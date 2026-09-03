@@ -5,7 +5,7 @@ SQLAlchemy model for users table
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from ..core.database import Base
+from ..core.database import Base  # No longer used with Neon direct queries
 
 
 class User(Base):

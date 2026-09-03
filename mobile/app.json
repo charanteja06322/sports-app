@@ -1,38 +1,57 @@
 {
   "expo": {
-    "name": "Cricket Sports Platform",
+    "name": "MOLDIN",
     "slug": "cricket-platform",
     "version": "1.0.0",
-    "sdkVersion": "54.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/startup/login_welcome.jpeg",
       "resizeMode": "cover",
-      "backgroundColor": "#1a1a2e"
+      "backgroundColor": "#FFFFFF"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cricketplatform.app"
+      "bundleIdentifier": "com.moldin.app",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.587530106324-knlifam9o70uc46nimg0hgpfut3faavu"
+            ]
+          }
+        ],
+        "NSCameraUsageDescription": "Camera is needed to scan match codes",
+        "NSPhotoLibraryUsageDescription": "Photo library is needed for profile pictures"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1a1a2e"
+        "backgroundColor": "#FFFFFF"
       },
-      "package": "com.cricketplatform.app",
-      "versionCode": 1
+      "package": "com.moldin.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {},
     "plugins": [
-      "@react-native-google-signin/google-signin"
+      "expo-status-bar"
     ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "extra": {
       "eas": {
         "projectId": "178a79a6-8df9-4d4c-a4cc-4f4db4343e26"
       }
-    }
+    },
+    "owner": "charanteja06322"
   }
 }

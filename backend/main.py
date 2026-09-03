@@ -1,24 +1,38 @@
 """
 Sports Platform API - Main Application
-FastAPI entry point for production-ready sports management platform
+FastAPI entry point for Neon PostgreSQL
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.core.config import settings
-# Commented out SQLAlchemy - using Supabase SDK directly
-# from app.core.database import engine, Base
+from app.core.database import Database
 from app.api.v1 import api_router
+import logging
 
-# SQLAlchemy initialization disabled - using Supabase SDK
-# Base.metadata.create_all(bind=engine)
+logger = logging.getLogger(__name__)
+
+
+# Lifespan context for startup/shutdown
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle app startup and shutdown"""
+    # Startup
+    logger.info("Starting up...")
+    yield
+    # Shutdown
+    await Database.close_pool()
+    logger.info("Shutting down...")
+
 
 # Initialize FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Production-ready API for Sports Management Platform with Supabase",
+    description="Production-ready API for Sports Management Platform with Neon PostgreSQL",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
     openapi_tags=[
         {
             "name": "Health",
@@ -66,11 +80,12 @@ def root():
 
 @app.get("/health", tags=["Health"])
 def health_check():
-    """Health check endpoint for monitoring"""
+    """Health check endpoint for monitoring - no database access"""
     return {
         "status": "healthy",
         "app": settings.APP_NAME,
-        "database": "Supabase PostgreSQL"
+        "database": "Neon PostgreSQL",
+        "backend": "FastAPI"
     }
 
 
@@ -80,5 +95,5 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=settings.DEBUG
+        reload=False
     )

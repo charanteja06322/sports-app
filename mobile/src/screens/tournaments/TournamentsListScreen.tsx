@@ -67,13 +67,13 @@ export function TournamentsListScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming':
-        return colors.info;
+        return colors.secondary;
       case 'ongoing':
-        return colors.success;
+        return colors.primary;
       case 'completed':
-        return colors.neutral.textDark;
+        return colors.textSecondary;
       default:
-        return colors.neutral.textLight;
+        return colors.textMuted;
     }
   };
 
@@ -122,7 +122,7 @@ export function TournamentsListScreen() {
       <View style={styles.tournamentDetails}>
         {item.start_date && (
           <View style={styles.detailItem}>
-            <Feather name="calendar" size={14} color={colors.neutral.textLight} />
+            <Feather name="calendar" size={14} color={colors.textMuted} />
             <Text style={styles.detailText}>
               {new Date(item.start_date).toLocaleDateString()}
             </Text>
@@ -131,7 +131,7 @@ export function TournamentsListScreen() {
         
         {item.prize_pool && (
           <View style={styles.detailItem}>
-            <Feather name="dollar-sign" size={14} color={colors.primary[500]} />
+            <Feather name="dollar-sign" size={14} color={colors.primary} />
             <Text style={styles.prizeText}>
               ${item.prize_pool.toLocaleString()}
             </Text>
@@ -156,7 +156,7 @@ export function TournamentsListScreen() {
     return (
       <ScreenContainer style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading tournaments...</Text>
         </View>
       </ScreenContainer>
@@ -189,7 +189,7 @@ export function TournamentsListScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary[500]}
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
@@ -219,7 +219,7 @@ export function TournamentsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.neutral.textLight,
+    color: colors.textSecondary,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -241,21 +241,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: colors.neutral.surface,
+    backgroundColor: colors.backgroundCard,
     borderWidth: 1,
-    borderColor: colors.neutral.border,
+    borderColor: colors.border,
   },
   filterButtonActive: {
-    backgroundColor: colors.primary[500],
-    borderColor: colors.primary[500],
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterText: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.neutral.text,
+    color: colors.textPrimary,
   },
   filterTextActive: {
-    color: '#fff',
+    color: colors.textLight,
   },
   header: {
     flexDirection: 'row',
@@ -267,23 +267,28 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.neutral.text,
+    color: colors.textPrimary,
   },
   headerCount: {
     fontSize: 14,
-    color: colors.neutral.textLight,
+    color: colors.textSecondary,
   },
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
   tournamentCard: {
-    backgroundColor: colors.neutral.surface,
+    backgroundColor: colors.backgroundCard,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.neutral.border,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tournamentHeader: {
     flexDirection: 'row',
@@ -294,7 +299,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.primary + '10',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -308,12 +313,12 @@ const styles = StyleSheet.create({
   tournamentName: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.neutral.text,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   tournamentType: {
     fontSize: 12,
-    color: colors.neutral.textLight,
+    color: colors.textSecondary,
     textTransform: 'capitalize',
   },
   statusBadge: {
@@ -334,7 +339,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: colors.neutral.textLight,
+    color: colors.textSecondary,
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -349,12 +354,12 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 12,
-    color: colors.neutral.textLight,
+    color: colors.textSecondary,
   },
   prizeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.primary[500],
+    color: colors.primary,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -367,12 +372,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.neutral.text,
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.neutral.textLight,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   fab: {
@@ -382,10 +387,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary[600],
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TextInput,
@@ -10,116 +11,206 @@ import {
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
-
-const LIVE_MATCHES = [
-  {
-    id: 'live-1',
-    badge: 'LIVE',
-    overs: '32.3 Ov',
-    home: 'Falcons CC',
-    away: 'Warriors XI',
-    homeShort: 'FC',
-    awayShort: 'WX',
-    homeScore: '186/7',
-    awayScore: '152/4',
-    status: 'Falcons CC elected to bat',
-  },
-  {
-    id: 'live-2',
-    badge: 'LIVE',
-    overs: '18.2 Ov',
-    home: 'Titans XI',
-    away: 'Kings CC',
-    homeShort: 'TX',
-    awayShort: 'KC',
-    homeScore: '124/3',
-    awayScore: '-/-',
-    status: 'Kings CC yet to bat',
-  },
-];
-
-const FEED_POSTS = [
-  {
-    id: 'post-1',
-    author: 'Arjun Reddy',
-    handle: '@arjunreddy07',
-    team: 'Falcons CC',
-    time: '2h',
-    category: 'Cricket',
-    body: 'Match day! Nothing feels better than doing what you love.',
-    accent: '#60E986',
-    stats: { likes: 128, comments: 24 },
-  },
-  {
-    id: 'post-2',
-    author: 'Sneha Iyer',
-    handle: '@snehaiver11',
-    team: 'Bengaluru, India',
-    time: '4h',
-    category: 'Football',
-    body: 'Training hard today for a stronger tomorrow. One step at a time.',
-    accent: '#5DA6FF',
-    stats: { likes: 96, comments: 18 },
-  },
-];
-
-const FOR_YOU_BLOCKS = [
-  {
-    id: 'player',
-    title: 'Player to Watch',
-    name: 'Shubman Gill',
-    subtitle: 'Top Order Batter • Team India',
-    detail: 'In exceptional form this season.',
-    stats: ['12 Matches', '842 Runs', '70.16 Avg', '94.3 SR'],
-    action: 'View Profile',
-  },
-  {
-    id: 'performance',
-    title: 'Recent Performance',
-    name: '112 (98)',
-    subtitle: 'vs Australia • ODI Series • 2d ago',
-    detail: 'Team India won by 36 runs',
-    stats: ['Player of the Match'],
-    action: 'View all',
-  },
-  {
-    id: 'team',
-    title: 'Recommended Team',
-    name: 'Sunrisers Hyderabad',
-    subtitle: 'T20 Franchise',
-    detail: 'Strong squad for this season.',
-    stats: ['28K Followers'],
-    action: 'Follow',
-  },
-];
+import { useAuth } from '../../context/AuthContext';
+import apiService from '../../services/api.service';
 
 const TOP_TABS = ['FEED', 'FOR YOU'] as const;
+const PAGE_SIZE = 40;
 
 export default function HomeScreen({ navigation }: any) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<(typeof TOP_TABS)[number]>('FEED');
-  const [location] = useState('Hyderabad');
+  const [location, setLocation] = useState('All Locations');
   const [query, setQuery] = useState('');
-  const [followedTeam, setFollowedTeam] = useState(false);
+  
+  // FEED tab state
+  const [feedPosts, setFeedPosts] = useState<any[]>([]);
+  const [feedPage, setFeedPage] = useState(0);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedHasMore, setFeedHasMore] = useState(true);
+  
+  // FOR YOU tab state
+  const [forYouPosts, setForYouPosts] = useState<any[]>([]);
+  const [forYouPage, setForYouPage] = useState(0);
+  const [forYouLoading, setForYouLoading] = useState(false);
+  const [forYouHasMore, setForYouHasMore] = useState(true);
+  
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredPosts = useMemo(
-    () =>
-      FEED_POSTS.filter((post) => {
-        if (!query.trim()) {
-          return true;
+  // Initial load
+  useEffect(() => {
+    loadFeedPage(0);
+    loadForYouPage(0);
+  }, [user]);
+
+  const loadFeedPage = async (page: number) => {
+    if (page === 0) setFeedLoading(true);
+    
+    try {
+      const res = await apiService.getMatches({ skip: page * PAGE_SIZE, limit: PAGE_SIZE });
+      
+      if (res?.success) {
+        const matches = res.matches || [];
+        const formatted = matches.map((match: any) => ({
+          id: match.id,
+          type: 'match',
+          title: `${match.team1?.name || 'Team A'} vs ${match.team2?.name || 'Team B'}`,
+          subtitle: match.match_type || 'Cricket',
+          status: match.status,
+          date: match.match_date,
+          data: match,
+        }));
+        
+        if (page === 0) {
+          setFeedPosts(formatted);
+        } else {
+          setFeedPosts(prev => [...prev, ...formatted]);
         }
+        
+        setFeedPage(page);
+        setFeedHasMore(matches.length === PAGE_SIZE);
+      }
+    } catch (err: any) {
+      console.error('Error loading feed:', err);
+      setError(err.message || 'Failed to load feed');
+    } finally {
+      if (page === 0) setFeedLoading(false);
+    }
+  };
 
-        const normalizedQuery = query.toLowerCase();
-        return (
-          post.author.toLowerCase().includes(normalizedQuery) ||
-          post.category.toLowerCase().includes(normalizedQuery) ||
-          post.body.toLowerCase().includes(normalizedQuery)
-        );
-      }),
-    [query]
+  const loadForYouPage = async (page: number) => {
+    if (page === 0) setForYouLoading(true);
+    
+    try {
+      const res = await apiService.getMatches({ skip: page * PAGE_SIZE, limit: PAGE_SIZE });
+      
+      if (res?.success) {
+        const matches = res.matches || [];
+        // TODO: Filter by user's favorite sports
+        const formatted = matches.map((match: any) => ({
+          id: match.id,
+          type: 'match',
+          title: `${match.team1?.name || 'Team A'} vs ${match.team2?.name || 'Team B'}`,
+          subtitle: match.match_type || 'Cricket',
+          status: match.status,
+          date: match.match_date,
+          data: match,
+        }));
+        
+        if (page === 0) {
+          setForYouPosts(formatted);
+        } else {
+          setForYouPosts(prev => [...prev, ...formatted]);
+        }
+        
+        setForYouPage(page);
+        setForYouHasMore(matches.length === PAGE_SIZE);
+      }
+    } catch (err: any) {
+      console.error('Error loading for you:', err);
+    } finally {
+      if (page === 0) setForYouLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setInitialLoading(false);
+  }, [feedPosts, forYouPosts]);
+
+  const handleFeedLoadMore = () => {
+    if (!feedLoading && feedHasMore) {
+      loadFeedPage(feedPage + 1);
+    }
+  };
+
+  const handleForYouLoadMore = () => {
+    if (!forYouLoading && forYouHasMore) {
+      loadForYouPage(forYouPage + 1);
+    }
+  };
+
+  const filteredPosts = useMemo(() => {
+    const posts = activeTab === 'FEED' ? feedPosts : forYouPosts;
+    if (!query.trim()) {
+      return posts;
+    }
+
+    const normalizedQuery = query.toLowerCase();
+    return posts.filter((post) => {
+      return (
+        post.title?.toLowerCase().includes(normalizedQuery) ||
+        post.subtitle?.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [query, activeTab, feedPosts, forYouPosts]);
+
+  if (initialLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading content...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const renderMatchCard = ({ item: post }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.matchCard}
+      onPress={() => {
+        if (post.type === 'match' && post.data?.id) {
+          navigation.navigate('MatchDetail', { matchId: post.data.id });
+        }
+      }}
+      activeOpacity={0.7}
+    >
+      <View style={styles.matchHeader}>
+        <View>
+          <Text style={styles.matchTitle}>{post.title}</Text>
+          <Text style={styles.matchSubtitle}>{post.subtitle}</Text>
+          <Text style={styles.matchDate}>
+            <Feather name="clock" size={12} color={colors.textSecondary} /> {post.status}
+          </Text>
+        </View>
+        <View style={styles.matchBadge}>
+          <Text style={styles.matchBadgeText}>{post.status === 'live' ? 'LIVE' : 'SCHEDULED'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.matchContent}>
+        <View style={[styles.statusIndicator, { backgroundColor: post.status === 'live' ? '#ff6b6b' : colors.primary }]} />
+        <Text style={styles.matchContentText}>{post.subtitle} Match</Text>
+      </View>
+    </TouchableOpacity>
   );
 
-  const showAction = (title: string, message: string) => {
-    Alert.alert(title, message);
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <MaterialCommunityIcons name="cricket" size={40} color={colors.textSecondary} />
+      <Text style={styles.emptyTitle}>No matches found</Text>
+      <Text style={styles.emptyCopy}>Check back soon for upcoming matches</Text>
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => {
+          navigation.popToTop();
+          navigation.navigate('MainTabs', { screen: 'Create' });
+        }}
+      >
+        <Feather name="plus" size={18} color={colors.background} />
+        <Text style={styles.createButtonText}>Create Match</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderFooter = (isLoading: boolean) => {
+    if (!isLoading) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={colors.primary} />
+      </View>
+    );
   };
 
   return (
@@ -135,7 +226,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.locationChip}
-            onPress={() => showAction('Location', 'Location switcher will be connected next.')}
+            onPress={() => Alert.alert('Location Switcher', 'Location switcher will be connected next.')}
           >
             <Feather name="map-pin" size={15} color={colors.primary} />
             <Text style={styles.locationText}>{location}</Text>
@@ -144,7 +235,7 @@ export default function HomeScreen({ navigation }: any) {
 
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => showAction('Notifications', 'Notifications panel is not connected yet.')}
+            onPress={() => Alert.alert('Notifications', 'Notifications panel is not connected yet.')}
           >
             <Feather name="bell" size={20} color={colors.textPrimary} />
             <View style={styles.badge}>
@@ -154,7 +245,7 @@ export default function HomeScreen({ navigation }: any) {
 
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => showAction('Messages', 'Chat inbox is not connected yet.')}
+            onPress={() => Alert.alert('Messages', 'Chat inbox is not connected yet.')}
           >
             <Feather name="message-circle" size={20} color={colors.textPrimary} />
             <View style={styles.badge}>
@@ -163,7 +254,7 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
-            <Text style={styles.profileInitial}>RK</Text>
+            <Text style={styles.profileInitial}>{user?.user_metadata?.full_name?.substring(0, 2) || 'U'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -175,236 +266,78 @@ export default function HomeScreen({ navigation }: any) {
             value={query}
             onChangeText={setQuery}
             style={styles.searchInput}
-            placeholder="Search players, teams, matches..."
+            placeholder="Search matches, teams..."
             placeholderTextColor={colors.textMuted}
           />
         </View>
         <TouchableOpacity
           style={styles.filterButton}
-          onPress={() => showAction('Filters', 'Advanced search filters are coming soon.')}
+          onPress={() => Alert.alert('Filters', 'Advanced search filters are coming soon.')}
         >
           <Feather name="sliders" size={18} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Live Now</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Matches')}>
-            <Text style={styles.linkText}>See All</Text>
+      <View style={styles.tabsBar}>
+        {TOP_TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.topTab, activeTab === tab && styles.topTabActive]}
+            onPress={() => setActiveTab(tab)}
+          >
+            <Text style={[styles.topTabText, activeTab === tab && styles.topTabTextActive]}>{tab}</Text>
           </TouchableOpacity>
+        ))}
+      </View>
+
+      {error && (
+        <View style={styles.errorBanner}>
+          <Feather name="alert-circle" size={16} color="#ff6b6b" />
+          <Text style={styles.errorText}>{error}</Text>
         </View>
+      )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveRail}>
-          {LIVE_MATCHES.map((match) => (
-            <TouchableOpacity
-              key={match.id}
-              style={styles.liveCard}
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate('Matches')}
-            >
-              <View style={styles.liveMeta}>
-                <View style={styles.liveBadge}>
-                  <Text style={styles.liveBadgeText}>{match.badge}</Text>
-                </View>
-                <Text style={styles.liveOvers}>{match.overs}</Text>
-              </View>
-
-              <View style={styles.scoreRow}>
-                <View style={styles.teamBlock}>
-                  <View style={styles.teamBadge}>
-                    <Text style={styles.teamBadgeText}>{match.homeShort}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.teamName}>{match.home}</Text>
-                    <Text style={styles.teamScore}>{match.homeScore}</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.vsLabel}>vs</Text>
-
-                <View style={styles.teamBlock}>
-                  <View style={styles.teamBadge}>
-                    <Text style={styles.teamBadgeText}>{match.awayShort}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.teamName}>{match.away}</Text>
-                    <Text style={styles.teamScore}>{match.awayScore}</Text>
-                  </View>
-                </View>
-
-                <Feather name="chevron-right" size={20} color={colors.textSecondary} />
-              </View>
-
-              <Text style={styles.liveStatus}>{match.status}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={styles.tabsBar}>
-          {TOP_TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.topTab, activeTab === tab && styles.topTabActive]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={[styles.topTabText, activeTab === tab && styles.topTabTextActive]}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {activeTab === 'FEED' ? (
-          <View style={styles.feedList}>
-            {filteredPosts.map((post) => (
-              <View key={post.id} style={styles.postCard}>
-                <View style={styles.postHeader}>
-                  <View style={[styles.postAvatar, { borderColor: post.accent }]}>
-                    <Text style={styles.postAvatarText}>
-                      {post.author
-                        .split(' ')
-                        .map((part) => part[0])
-                        .join('')
-                        .slice(0, 2)}
-                    </Text>
-                  </View>
-                  <View style={styles.postAuthorBlock}>
-                    <View style={styles.postAuthorRow}>
-                      <Text style={styles.postAuthor}>{post.author}</Text>
-                      <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
-                    </View>
-                    <Text style={styles.postMeta}>
-                      {post.handle} • {post.category}
-                    </Text>
-                    <Text style={styles.postMetaSecondary}>
-                      <Feather name="map-pin" size={11} color={colors.textSecondary} /> {post.team} • {post.time}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => showAction('Post Menu', `More actions for ${post.author} coming soon.`)}
-                  >
-                    <Feather name="more-vertical" size={20} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={[styles.heroCard, { borderColor: `${post.accent}55` }]}>
-                  <View style={[styles.heroArtwork, { backgroundColor: `${post.accent}12` }]}>
-                    <MaterialCommunityIcons
-                      name={post.id === 'post-1' ? 'cricket' : 'soccer'}
-                      size={44}
-                      color={post.accent}
-                    />
-                  </View>
-                  <View style={styles.heroCopy}>
-                    <Text style={styles.postBody}>{post.body}</Text>
-                    <Text style={styles.heroSubText}>Built from the startup design feed layout.</Text>
-                  </View>
-                </View>
-
-                <View style={styles.postActions}>
-                  <TouchableOpacity
-                    style={styles.postAction}
-                    onPress={() => showAction('Liked', `You liked ${post.author}'s post.`)}
-                  >
-                    <Feather name="heart" size={18} color={colors.textPrimary} />
-                    <Text style={styles.postActionText}>{post.stats.likes}</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.postAction}
-                    onPress={() => showAction('Comments', 'Comments are not connected yet.')}
-                  >
-                    <Feather name="message-circle" size={18} color={colors.textPrimary} />
-                    <Text style={styles.postActionText}>{post.stats.comments}</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.postAction}
-                    onPress={() => showAction('Share', 'Native share is not connected yet.')}
-                  >
-                    <Feather name="share" size={18} color={colors.textPrimary} />
-                    <Text style={styles.postActionText}>Share</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.postAction}
-                    onPress={() => showAction('Saved', 'Post saved to your collection.')}
-                  >
-                    <Feather name="bookmark" size={18} color={colors.textPrimary} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-
-            {!filteredPosts.length && (
-              <View style={styles.emptyState}>
-                <Feather name="search" size={30} color={colors.textSecondary} />
-                <Text style={styles.emptyTitle}>No feed items match your search</Text>
-                <Text style={styles.emptyCopy}>Try a player name, team, or sport keyword.</Text>
-              </View>
-            )}
-          </View>
-        ) : (
-          <View style={styles.discoveryList}>
-            <View style={styles.discoveryHeader}>
-              <View>
-                <Text style={styles.discoveryTitle}>For You • Cricket</Text>
-                <Text style={styles.discoverySubtitle}>Personalized content based on the startup design.</Text>
-              </View>
+      {activeTab === 'FEED' ? (
+        <FlatList
+          data={filteredPosts}
+          renderItem={renderMatchCard}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={renderEmptyState}
+          ListFooterComponent={() => renderFooter(feedLoading)}
+          onEndReached={handleFeedLoadMore}
+          onEndReachedThreshold={0.3}
+          contentContainerStyle={styles.flatListContent}
+          scrollEnabled={false}
+        />
+      ) : (
+        <FlatList
+          data={filteredPosts}
+          renderItem={renderMatchCard}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="heart" size={40} color={colors.textSecondary} />
+              <Text style={styles.emptyTitle}>No personalized content yet</Text>
+              <Text style={styles.emptyCopy}>Update your sport preferences to get personalized matches</Text>
               <TouchableOpacity
-                style={styles.customizeButton}
-                onPress={() => showAction('Customize', 'Personalization controls are coming soon.')}
+                style={styles.createButton}
+                onPress={() => {
+                  navigation.popToTop();
+                  navigation.navigate('MainTabs', { screen: 'Create' });
+                }}
               >
-                <Feather name="sliders" size={15} color={colors.primary} />
-                <Text style={styles.customizeText}>Customize</Text>
+                <Feather name="plus" size={18} color={colors.background} />
+                <Text style={styles.createButtonText}>Create Match</Text>
               </TouchableOpacity>
             </View>
-
-            {FOR_YOU_BLOCKS.map((block) => (
-              <View key={block.id} style={styles.discoveryCard}>
-                <Text style={styles.discoveryCardTitle}>{block.title}</Text>
-                <Text style={styles.discoveryName}>{block.name}</Text>
-                <Text style={styles.discoveryMeta}>{block.subtitle}</Text>
-                <Text style={styles.discoveryDetail}>{block.detail}</Text>
-                <View style={styles.discoveryStatsRow}>
-                  {block.stats.map((stat) => (
-                    <Text key={stat} style={styles.discoveryStat}>
-                      {stat}
-                    </Text>
-                  ))}
-                </View>
-                <TouchableOpacity
-                  style={[
-                    styles.discoveryAction,
-                    block.action === 'Follow' && followedTeam && styles.discoveryActionActive,
-                  ]}
-                  onPress={() => {
-                    if (block.action === 'View Profile') {
-                      navigation.navigate('Profile');
-                      return;
-                    }
-
-                    if (block.action === 'Follow') {
-                      setFollowedTeam((current) => !current);
-                      return;
-                    }
-
-                    showAction(block.action, `${block.title} details are not connected yet.`);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.discoveryActionText,
-                      block.action === 'Follow' && followedTeam && styles.discoveryActionTextActive,
-                    ]}
-                  >
-                    {block.action === 'Follow' && followedTeam ? 'Following' : block.action}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+          )}
+          ListFooterComponent={() => renderFooter(forYouLoading)}
+          onEndReached={handleForYouLoadMore}
+          onEndReachedThreshold={0.3}
+          contentContainerStyle={styles.flatListContent}
+          scrollEnabled={false}
+        />
+      )}
     </View>
   );
 }
@@ -412,11 +345,22 @@ export default function HomeScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#04090F',
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    color: colors.textSecondary,
+    fontSize: 14,
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: 14,
+    backgroundColor: colors.background,
   },
   brandRow: {
     flexDirection: 'row',
@@ -431,7 +375,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
-    backgroundColor: 'rgba(0, 255, 0, 0.06)',
+    backgroundColor: `${colors.primary}10`,
   },
   logoText: {
     color: colors.primary,
@@ -454,11 +398,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.backgroundCard,
     borderRadius: 18,
     paddingHorizontal: 12,
     paddingVertical: 10,
     flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   locationText: {
     color: colors.textPrimary,
@@ -486,7 +432,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#041008',
+    color: colors.background,
     fontSize: 10,
     fontWeight: '700',
   },
@@ -498,158 +444,75 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: colors.primary,
-    backgroundColor: colors.backgroundCard,
+    backgroundColor: `${colors.primary}10`,
   },
   profileInitial: {
-    color: colors.textPrimary,
-    fontSize: 13,
+    color: colors.primary,
+    fontSize: 14,
     fontWeight: '700',
   },
   searchRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingVertical: 12,
     gap: 10,
+    backgroundColor: colors.background,
   },
   searchBox: {
     flex: 1,
-    height: 52,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
     gap: 10,
+    paddingHorizontal: 12,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   searchInput: {
     flex: 1,
+    paddingVertical: 10,
+    fontSize: 14,
     color: colors.textPrimary,
-    fontSize: 15,
+    paddingHorizontal: 4,
   },
   filterButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  content: {
-    flex: 1,
-    marginTop: 10,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  linkText: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  liveRail: {
-    paddingLeft: 16,
-    paddingRight: 6,
-  },
-  liveCard: {
-    width: 360,
-    marginRight: 12,
-    borderRadius: 22,
-    padding: 18,
-    backgroundColor: '#0A121A',
-    borderWidth: 1,
-    borderColor: 'rgba(117, 255, 159, 0.12)',
-  },
-  liveMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 18,
-  },
-  liveBadge: {
-    backgroundColor: 'rgba(0, 255, 0, 0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  liveBadgeText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  liveOvers: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  teamBlock: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  teamBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  errorBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#ffe5e5',
+    marginHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
   },
-  teamBadgeText: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  teamName: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    marginBottom: 4,
-  },
-  teamScore: {
-    color: colors.textPrimary,
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  vsLabel: {
-    color: colors.textMuted,
-    fontSize: 16,
-    marginHorizontal: 12,
-  },
-  liveStatus: {
-    color: colors.primary,
-    fontSize: 14,
-    textAlign: 'center',
+  errorText: {
+    flex: 1,
+    color: '#c92a2a',
+    fontSize: 12,
+    fontWeight: '500',
   },
   tabsBar: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    gap: 16,
+    marginVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-    marginTop: 18,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 16,
   },
   topTab: {
-    marginRight: 24,
-    paddingBottom: 14,
+    paddingVertical: 12,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
@@ -657,222 +520,106 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.primary,
   },
   topTabText: {
-    color: colors.textSecondary,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
+    color: colors.textSecondary,
   },
   topTabTextActive: {
     color: colors.primary,
   },
-  feedList: {
-    padding: 16,
-    gap: 14,
+  flatListContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
-  postCard: {
-    backgroundColor: '#091119',
-    borderRadius: 22,
-    padding: 16,
+  matchCard: {
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: colors.border,
   },
-  postHeader: {
+  matchHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  postAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  postAvatarText: {
-    color: colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  postAuthorBlock: {
-    flex: 1,
-  },
-  postAuthorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 3,
-  },
-  postAuthor: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  postMeta: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginBottom: 2,
-  },
-  postMetaSecondary: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  heroCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    overflow: 'hidden',
-    marginBottom: 14,
-  },
-  heroArtwork: {
-    height: 170,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroCopy: {
-    padding: 16,
-  },
-  postBody: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    lineHeight: 30,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  heroSubText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  postActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-  },
-  postAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  postActionText: {
-    color: colors.textPrimary,
-    fontSize: 14,
-  },
-  discoveryList: {
-    padding: 16,
-    gap: 14,
-  },
-  discoveryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 12,
-  },
-  discoveryTitle: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  discoverySubtitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    maxWidth: 230,
-  },
-  customizeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(117, 255, 159, 0.18)',
-    backgroundColor: 'rgba(0, 255, 0, 0.06)',
-  },
-  customizeText: {
-    color: colors.primary,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  discoveryCard: {
-    backgroundColor: '#091119',
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(117, 255, 159, 0.08)',
-  },
-  discoveryCardTitle: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  discoveryName: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  discoveryMeta: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginBottom: 6,
-  },
-  discoveryDetail: {
-    color: colors.textPrimary,
-    fontSize: 15,
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
-  discoveryStatsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 14,
-  },
-  discoveryStat: {
-    color: colors.textPrimary,
-    fontSize: 13,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  discoveryAction: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-  },
-  discoveryActionActive: {
-    backgroundColor: 'rgba(0, 255, 0, 0.14)',
-  },
-  discoveryActionText: {
-    color: '#07100A',
+  matchTitle: {
     fontSize: 14,
     fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 4,
   },
-  discoveryActionTextActive: {
+  matchSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  matchDate: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  matchBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: `${colors.primary}20`,
+    borderRadius: 6,
+  },
+  matchBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.primary,
   },
-  emptyState: {
-    backgroundColor: '#091119',
-    borderRadius: 20,
-    padding: 28,
+  matchContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    gap: 8,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  matchContentText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
     marginTop: 12,
     marginBottom: 6,
   },
   emptyCopy: {
+    fontSize: 13,
     color: colors.textSecondary,
-    fontSize: 14,
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 16,
+  },
+  createButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.background,
+  },
+  footerLoader: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
 });

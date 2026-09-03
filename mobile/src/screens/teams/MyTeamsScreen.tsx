@@ -66,7 +66,7 @@ export function MyTeamsScreen() {
         )}
       </View>
 
-      <Feather name="chevron-right" size={24} color={colors.secondary[400]} />
+      <Feather name="chevron-right" size={24} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -74,7 +74,7 @@ export function MyTeamsScreen() {
     return (
       <ScreenContainer style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </ScreenContainer>
     );
@@ -88,7 +88,7 @@ export function MyTeamsScreen() {
           style={styles.addButton}
           onPress={() => navigation.navigate('CreateTeam')}
         >
-          <Feather name="plus" size={20} color={colors.primary[600]} />
+          <Feather name="plus" size={20} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -101,7 +101,7 @@ export function MyTeamsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary[500]}
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
@@ -127,7 +127,7 @@ export function MyTeamsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
   },
   addButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.primary[100],
+    backgroundColor: 'rgba(30,64,175,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -160,18 +160,18 @@ const styles = StyleSheet.create({
   teamCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.backgroundCard,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.neutral.border,
+    borderColor: colors.border,
   },
   teamIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary[100],
+    backgroundColor: 'rgba(30,64,175,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   teamInitial: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.primary[600],
+    color: colors.primary,
   },
   teamInfo: {
     flex: 1,
@@ -187,13 +187,13 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   teamShortName: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.primary[600],
+    color: colors.primary,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -206,17 +206,17 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
   createButton: {
-    backgroundColor: colors.primary[600],
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

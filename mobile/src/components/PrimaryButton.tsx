@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, TouchableOpacityProps, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors } from '../theme';
+import { colors } from '../theme/colors';
 
 interface PrimaryButtonProps extends TouchableOpacityProps {
   label: string;
@@ -32,7 +32,7 @@ export function PrimaryButton({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={isSolid ? '#fff' : colors.primary[500]} />
+        <ActivityIndicator color={isSolid ? '#fff' : colors.primary} />
       ) : (
         <Text style={[styles.text, isSolid ? styles.solidText : styles.outlineText]}>
           {label}
@@ -52,12 +52,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   solid: {
-    backgroundColor: colors.primary[500],
+    backgroundColor: colors.primary,
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: colors.primary[500],
+    borderColor: colors.primary,
   },
   disabled: {
     opacity: 0.6,
@@ -67,9 +67,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   solidText: {
-    color: colors.neutral.white,
+    color: '#FFFFFF',
   },
   outlineText: {
-    color: colors.primary[600],
+    color: colors.primary,
   },
 });

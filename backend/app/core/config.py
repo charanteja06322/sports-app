@@ -13,15 +13,11 @@ class Settings(BaseSettings):
     APP_NAME: str = "Cricket Platform API"
     DEBUG: bool = True
     
-    # Database (SQLAlchemy - Optional)
-    DATABASE_URL: str
-    
-    # Supabase Configuration
-    SUPABASE_URL: str
-    SUPABASE_ANON_KEY: str
+    # Neon PostgreSQL Configuration
+    DATABASE_URL: str = "postgresql://neondb_owner:password@ep-xxxx.neon.tech/neondb?sslmode=require"
     
     # Security
-    SECRET_KEY: str
+    SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     

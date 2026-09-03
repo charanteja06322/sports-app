@@ -140,7 +140,7 @@ export function CreateTeamScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: 24,
@@ -148,12 +148,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
     marginBottom: 32,
   },
   textArea: {

@@ -3,30 +3,37 @@
  * Global state management for authentication with Supabase
  */
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+// import { GoogleSignin } from '@react-native-google-signin/google-signin'; // TEMPORARILY DISABLED FOR EXPO GO
 import { supabase } from '../config/supabase';
 
 const AuthContext = createContext();
 
-// Configure Google Sign-In
-GoogleSignin.configure({
-  webClientId: '587530106324-knlifam9o70uc46nimg0hgpfut3faavu.apps.googleusercontent.com',
-  iosClientId: '587530106324-knlifam9o70uc46nimg0hgpfut3faavu.apps.googleusercontent.com', // Optional: Add iOS client ID if you have one
-});
+let googleConfigApplied = false;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if user is logged in on app start
   useEffect(() => {
+    // GOOGLE SIGN-IN TEMPORARILY DISABLED FOR EXPO GO TESTING
+    // Configure Google Sign-In safely after mount (prevents cold-start crashes)
+    // if (!googleConfigApplied) {
+    //   try {
+    //     GoogleSignin.configure({
+    //       webClientId: '587530106324-knlifam9o70uc46nimg0hgpfut3faavu.apps.googleusercontent.com',
+    //     });
+    //     googleConfigApplied = true;
+    //   } catch (e) {
+    //     console.error('[Auth] GoogleSignin.configure failed:', e);
+    //   }
+    // }
+
     checkAuthStatus();
 
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event);
+        if (__DEV__) console.log('[Auth] Event:', event);
         if (session?.user) {
           setUser(session.user);
           setIsAuthenticated(true);
@@ -50,40 +57,23 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
       }
     } catch (error) {
-      console.log('Error checking auth status:', error);
+      console.error('[Auth] Error checking status:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Email/Password Sign In
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-
     setUser(data.user);
     setIsAuthenticated(true);
     return data;
   };
 
-  // Email/Password Sign Up
   const signUp = async ({ email, password, full_name }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name,
-        },
-      },
-    });
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name } } });
     if (error) throw error;
-
-    // If email confirmations are enabled, Supabase may return `session: null`.
-    // In that case, keep the user unauthenticated until they verify and sign in.
     if (data?.session?.user) {
       setUser(data.session.user);
       setIsAuthenticated(true);
@@ -91,41 +81,41 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setIsAuthenticated(false);
     }
-
     return data;
   };
 
-  // Google Sign-In
+  // Google Sign-In - TEMPORARILY DISABLED FOR EXPO GO
   const signInWithGoogle = async () => {
-    try {
-      // Check if Google Play Services are available
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    throw new Error('Google Sign-In requires a development build. Please use email/password login or build the app with EAS.');
+    // try {
+    //   // Check if Google Play Services are available
+    //   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-      // Google Sign In flow (v13+ returns { type, data })
-      const userInfo = await GoogleSignin.signIn();
-      if (userInfo?.type === 'cancelled') {
-        return null; // User dismissed the Google sheet
-      }
+    //   // Google Sign In flow (v13+ returns { type, data })
+    //   const userInfo = await GoogleSignin.signIn();
+    //   if (userInfo?.type === 'cancelled') {
+    //     return null; // User dismissed the Google sheet
+    //   }
 
-      const tokens = await GoogleSignin.getTokens();
-      const idToken = tokens?.idToken || userInfo?.data?.idToken;
+    //   const tokens = await GoogleSignin.getTokens();
+    //   const idToken = tokens?.idToken || userInfo?.data?.idToken;
 
-      if (!idToken) throw new Error('No ID token received from Google');
+    //   if (!idToken) throw new Error('No ID token received from Google');
 
-      // Sign in to Supabase with Google ID token
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: idToken,
-      });
-      if (error) throw error;
+    //   // Sign in to Supabase with Google ID token
+    //   const { data, error } = await supabase.auth.signInWithIdToken({
+    //     provider: 'google',
+    //     token: idToken,
+    //   });
+    //   if (error) throw error;
 
-      setUser(data.user);
-      setIsAuthenticated(true);
-      return data;
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      throw error;
-    }
+    //   setUser(data.user);
+    //   setIsAuthenticated(true);
+    //   return data;
+    // } catch (error) {
+    //   console.error('Google Sign-In Error:', error);
+    //   throw error;
+    // }
   };
 
   // Logout
@@ -136,13 +126,14 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       // Sign out from Google if signed in (v13+: hasPreviousSignIn is sync)
-      try {
-        if (GoogleSignin.hasPreviousSignIn()) {
-          await GoogleSignin.signOut();
-        }
-      } catch (googleError) {
-        console.log('Google sign-out skipped:', googleError?.message);
-      }
+      // TEMPORARILY DISABLED FOR EXPO GO
+      // try {
+      //   if (GoogleSignin.hasPreviousSignIn()) {
+      //     await GoogleSignin.signOut();
+      //   }
+      // } catch (googleError) {
+      //   console.log('Google sign-out skipped:', googleError?.message);
+      // }
 
       setUser(null);
       setIsAuthenticated(false);

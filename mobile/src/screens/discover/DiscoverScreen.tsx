@@ -34,8 +34,6 @@ const RECOMMENDED = [
 export default function DiscoverScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
 
-  const showAction = (title: string, msg: string) => Alert.alert(title, msg);
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -47,11 +45,11 @@ export default function DiscoverScreen({ navigation }: any) {
           <Text style={styles.brandName}>Discover</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => showAction('Notifications', 'Not connected yet.')}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Notifications', 'Notifications panel not connected yet.')}>
             <Feather name="bell" size={20} color={colors.textPrimary} />
             <View style={styles.badge}><Text style={styles.badgeText}>3</Text></View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => showAction('Messages', 'Not connected yet.')}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => Alert.alert('Messages', 'Chat inbox not connected yet.')}>
             <Feather name="message-circle" size={20} color={colors.textPrimary} />
             <View style={styles.badge}><Text style={styles.badgeText}>2</Text></View>
           </TouchableOpacity>
@@ -74,7 +72,7 @@ export default function DiscoverScreen({ navigation }: any) {
               placeholderTextColor={colors.textMuted}
             />
           </View>
-          <TouchableOpacity style={styles.filterBtn} onPress={() => showAction('Filters', 'Coming soon.')}>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => Alert.alert('Filters', 'Advanced filters coming soon.')}>
             <Feather name="sliders" size={18} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -87,7 +85,13 @@ export default function DiscoverScreen({ navigation }: any) {
               <TouchableOpacity
                 key={cat.id}
                 style={styles.catCard}
-                onPress={() => showAction(cat.title, `${cat.title} browse coming soon.`)}
+                onPress={() => {
+                  if (cat.title === 'Teams') {
+                    navigation.navigate('TeamsBrowse');
+                  } else {
+                    Alert.alert(`${cat.title} Browse`, `${cat.title} browse coming soon.`);
+                  }
+                }}
               >
                 <View style={[styles.catIcon, { borderColor: cat.accent }]}>
                   <Feather name={cat.icon as any} size={26} color={cat.accent} />
@@ -105,13 +109,13 @@ export default function DiscoverScreen({ navigation }: any) {
               <Feather name="trending-up" size={18} color={colors.primary} />
               <Text style={styles.sectionTitle}>Trending in Cricket</Text>
             </View>
-            <TouchableOpacity onPress={() => showAction('Trending', 'Full trending view coming soon.')}>
+            <TouchableOpacity onPress={() => Alert.alert('Trending', 'Full trending view coming soon.')}>
               <Text style={styles.linkText}>View all</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendRail}>
             {TRENDING.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.trendCard} activeOpacity={0.85} onPress={() => showAction('Video', 'Video player coming soon.')}>
+              <TouchableOpacity key={item.id} style={styles.trendCard} activeOpacity={0.85} onPress={() => Alert.alert('Video Player', 'Video player coming soon.')}>
                 <View style={styles.trendThumb}>
                   <Feather name="play" size={32} color="rgba(255,255,255,0.6)" />
                 </View>
@@ -173,7 +177,7 @@ export default function DiscoverScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#04090F' },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     paddingHorizontal: 16, paddingTop: 14, paddingBottom: 12,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -201,14 +205,19 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   searchRow: { flexDirection: 'row', paddingHorizontal: 16, paddingBottom: 14, gap: 10 },
   searchBox: {
-    flex: 1, height: 48, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', flexDirection: 'row',
+    flex: 1, height: 48, backgroundColor: colors.backgroundCard, borderRadius: 14,
+    borderWidth: 1, borderColor: colors.border, flexDirection: 'row',
     alignItems: 'center', paddingHorizontal: 14, gap: 10,
   },
-  searchInput: { flex: 1, color: colors.textPrimary, fontSize: 14 },
+  searchInput: { 
+    flex: 1, 
+    color: colors.textPrimary, 
+    fontSize: 14,
+    paddingHorizontal: 4,
+  },
   filterBtn: {
     width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.backgroundCard, borderWidth: 1, borderColor: colors.border,
   },
   section: { paddingHorizontal: 16, marginBottom: 28 },
   sectionHeader: {

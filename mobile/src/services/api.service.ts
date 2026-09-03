@@ -20,11 +20,17 @@ class APIService {
     this.axiosInstance.interceptors.request.use(
       async (config) => {
         try {
-          // Get current session from Supabase
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session?.access_token) {
-            config.headers.Authorization = `Bearer ${session.access_token}`;
+          // Try to get current session from Supabase
+          // If Supabase is not available, allow anonymous access
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session?.access_token) {
+              config.headers.Authorization = `Bearer ${session.access_token}`;
+            }
+          } catch (supabaseError) {
+            // Supabase not available - allow anonymous access
+            console.warn('Supabase auth unavailable, using anonymous access');
           }
         } catch (error) {
           console.error('Error getting auth token:', error);
@@ -223,6 +229,51 @@ class APIService {
 
   async createMatch(matchData: any) {
     return this.post('/matches', matchData);
+  }
+
+  // ============================================================================
+  // POSTS API
+  // ============================================================================
+
+  async getPosts(params?: {
+    skip?: number;
+    limit?: number;
+    category?: string;
+    search?: string;
+  }) {
+    return this.get('/posts', { params });
+  }
+
+  async getPost(postId: string) {
+    return this.get(`/posts/${postId}`);
+  }
+
+  async createPost(postData: any) {
+    return this.post('/posts', postData);
+  }
+
+  async updatePost(postId: string, postData: any) {
+    return this.put(`/posts/${postId}`, postData);
+  }
+
+  async deletePost(postId: string) {
+    return this.delete(`/posts/${postId}`);
+  }
+
+  async getMyPosts() {
+    return this.get('/posts/user/my-posts');
+  }
+
+  async likePost(postId: string) {
+    return this.post(`/posts/${postId}/like`);
+  }
+
+  async unlikePost(postId: string) {
+    return this.delete(`/posts/${postId}/like`);
+  }
+
+  async commentOnPost(postId: string, content: string) {
+    return this.post(`/posts/${postId}/comments`, { content });
   }
 }
 

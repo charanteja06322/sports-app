@@ -73,9 +73,15 @@ export default function CreateMatchScreen({ navigation }: any) {
   };
 
   const handleFinish = () => {
-    Alert.alert('Match Started!', `${tossWinner} won the toss and elected to ${tossDecision}.`, [
-      { text: 'Go to Live Scoring', onPress: () => navigation.goBack() },
-      { text: 'Cancel', style: 'cancel', onPress: () => navigation.goBack() },
+    Alert.alert('✓ Match Started!', `${tossWinner} won the toss and elected to ${tossDecision}.`, [
+      { 
+        text: 'View Live', 
+        onPress: () => {
+          navigation.popToTop();
+          navigation.navigate('MainTabs', { screen: 'Matches' });
+        }
+      },
+      { text: 'Go Back', style: 'default', onPress: () => navigation.goBack() },
     ]);
   };
 
@@ -279,7 +285,7 @@ const s = StyleSheet.create({
   dot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   dotA: { backgroundColor: colors.primary, borderColor: colors.primary },
   dotT: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  dotTA: { color: '#000000' },
+  dotTA: { color: colors.textLight },
   scroll: { flex: 1 },
   sc: { paddingHorizontal: 16, paddingBottom: 20 },
   st: { fontSize: 22, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
@@ -289,8 +295,8 @@ const s = StyleSheet.create({
   chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginRight: 8, marginBottom: 8 },
   chipA: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipT: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  chipTA: { color: '#000000' },
-  inp: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14 },
+  chipTA: { color: colors.textLight },
+  inp: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 14, paddingVertical: 12, color: colors.textPrimary, fontSize: 14, paddingLeft: 14 },
   fr: { flexDirection: 'row', gap: 12 },
   ir: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)', marginTop: 8 },
   il: { fontSize: 14, color: colors.textSecondary },
@@ -298,7 +304,7 @@ const s = StyleSheet.create({
   footer: { flexDirection: 'row', padding: 16, gap: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
   priBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   priBtnD: { opacity: 0.4 },
-  priBtnT: { fontSize: 15, fontWeight: '700', color: '#000000' },
+  priBtnT: { fontSize: 15, fontWeight: '700', color: colors.textLight },
   secBtn: { paddingHorizontal: 24, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   secBtnT: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
   vsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 24 },
@@ -322,7 +328,7 @@ const s = StyleSheet.create({
   prA: { backgroundColor: 'rgba(0,255,0,0.06)', borderWidth: 1, borderColor: 'rgba(0,255,0,0.15)' },
   pchk: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   pchkA: { backgroundColor: colors.primary, borderColor: colors.primary },
-  pchkM: { fontSize: 12, fontWeight: '800', color: '#000000' },
+  pchkM: { fontSize: 12, fontWeight: '800', color: colors.textLight },
   pn: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
   prole: { fontSize: 11, color: colors.textMuted },
   capBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(255,204,0,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -332,5 +338,5 @@ const s = StyleSheet.create({
   cfT: { fontSize: 24, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' },
   cfS: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 20 },
   startBtn: { backgroundColor: colors.primary, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
-  startBtnT: { fontSize: 16, fontWeight: '800', color: '#000000' },
+  startBtnT: { fontSize: 16, fontWeight: '800', color: colors.textLight },
 });

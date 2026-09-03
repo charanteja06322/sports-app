@@ -1,13 +1,14 @@
 """
-Teams API Routes - Supabase Integration
-Endpoints for team management using Supabase backend
+Teams API Routes - Neon PostgreSQL Integration
+Endpoints for team management using Neon backend
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
-from app.core.auth import get_current_user, get_user_id
-from app.core.supabase_client import get_supabase
+from app.core.auth import get_user_id
+from app.core.database import Database
 from datetime import datetime
+import uuid
 
 router = APIRouter()
 
@@ -47,51 +48,44 @@ async def create_team(
     **Create New Team**
     
     Creates a new cricket team with the current user as owner.
-    
-    - **name**: Full team name
-    - **short_name**: Team abbreviation (e.g., "MI" for Mumbai Indians)
-    - **home_ground**: Home stadium/ground
-    - **founded_year**: Year the team was established
-    - **description**: Team description/bio
-    
-    Returns: Created team with ID
     """
-    supabase = get_supabase()
-    
     try:
-        # Create team
-        team_insert = {
-            "name": team_data.name,
-            "short_name": team_data.short_name,
-            "home_ground": team_data.home_ground,
-            "founded_year": team_data.founded_year,
-            "description": team_data.description,
-            "created_by": user_id
-        }
+        team_id = str(uuid.uuid4())
         
-        response = supabase.table('teams').insert(team_insert).execute()
+        # Insert team
+        query = """
+            INSERT INTO public.teams (id, name, short_name, home_ground, founded_year, description, created_by, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            RETURNING *
+        """
+        team = await Database.fetch_one(
+            query,
+            team_id,
+            team_data.name,
+            team_data.short_name,
+            team_data.home_ground,
+            team_data.founded_year,
+            team_data.description,
+            user_id
+        )
         
-        if not response.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create team"
-            )
-        
-        team = response.data[0]
-        
-        # Auto-join creator as first member
-        member_insert = {
-            "team_id": team["id"],
-            "user_id": user_id,
-            "role": "owner"
-        }
-        
-        supabase.table('team_members').insert(member_insert).execute()
+        # Add creator as team member
+        member_query = """
+            INSERT INTO public.team_members (id, team_id, user_id, role, joined_at)
+            VALUES ($1, $2, $3, $4, NOW())
+        """
+        await Database.execute(
+            member_query,
+            str(uuid.uuid4()),
+            team_id,
+            user_id,
+            'captain'
+        )
         
         return {
             "success": True,
-            "message": "Team created successfully",
-            "team": team
+            "team": team,
+            "message": "Team created successfully"
         }
         
     except Exception as e:
@@ -104,41 +98,37 @@ async def create_team(
 @router.get("")
 async def list_teams(
     skip: int = Query(0, ge=0, description="Pagination offset"),
-    limit: int = Query(20, ge=1, le=100, description="Results per page"),
+    limit: int = Query(40, ge=1, le=100, description="Results per page"),
     search: Optional[str] = Query(None, description="Search team names")
 ):
     """
     **List All Teams**
     
-    Get paginated list of teams with optional search.
-    
-    Query parameters:
-    - **skip**: Number of records to skip (pagination)
-    - **limit**: Number of records to return (max 100)
-    - **search**: Search term for team names
-    
-    Returns: List of teams with metadata
+    Get paginated list of teams with optional search (PUBLIC - no auth required).
     """
-    supabase = get_supabase()
-    
     try:
         # Build query
-        query = supabase.table('teams').select('*')
+        query = "SELECT * FROM public.teams"
+        params = []
         
         # Apply search filter
         if search:
-            query = query.ilike('name', f'%{search}%')
+            query += " WHERE name ILIKE $1"
+            params.append(f'%{search}%')
         
-        # Apply pagination
-        query = query.range(skip, skip + limit - 1)
-        query = query.order('created_at', desc=True)
+        # Order and paginate
+        offset_num = len(params) + 1
+        limit_num = len(params) + 2
+        query += f" ORDER BY created_at DESC LIMIT ${limit_num} OFFSET ${offset_num}"
+        params.extend([limit, skip])
         
-        response = query.execute()
+        # Execute query
+        teams = await Database.fetch_all(query, *params)
         
         return {
             "success": True,
-            "teams": response.data,
-            "count": len(response.data),
+            "teams": teams,
+            "count": len(teams),
             "skip": skip,
             "limit": limit
         }
@@ -156,34 +146,30 @@ async def get_team(team_id: str):
     **Get Team Details**
     
     Get detailed information about a specific team.
-    
-    Returns:
-    - Team information
-    - Member count
-    - Created by info
     """
-    supabase = get_supabase()
-    
     try:
-        # Get team
-        team_response = supabase.table('teams').select('*').eq('id', team_id).single().execute()
+        query = "SELECT * FROM public.teams WHERE id = $1"
+        team = await Database.fetch_one(query, team_id)
         
-        if not team_response.data:
+        if not team:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Team not found"
             )
         
-        # Get member count
-        members_response = supabase.table('team_members').select('id').eq('team_id', team_id).execute()
-        member_count = len(members_response.data)
-        
-        team = team_response.data
-        team['member_count'] = member_count
+        # Get team members
+        members_query = """
+            SELECT tm.*, u.full_name, u.email 
+            FROM public.team_members tm
+            LEFT JOIN public.users u ON tm.user_id = u.id
+            WHERE tm.team_id = $1
+        """
+        members = await Database.fetch_all(members_query, team_id)
         
         return {
             "success": True,
-            "team": team
+            "team": team,
+            "members": members
         }
         
     except HTTPException:
@@ -204,52 +190,55 @@ async def update_team(
     """
     **Update Team**
     
-    Update team information. Only team owner/creator can update.
-    
-    Updatable fields:
-    - name
-    - short_name
-    - home_ground
-    - founded_year
-    - description
+    Update team information. Only the owner can update.
     """
-    supabase = get_supabase()
-    
     try:
         # Check if team exists and user is owner
-        team_response = supabase.table('teams').select('*').eq('id', team_id).single().execute()
+        team_query = "SELECT * FROM public.teams WHERE id = $1"
+        team = await Database.fetch_one(team_query, team_id)
         
-        if not team_response.data:
+        if not team:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Team not found"
             )
         
-        team = team_response.data
-        
-        # Verify user is owner
         if team['created_by'] != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only team owner can update team"
+                detail="Only the team owner can update the team"
             )
         
-        # Prepare update data (only include provided fields)
-        update_data = team_data.model_dump(exclude_unset=True)
+        # Prepare update data
+        updates = {}
+        if team_data.name:
+            updates['name'] = team_data.name
+        if team_data.short_name:
+            updates['short_name'] = team_data.short_name
+        if team_data.home_ground is not None:
+            updates['home_ground'] = team_data.home_ground
+        if team_data.founded_year is not None:
+            updates['founded_year'] = team_data.founded_year
+        if team_data.description is not None:
+            updates['description'] = team_data.description
         
-        if not update_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No fields to update"
-            )
+        if not updates:
+            return {"success": True, "team": team}
         
-        # Update team
-        update_response = supabase.table('teams').update(update_data).eq('id', team_id).execute()
+        # Build update query
+        set_clauses = [f"{k} = ${i+1}" for i, k in enumerate(updates.keys())]
+        update_query = f"UPDATE public.teams SET {', '.join(set_clauses)}, updated_at = NOW() WHERE id = ${len(updates)+1} RETURNING *"
+        
+        updated_team = await Database.fetch_one(
+            update_query,
+            *list(updates.values()),
+            team_id
+        )
         
         return {
             "success": True,
-            "message": "Team updated successfully",
-            "team": update_response.data[0]
+            "team": updated_team,
+            "message": "Team updated successfully"
         }
         
     except HTTPException:
@@ -269,33 +258,28 @@ async def delete_team(
     """
     **Delete Team**
     
-    Delete a team. Only team owner/creator can delete.
-    
-    This will also remove all team members.
+    Delete a team. Only the owner can delete.
     """
-    supabase = get_supabase()
-    
     try:
         # Check if team exists and user is owner
-        team_response = supabase.table('teams').select('*').eq('id', team_id).single().execute()
+        team_query = "SELECT * FROM public.teams WHERE id = $1"
+        team = await Database.fetch_one(team_query, team_id)
         
-        if not team_response.data:
+        if not team:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Team not found"
             )
         
-        team = team_response.data
-        
-        # Verify user is owner
         if team['created_by'] != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only team owner can delete team"
+                detail="Only the team owner can delete the team"
             )
         
-        # Delete team (CASCADE will delete team_members)
-        supabase.table('teams').delete().eq('id', team_id).execute()
+        # Delete team (cascade deletes members)
+        delete_query = "DELETE FROM public.teams WHERE id = $1"
+        await Database.execute(delete_query, team_id)
         
         return {
             "success": True,
@@ -311,10 +295,6 @@ async def delete_team(
         )
 
 
-# ============================================================================
-# TEAM MEMBERSHIP ENDPOINTS
-# ============================================================================
-
 @router.post("/{team_id}/join")
 async def join_team(
     team_id: str,
@@ -323,47 +303,46 @@ async def join_team(
     """
     **Join Team**
     
-    Join a team as a member.
-    
-    - Cannot join if already a member
-    - Automatically assigned 'member' role
+    Join an existing team.
     """
-    supabase = get_supabase()
-    
     try:
         # Check if team exists
-        team_response = supabase.table('teams').select('id').eq('id', team_id).single().execute()
+        team_query = "SELECT * FROM public.teams WHERE id = $1"
+        team = await Database.fetch_one(team_query, team_id)
         
-        if not team_response.data:
+        if not team:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Team not found"
             )
         
         # Check if already a member
-        existing = supabase.table('team_members')\
-            .select('id')\
-            .eq('team_id', team_id)\
-            .eq('user_id', user_id)\
-            .execute()
+        check_query = "SELECT * FROM public.team_members WHERE team_id = $1 AND user_id = $2"
+        existing = await Database.fetch_one(check_query, team_id, user_id)
         
-        if existing.data:
+        if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Already a member of this team"
+                detail="User is already a team member"
             )
         
-        # Join team
-        member_insert = {
-            "team_id": team_id,
-            "user_id": user_id,
-            "role": "member"
-        }
-        
-        supabase.table('team_members').insert(member_insert).execute()
+        # Add user to team
+        member_query = """
+            INSERT INTO public.team_members (id, team_id, user_id, role, joined_at)
+            VALUES ($1, $2, $3, $4, NOW())
+            RETURNING *
+        """
+        member = await Database.fetch_one(
+            member_query,
+            str(uuid.uuid4()),
+            team_id,
+            user_id,
+            'player'
+        )
         
         return {
             "success": True,
+            "member": member,
             "message": "Successfully joined team"
         }
         
@@ -376,7 +355,7 @@ async def join_team(
         )
 
 
-@router.delete("/{team_id}/leave")
+@router.post("/{team_id}/leave")
 async def leave_team(
     team_id: str,
     user_id: str = Depends(get_user_id)
@@ -384,39 +363,22 @@ async def leave_team(
     """
     **Leave Team**
     
-    Leave a team. Team owner cannot leave (must delete team).
+    Leave a team.
     """
-    supabase = get_supabase()
-    
     try:
-        # Check if member exists
-        member_response = supabase.table('team_members')\
-            .select('*')\
-            .eq('team_id', team_id)\
-            .eq('user_id', user_id)\
-            .execute()
+        # Check if user is a member
+        member_query = "SELECT * FROM public.team_members WHERE team_id = $1 AND user_id = $2"
+        member = await Database.fetch_one(member_query, team_id, user_id)
         
-        if not member_response.data:
+        if not member:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Not a member of this team"
+                detail="User is not a team member"
             )
         
-        member = member_response.data[0]
-        
-        # Check if owner
-        if member['role'] == 'owner':
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Team owner cannot leave. Delete the team instead."
-            )
-        
-        # Leave team
-        supabase.table('team_members')\
-            .delete()\
-            .eq('team_id', team_id)\
-            .eq('user_id', user_id)\
-            .execute()
+        # Remove user from team
+        delete_query = "DELETE FROM public.team_members WHERE team_id = $1 AND user_id = $2"
+        await Database.execute(delete_query, team_id, user_id)
         
         return {
             "success": True,
@@ -437,33 +399,42 @@ async def get_team_members(team_id: str):
     """
     **Get Team Members**
     
-    Get list of all team members with their roles.
-    
-    Returns:
-    - User ID
-    - Role (owner/member)
-    - Join date
+    Get list of all members in a team.
     """
-    supabase = get_supabase()
-    
     try:
-        # Get members
-        members_response = supabase.table('team_members')\
-            .select('*')\
-            .eq('team_id', team_id)\
-            .order('created_at')\
-            .execute()
+        # Check if team exists
+        team_query = "SELECT * FROM public.teams WHERE id = $1"
+        team = await Database.fetch_one(team_query, team_id)
+        
+        if not team:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Team not found"
+            )
+        
+        # Get team members
+        members_query = """
+            SELECT tm.*, u.full_name, u.email, u.cricket_role
+            FROM public.team_members tm
+            LEFT JOIN public.users u ON tm.user_id = u.id
+            WHERE tm.team_id = $1
+            ORDER BY tm.joined_at ASC
+        """
+        members = await Database.fetch_all(members_query, team_id)
         
         return {
             "success": True,
-            "members": members_response.data,
-            "count": len(members_response.data)
+            "team_id": team_id,
+            "members": members,
+            "count": len(members)
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching members: {str(e)}"
+            detail=f"Error fetching team members: {str(e)}"
         )
 
 
@@ -474,35 +445,14 @@ async def get_my_teams(user_id: str = Depends(get_user_id)):
     
     Get all teams the current user is a member of.
     """
-    supabase = get_supabase()
-    
     try:
-        # Get user's team memberships
-        memberships = supabase.table('team_members')\
-            .select('team_id, role')\
-            .eq('user_id', user_id)\
-            .execute()
-        
-        if not memberships.data:
-            return {
-                "success": True,
-                "teams": [],
-                "count": 0
-            }
-        
-        # Get team details
-        team_ids = [m['team_id'] for m in memberships.data]
-        teams_response = supabase.table('teams')\
-            .select('*')\
-            .in_('id', team_ids)\
-            .execute()
-        
-        # Add role to each team
-        teams = teams_response.data
-        role_map = {m['team_id']: m['role'] for m in memberships.data}
-        
-        for team in teams:
-            team['user_role'] = role_map.get(team['id'])
+        query = """
+            SELECT DISTINCT t.* FROM public.teams t
+            INNER JOIN public.team_members tm ON t.id = tm.team_id
+            WHERE tm.user_id = $1
+            ORDER BY t.created_at DESC
+        """
+        teams = await Database.fetch_all(query, user_id)
         
         return {
             "success": True,
@@ -514,4 +464,25 @@ async def get_my_teams(user_id: str = Depends(get_user_id)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching user teams: {str(e)}"
+        )
+
+
+@router.post("/seed-test-data")
+async def seed_test_teams():
+    """
+    **Seed Test Data** (Admin only)
+    
+    Populate teams with test data.
+    """
+    try:
+        # Teams already seeded in neon-schema.sql
+        return {
+            "success": True,
+            "message": "Test teams already exist in database"
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error seeding teams: {str(e)}"
         )

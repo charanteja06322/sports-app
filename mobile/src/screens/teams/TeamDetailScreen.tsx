@@ -104,7 +104,7 @@ export function TeamDetailScreen() {
     return (
       <ScreenContainer style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </ScreenContainer>
     );
@@ -146,7 +146,7 @@ export function TeamDetailScreen() {
 
         {team.home_ground && (
           <View style={styles.infoRow}>
-            <Feather name="map-pin" size={20} color={colors.primary[600]} />
+            <Feather name="map-pin" size={20} color={colors.primary} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Home Ground</Text>
               <Text style={styles.infoValue}>{team.home_ground}</Text>
@@ -156,7 +156,7 @@ export function TeamDetailScreen() {
 
         {team.founded_year && (
           <View style={styles.infoRow}>
-            <Feather name="calendar" size={20} color={colors.primary[600]} />
+            <Feather name="calendar" size={20} color={colors.primary} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Founded</Text>
               <Text style={styles.infoValue}>{team.founded_year}</Text>
@@ -165,7 +165,7 @@ export function TeamDetailScreen() {
         )}
 
         <View style={styles.infoRow}>
-          <Feather name="users" size={20} color={colors.primary[600]} />
+          <Feather name="users" size={20} color={colors.primary} />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Members</Text>
             <Text style={styles.infoValue}>
@@ -213,7 +213,7 @@ export function TeamDetailScreen() {
             onPress={handleLeaveTeam}
             disabled={joining}
           >
-            <Feather name="log-out" size={20} color={colors.danger[600]} />
+            <Feather name="log-out" size={20} color={colors.error} />
             <Text style={styles.leaveButtonText}>Leave Team</Text>
           </TouchableOpacity>
         ) : (
@@ -232,7 +232,7 @@ export function TeamDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -246,20 +246,20 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
   },
   headerCard: {
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.backgroundCard,
     padding: 24,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral.border,
+    borderBottomColor: colors.border,
   },
   teamIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.primary[100],
+    backgroundColor: 'rgba(30,64,175,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -267,35 +267,35 @@ const styles = StyleSheet.create({
   teamInitial: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.primary[600],
+    color: colors.primary,
   },
   teamName: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   teamShortName: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.primary[600],
+    color: colors.primary,
     marginBottom: 12,
   },
   description: {
     fontSize: 14,
-    color: colors.secondary[600],
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
   infoCard: {
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.backgroundCard,
     padding: 20,
     marginTop: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 16,
   },
   infoRow: {
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral.border,
+    borderBottomColor: colors.border,
   },
   infoContent: {
     marginLeft: 16,
@@ -311,16 +311,16 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: colors.secondary[500],
+    color: colors.textMuted,
     marginBottom: 2,
   },
   infoValue: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
   },
   membersCard: {
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.backgroundCard,
     padding: 20,
     marginTop: 12,
   },
@@ -329,20 +329,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral.border,
+    borderBottomColor: colors.border,
   },
   memberAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.secondary[100],
+    backgroundColor: 'rgba(245,158,11,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   memberInitial: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.secondary[700],
+    color: colors.secondary,
   },
   memberInfo: {
     flex: 1,
@@ -351,15 +351,15 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 16,
     fontWeight: '500',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
   },
   memberRole: {
     fontSize: 12,
-    color: colors.secondary[500],
+    color: colors.textMuted,
     textTransform: 'capitalize',
   },
   jerseyBadge: {
-    backgroundColor: colors.primary[100],
+    backgroundColor: 'rgba(30,64,175,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   jerseyNumber: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary[600],
+    color: colors.primary,
   },
   actionContainer: {
     padding: 20,
@@ -378,16 +378,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239,68,68,0.05)',
     paddingVertical: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.danger[200],
+    borderColor: 'rgba(239,68,68,0.2)',
   },
   leaveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.danger[600],
+    color: colors.error,
     marginLeft: 8,
   },
 });

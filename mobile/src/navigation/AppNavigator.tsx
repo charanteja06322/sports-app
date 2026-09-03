@@ -14,7 +14,9 @@ import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { colors } from '../theme/colors';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -33,9 +35,12 @@ import { TeamsListScreen } from '../screens/teams/TeamsListScreen';
 import { TeamDetailScreen } from '../screens/teams/TeamDetailScreen';
 import { CreateTeamScreen } from '../screens/teams/CreateTeamScreen';
 import { MyTeamsScreen } from '../screens/teams/MyTeamsScreen';
+import TeamsBrowseScreen from '../screens/teams/TeamsBrowseScreen';
 
 // Match Screens
 import CreateMatchScreen from '../screens/matches/CreateMatchScreen';
+import MatchDetailScreen from '../screens/matches/MatchDetailScreen';
+import PostCreationScreen from '../screens/create/PostCreationScreen';
 
 // Tournament Screens
 import { TournamentsListScreen } from '../screens/tournaments/TournamentsListScreen';
@@ -44,23 +49,24 @@ import { CreateTournamentScreen } from '../screens/tournaments/CreateTournamentS
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// 5-Tab Bottom Navigation - Core Architecture
+// Instagram-Style Tab Navigator
 function MainTabNavigator() {
   return (
     <Tab.Navigator
       id="MainTabs"
       screenOptions={{
-        tabBarActiveTintColor: '#00FF00',
-        tabBarInactiveTintColor: '#5A6270',
+        tabBarActiveTintColor: colors.textPrimary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#0A0E13',
-          borderTopColor: '#2A3440',
-          borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 65,
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
+          borderTopWidth: 0.5,
+          paddingBottom: 6,
+          paddingTop: 6,
+          height: 50,
         },
         headerShown: false,
+        tabBarShowLabel: false, // Instagram doesn't show labels
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
@@ -71,9 +77,12 @@ function MainTabNavigator() {
         name="Home" 
         component={HomeScreen}
         options={{
-          title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22 }}>{focused ? '🏠' : '🏠'}</Text>
+            <Ionicons 
+              name={focused ? "home" : "home-outline"} 
+              size={26} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -81,9 +90,12 @@ function MainTabNavigator() {
         name="Matches" 
         component={MatchesScreen}
         options={{
-          title: 'Matches',
           tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22 }}>{focused ? '🏏' : '🏏'}</Text>
+            <MaterialCommunityIcons 
+              name={focused ? "cricket" : "cricket"} 
+              size={26} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -91,30 +103,25 @@ function MainTabNavigator() {
         name="Create" 
         component={CreateScreen}
         options={{
-          title: 'Create',
           tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: '#00FF00',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: -20,
-            }}>
-              <Text style={{ fontSize: 28, color: '#000000', fontWeight: '300' }}>+</Text>
-            </View>
+            <Feather 
+              name="plus-square" 
+              size={26} 
+              color={color} 
+            />
           ),
-          tabBarLabel: () => null,
         }}
       />
       <Tab.Screen 
         name="Discover" 
         component={DiscoverScreen}
         options={{
-          title: 'Discover',
           tabBarIcon: ({ color, focused }) => (
-            <Text style={{ fontSize: 22 }}>{focused ? '🔍' : '🔍'}</Text>
+            <Feather 
+              name="search" 
+              size={26} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -122,17 +129,22 @@ function MainTabNavigator() {
         name="Profile" 
         component={ProfileScreen}
         options={{
-          title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 28,
               height: 28,
               borderRadius: 14,
-              backgroundColor: focused ? '#00FF00' : '#2A3440',
+              borderWidth: focused ? 2 : 0,
+              borderColor: colors.textPrimary,
               alignItems: 'center',
               justifyContent: 'center',
+              backgroundColor: colors.backgroundGray,
             }}>
-              <Text style={{ fontSize: 14, fontWeight: 'bold', color: focused ? '#000000' : '#FFFFFF' }}>U</Text>
+              <Ionicons 
+                name="person" 
+                size={16} 
+                color={focused ? colors.textPrimary : colors.textSecondary} 
+              />
             </View>
           ),
         }}
@@ -154,9 +166,10 @@ export default function AppNavigator() {
         id="RootStack"
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#1a1a2e',
+            backgroundColor: colors.background,
           },
-          headerTintColor: '#fff',
+          headerTintColor: colors.textPrimary,
+          headerShadowVisible: true,
         }}
       >
         {!isAuthenticated ? (
@@ -188,8 +201,11 @@ export default function AppNavigator() {
             <Stack.Screen name="TeamDetail" component={TeamDetailScreen} options={{ title: 'Team Details' }} />
             <Stack.Screen name="CreateTeam" component={CreateTeamScreen} options={{ title: 'Create Team' }} />
             <Stack.Screen name="MyTeams" component={MyTeamsScreen} options={{ title: 'My Teams' }} />
+            <Stack.Screen name="TeamsBrowse" component={TeamsBrowseScreen} options={{ headerShown: false }} />
             {/* Match Screens */}
             <Stack.Screen name="CreateMatch" component={CreateMatchScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="MatchDetail" component={MatchDetailScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CreatePost" component={PostCreationScreen} options={{ headerShown: false }} />
             {/* Tournament Screens */}
             <Stack.Screen name="TournamentsList" component={TournamentsListScreen} options={{ title: 'Tournaments' }} />
             <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} options={{ title: 'Create Tournament' }} />

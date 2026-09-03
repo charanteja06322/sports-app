@@ -1,8 +1,11 @@
+/**
+ * MOLDIN - Professional Login Screen
+ * Clean, modern design matching new UI/UX
+ */
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,11 +15,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
-
-const loginDesignImage = require('../../../assets/startup/login_welcome.jpeg');
 
 export default function LoginScreen({ navigation }: any) {
   const { signIn, signInWithGoogle } = useAuth();
@@ -63,13 +64,6 @@ export default function LoginScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Image source={loginDesignImage} style={styles.backgroundImage} blurRadius={10} />
-      <View style={styles.backgroundOverlay} />
-      <View style={[styles.glow, styles.glowTop]} />
-      <View style={[styles.glow, styles.glowBottom]} />
-      <View style={[styles.curve, styles.curveLeft]} />
-      <View style={[styles.curve, styles.curveRight]} />
-
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -79,22 +73,25 @@ export default function LoginScreen({ navigation }: any) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>P</Text>
+            <View style={styles.logo}>
+              <MaterialCommunityIcons name="cricket" size={32} color={colors.primary} />
             </View>
-            <Text style={styles.title}>Welcome</Text>
-            <Text style={styles.subtitle}>Sign in to continue your sports journey.</Text>
+            <Text style={styles.brandName}>MOLDIN</Text>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Sign in to your account to continue</Text>
           </View>
 
+          {/* Form */}
           <View style={styles.formCard}>
-            <View style={styles.inputSection}>
-              <Text style={styles.label}>Email or Username</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
               <View style={styles.inputContainer}>
-                <Feather name="user" size={18} color="#9FE98B" />
+                <Feather name="mail" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your email or username"
+                  placeholder="Enter your email"
                   placeholderTextColor={colors.textMuted}
                   value={email}
                   onChangeText={setEmail}
@@ -104,10 +101,10 @@ export default function LoginScreen({ navigation }: any) {
               </View>
             </View>
 
-            <View style={styles.inputSection}>
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputContainer}>
-                <Feather name="lock" size={18} color="#9FE98B" />
+                <Feather name="lock" size={20} color={colors.textSecondary} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
@@ -116,10 +113,10 @@ export default function LoginScreen({ navigation }: any) {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
-                <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Feather
                     name={showPassword ? 'eye-off' : 'eye'}
-                    size={18}
+                    size={20}
                     color={colors.textSecondary}
                   />
                 </TouchableOpacity>
@@ -127,45 +124,46 @@ export default function LoginScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity style={styles.forgotPassword} onPress={handleForgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.primaryButton, loading && styles.disabledButton]}
               onPress={handleLogin}
               disabled={loading}
-              activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color="#07110A" />
+                <ActivityIndicator color={colors.textLight} />
               ) : (
                 <Text style={styles.primaryButtonText}>Sign In</Text>
               )}
             </TouchableOpacity>
 
-            <View style={styles.dividerRow}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.divider} />
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
             </View>
 
             <TouchableOpacity
-              style={[styles.secondaryButton, googleLoading && styles.disabledButton]}
+              style={[styles.googleButton, googleLoading && styles.disabledButton]}
               onPress={handleGoogleSignIn}
               disabled={googleLoading}
-              activeOpacity={0.85}
             >
-              <View style={styles.googleBadge}>
-                <Text style={styles.googleBadgeText}>G</Text>
-              </View>
               {googleLoading ? (
                 <ActivityIndicator color={colors.textPrimary} />
               ) : (
-                <Text style={styles.secondaryButtonText}>Continue with Google</Text>
+                <>
+                  <View style={styles.googleIcon}>
+                    <Text style={styles.googleIconText}>G</Text>
+                  </View>
+                  <Text style={styles.googleButtonText}>Continue with Google</Text>
+                </>
               )}
             </TouchableOpacity>
           </View>
 
+          {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
@@ -181,116 +179,70 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#05080B',
+    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
   },
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.24,
-  },
-  backgroundOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(5, 9, 13, 0.88)',
-  },
-  glow: {
-    position: 'absolute',
-    borderRadius: 220,
-    backgroundColor: 'rgba(71, 227, 107, 0.10)',
-  },
-  glowTop: {
-    width: 260,
-    height: 260,
-    top: -90,
-    left: -40,
-  },
-  glowBottom: {
-    width: 280,
-    height: 280,
-    bottom: -120,
-    right: -70,
-  },
-  curve: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    borderWidth: 1,
-    borderColor: 'rgba(120, 228, 139, 0.12)',
-  },
-  curveLeft: {
-    top: -190,
-    left: -120,
-  },
-  curveRight: {
-    bottom: -180,
-    right: -110,
-  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 32,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 40,
   },
-  logoCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 1.5,
-    borderColor: 'rgba(130, 236, 146, 0.85)',
+  logo: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.primaryLight + '15',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
-    backgroundColor: 'rgba(18, 35, 23, 0.45)',
+    marginBottom: 20,
   },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#A8F593',
-  },
-  title: {
-    fontSize: 44,
+  brandName: {
+    fontSize: 32,
     fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: 10,
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    lineHeight: 22,
-    color: '#A1ACB8',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   formCard: {
-    borderRadius: 28,
-    padding: 24,
-    backgroundColor: 'rgba(8, 13, 17, 0.72)',
-    borderWidth: 1,
-    borderColor: 'rgba(86, 101, 118, 0.22)',
+    marginBottom: 24,
   },
-  inputSection: {
-    marginBottom: 18,
+  inputGroup: {
+    marginBottom: 20,
   },
   label: {
-    color: '#F6F8FA',
     fontSize: 15,
-    fontWeight: '500',
-    marginBottom: 10,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    height: 60,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(10, 14, 18, 0.72)',
+    backgroundColor: colors.backgroundCard,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(85, 98, 112, 0.45)',
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    height: 56,
+    gap: 12,
   },
   input: {
     flex: 1,
@@ -301,74 +253,69 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginBottom: 24,
   },
-  forgotPasswordText: {
-    fontSize: 15,
-    color: '#9FE98B',
-    fontWeight: '500',
+  forgotText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
   },
   primaryButton: {
-    height: 58,
-    borderRadius: 16,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#32D15F',
-    marginBottom: 22,
-    shadowColor: '#32D15F',
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
+    marginBottom: 20,
   },
   primaryButtonText: {
-    fontSize: 19,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#08120A',
+    color: colors.textLight,
   },
   disabledButton: {
-    opacity: 0.7,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 22,
+    opacity: 0.6,
   },
   divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(130, 145, 160, 0.28)',
+    backgroundColor: colors.border,
   },
   dividerText: {
-    marginHorizontal: 14,
+    marginHorizontal: 16,
     fontSize: 14,
-    color: '#98A4AF',
+    fontWeight: '600',
+    color: colors.textMuted,
   },
-  secondaryButton: {
-    height: 58,
-    borderRadius: 16,
+  googleButton: {
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: 'rgba(108, 121, 136, 0.42)',
-    backgroundColor: 'rgba(10, 14, 18, 0.82)',
+    borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    gap: 12,
   },
-  googleBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  googleIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  googleBadgeText: {
-    fontSize: 18,
+  googleIconText: {
+    fontSize: 14,
     fontWeight: '700',
     color: '#DB4437',
   },
-  secondaryButtonText: {
-    fontSize: 17,
+  googleButtonText: {
+    fontSize: 16,
     fontWeight: '600',
     color: colors.textPrimary,
   },
@@ -376,15 +323,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 20,
   },
   footerText: {
     fontSize: 15,
-    color: '#A1ACB8',
+    color: colors.textSecondary,
   },
   footerLink: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#8DE97B',
+    color: colors.primary,
   },
 });

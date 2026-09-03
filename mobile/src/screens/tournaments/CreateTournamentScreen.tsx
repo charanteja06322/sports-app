@@ -122,7 +122,7 @@ export function CreateTournamentScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: 24,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.neutral.text,
+    color: colors.textPrimary,
     marginBottom: 24,
   },
   pickerContainer: {
@@ -139,12 +139,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.neutral.text,
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   picker: {
-    backgroundColor: colors.neutral.surface,
-    color: colors.neutral.text,
+    backgroundColor: colors.backgroundCard,
+    color: colors.textPrimary,
   },
   button: {
     marginTop: 24,

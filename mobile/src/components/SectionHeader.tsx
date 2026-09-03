@@ -35,11 +35,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
   },
   actionLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.primary[600],
+    color: colors.primary,
   },
 });

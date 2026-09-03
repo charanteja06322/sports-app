@@ -6,9 +6,13 @@
 // FastAPI Backend URL
 // For local development on physical device or emulator
 export const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.0.105:8000/api/v1'  // Development - your machine's IP
+  ? 'http://localhost:8000/api/v1'  // Try localhost first (works with some setups)
   : 'https://your-production-api.com/api/v1';  // Production (deploy backend first)
 
+// Alternative URLs if localhost doesn't work:
+// iOS simulator: http://localhost:8000/api/v1
+// Android emulator: http://10.0.2.2:8000/api/v1 (add firewall exception if needed)
+// Physical device: http://YOUR_MACHINE_IP:8000/api/v1 (e.g., http://192.168.x.x:8000/api/v1 or http://10.10.4.16:8000/api/v1)
 // For EAS build preview/production, use deployed backend URL
 // export const API_BASE_URL = 'https://YOUR_DEPLOYED_URL/api/v1';
 

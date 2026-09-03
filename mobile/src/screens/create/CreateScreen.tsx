@@ -64,7 +64,7 @@ export default function CreateScreen({ navigation }: any) {
         </TouchableOpacity>
 
         {/* Create Post */}
-        <TouchableOpacity style={styles.createCard} onPress={() => Alert.alert('Create Post', 'Post creation coming soon.')}>
+        <TouchableOpacity style={styles.createCard} onPress={() => navigation.navigate('CreatePost')}>
           <View style={styles.cardIcon}>
             <Text style={styles.iconEmoji}>📝</Text>
           </View>
@@ -138,16 +138,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   playNowCard: {
     borderWidth: 2,
     borderColor: colors.primary,
+    backgroundColor: colors.primary + '05',
   },
   cardIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+    backgroundColor: colors.primary + '10',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,

@@ -4,7 +4,7 @@ Business logic for user authentication using Supabase Auth
 """
 from fastapi import HTTPException, status
 from ..schemas.auth import UserSignupRequest, UserLoginRequest, AuthResponse, UserResponse
-from ..core.supabase_client import get_supabase
+from app.core.db_wrapper import db
 from gotrue.errors import AuthApiError
 
 

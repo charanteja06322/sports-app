@@ -90,13 +90,13 @@ export function TeamsListScreen() {
         )}
         {item.home_ground && (
           <View style={styles.groundContainer}>
-            <Feather name="map-pin" size={12} color={colors.secondary[400]} />
+            <Feather name="map-pin" size={12} color={colors.primary} />
             <Text style={styles.groundText}>{item.home_ground}</Text>
           </View>
         )}
       </View>
 
-      <Feather name="chevron-right" size={24} color={colors.secondary[400]} />
+      <Feather name="chevron-right" size={24} color={colors.textMuted} />
     </TouchableOpacity>
   );
 
@@ -104,7 +104,7 @@ export function TeamsListScreen() {
     return (
       <ScreenContainer style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary[500]} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading teams...</Text>
         </View>
       </ScreenContainer>
@@ -118,13 +118,13 @@ export function TeamsListScreen() {
         <Feather
           name="search"
           size={20}
-          color={colors.secondary[400]}
+          color={colors.textMuted}
           style={styles.searchIcon}
         />
         <TextInput
           style={styles.searchInput}
           placeholder="Search teams..."
-          placeholderTextColor={colors.secondary[400]}
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -146,7 +146,7 @@ export function TeamsListScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.primary[500]}
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
@@ -176,7 +176,7 @@ export function TeamsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.background,
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -186,12 +186,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.backgroundCard,
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 12,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.neutral.border,
+    borderColor: colors.border,
   },
   searchIcon: {
     marginRight: 12,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: colors.secondary[900],
+    color: colors.textPrimary,
   },
   header: {
     flexDirection: 'row',
@@ -219,11 +219,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
   },
   headerCount: {
     fontSize: 14,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -232,18 +232,23 @@ const styles = StyleSheet.create({
   teamCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.backgroundCard,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.neutral.border,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   teamIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary[100],
+    backgroundColor: colors.primary + '10',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -254,7 +259,7 @@ const styles = StyleSheet.create({
   teamInitial: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.primary[600],
+    color: colors.primary,
   },
   teamInfo: {
     flex: 1,
@@ -262,13 +267,13 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   teamShortName: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.primary[600],
+    color: colors.primary,
     marginBottom: 4,
   },
   groundContainer: {
@@ -278,7 +283,7 @@ const styles = StyleSheet.create({
   },
   groundText: {
     fontSize: 12,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
     marginLeft: 4,
   },
   emptyContainer: {
@@ -292,12 +297,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.secondary[900],
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.secondary[500],
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   fab: {
@@ -307,10 +312,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary[600],
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
