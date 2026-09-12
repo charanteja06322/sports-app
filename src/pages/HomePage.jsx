@@ -1,170 +1,177 @@
-import { useState, useEffect } from 'react';
-import { useSport } from '../context/SportContext';
-import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAervoStore, SPORTS } from "../store/aervoStore";
+import { PageHeader, Button, EmptyState } from "../components/aervo/CommonUI";
+import { PostCard } from "../components/aervo/PostCard";
+import { PostComposer } from "../components/aervo/PostComposer";
+import { ScoreboardDemo } from "../components/aervo/ScoreboardDemo";
+import { IconPlus, IconArrowUpRight, IconClock, IconMapPin, IconMessageCircle } from "../components/aervo/AervoIcons";
 
-const HomePage = () => {
-  const { selectedSport, sports } = useSport();
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
-  const [content, setContent] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function HomePage() {
+  const activeSportName = useAervoStore((s) => s.activeSport);
+  const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
+  const me = useAervoStore((s) => s.me);
+  const posts = useAervoStore((s) => s.posts);
+  const games = useAervoStore((s) => s.games);
 
-  // Sample content based on sports
-  const sampleContent = {
-    football: [
-      { title: "Weekend Football Match", description: "Join our casual game", type: "match" },
-      { title: "Football Skills Workshop", description: "Improve your techniques", type: "event" }
-    ],
-    basketball: [
-      { title: "Basketball Pickup Game", description: "Half-court game", type: "match" },
-      { title: "Shooting Practice Session", description: "Work on your shot", type: "event" }
-    ],
-    tennis: [
-      { title: "Tennis Doubles Match", description: "Join our doubles match", type: "match" },
-      { title: "Serve Improvement Clinic", description: "Work on your serve", type: "event" }
-    ],
-    cricket: [
-      { title: "Weekend Cricket Match", description: "Join our T20 game", type: "match" },
-      { title: "Batting Practice Session", description: "Work on your cover drive", type: "event" }
-    ]
-  };
+  const [composerOpen, setComposerOpen] = useState(false);
 
-  useEffect(() => {
-    setTimeout(() => {
-      const sportContent = sampleContent[selectedSport?.id] || [
-        { title: "Select a Sport", description: "Choose your favorite sport in profile to see personalized content", type: "info" }
-      ];
-      setContent(sportContent);
-      setLoading(false);
-    }, 500);
-  }, [selectedSport]);
-
-  const handleCreateMatch = () => {
-    navigate('/matches/create');
-  };
+  // Filter posts and games by active sport lens
+  const sportPosts = posts.filter((p) => p.sport === activeSportName);
+  const sportGames = games.filter((g) => g.sport === activeSportName);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header with user info and actions */}
-      {currentUser && (
-        <div className="bg-white dark:bg-gray-800 shadow-sm">
-          <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center space-x-4 mb-3 sm:mb-0">
-              <div className="flex items-center space-x-2">
-                <span className="font-medium">{currentUser.displayName || 'User'}</span>
-              </div>
+    <main className="mx-auto max-w-[1240px] px-5 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-11">
+      {/* Page Header */}
+      <PageHeader
+        eyebrow={`${sport.name} / Community Home`}
+        title={me?.displayName ? `Welcome back, ${me.displayName.split(" ")[0]}.` : "Your sport, in motion."}
+        body={`A focused place for ${sport.name.toLowerCase()} athletes to connect, organize games, and share what is happening on the field.`}
+        action={
+          <Button
+            onClick={() => setComposerOpen(true)}
+            style={{ backgroundColor: sport.accent }}
+            className="text-white shadow-md hover:brightness-105"
+          >
+            <IconPlus size={16} />
+            <span>Share a moment</span>
+          </Button>
+        }
+      />
+
+      {/* Main Grid: Feed + Right Sidebar */}
+      <div className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Left: Feed */}
+        <section className="min-w-0 space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="mono-font text-[10px] uppercase tracking-[0.18em] text-[#71807d]">
+                The {sport.name.toLowerCase()} feed
+              </p>
+              <h2 className="display-font mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#253638]">
+                From the community
+              </h2>
             </div>
-            
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleCreateMatch}
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-md transition-colors"
+            <Link
+              to="/players"
+              className="text-[12px] font-bold text-[#277863] hover:underline flex items-center gap-1"
+            >
+              Find athletes <IconArrowUpRight size={14} />
+            </Link>
+          </div>
+
+          {sportPosts.length === 0 ? (
+            <EmptyState
+              icon={<IconMessageCircle size={24} />}
+              title={`Your ${sport.name.toLowerCase()} feed is open.`}
+              body={`There are no ${sport.name.toLowerCase()} posts yet. Be the first to share a real moment from your court or field.`}
+              action={
+                <Button onClick={() => setComposerOpen(true)}>
+                  <IconPlus size={15} />
+                  <span>Create a post</span>
+                </Button>
+              }
+            />
+          ) : (
+            <div className="space-y-5">
+              {sportPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
+
+          {/* Interactive Live Scoreboard Demo */}
+          <div className="pt-6">
+            <ScoreboardDemo />
+          </div>
+        </section>
+
+        {/* Right Sidebar */}
+        <aside className="space-y-6">
+          {/* Upcoming Games Card */}
+          <section className="rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p
+                  className="mono-font text-[10px] uppercase tracking-[0.18em] font-semibold"
+                  style={{ color: sport.deep }}
+                >
+                  On the calendar
+                </p>
+                <h2 className="display-font mt-1.5 text-xl font-bold tracking-tight text-[#253638]">
+                  Open {sport.name} Games
+                </h2>
+              </div>
+              <Link
+                to="/games"
+                className="grid size-8 place-items-center rounded-full bg-[#FAF7F2] text-[#277863] hover:bg-[#EAE4D7]"
               >
-                Create Match
-              </button>
+                <IconArrowUpRight size={16} />
+              </Link>
             </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Main content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          {/* Welcome section */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-              Welcome to SportsApp
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
-              Find, create, and join sports teams in your area. Connect with players who share your passion for the game.
-            </p>
-          </div>
-          
-          {/* For You Section - Sport Specific */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-              For You ({selectedSport ? sports.find(s => s.id === selectedSport.id)?.name : 'All Sports'})
-            </h2>
-            
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">Loading personalized content...</p>
-              </div>
+
+            {sportGames.length === 0 ? (
+              <p className="mt-4 text-[13px] leading-relaxed text-[#71807d]">
+                No {sport.name.toLowerCase()} games scheduled yet. Set one up for your circle!
+              </p>
             ) : (
-              <div className="space-y-4">
-                {content.map((item, index) => (
-                  <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg p-4">
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-2">
-                      {item.description}
+              <div className="mt-4 space-y-3">
+                {sportGames.slice(0, 3).map((game) => (
+                  <Link
+                    to={`/games/${game.id}`}
+                    key={game.id}
+                    className="block rounded-2xl border border-[#DDD6C8] p-3.5 transition-all hover:border-[#277863]/60 hover:bg-[#FAF7F2]/50"
+                  >
+                    <p className="truncate text-[13px] font-bold text-[#253638]">
+                      {game.title}
                     </p>
-                    <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="px-2 py-0.5 text-xs {item.type === 'match' ? 'bg-blue-100 text-blue-800' : item.type === 'event' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'} rounded">
-                        {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                      </span>
-                      <span>{selectedSport ? sports.find(s => s.id === selectedSport.id)?.name : 'All Sports'}</span>
-                    </div>
-                  </div>
+                    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-[#71807d]">
+                      <IconClock size={12} />
+                      <span>{new Date(game.scheduledAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    </p>
+                    {game.location && (
+                      <p className="mt-1 flex items-center gap-1.5 text-[11px] text-[#71807d]">
+                        <IconMapPin size={12} />
+                        <span className="truncate">{game.location}</span>
+                      </p>
+                    )}
+                  </Link>
                 ))}
               </div>
             )}
-          </div>
-          
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Create Team
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Start your own sports team and invite friends to play.
-              </p>
-              <Link
-                to="/teams/create"
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded block text-center"
-              >
-                Create Team
-              </Link>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Join Teams
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Browse and join existing teams in your favorite sports.
-              </p>
-              <Link
-                to="/teams"
-                className="w-full bg-secondary-600 hover:bg-secondary-700 text-white py-2 px-4 rounded block text-center"
-              >
-                Browse Teams
-              </Link>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-                Find Players
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Connect with other players and build your sports network.
-              </p>
-              <Link
-                to="/friends"
-                className="w-full bg-info-600 hover:bg-info-700 text-white py-2 px-4 rounded block text-center"
-              >
-                Find Players
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-export default HomePage;
+            <div className="mt-5 border-t border-[#DDD6C8] pt-3">
+              <Link
+                to="/games"
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#277863] hover:underline"
+              >
+                View all games <IconArrowUpRight size={13} />
+              </Link>
+            </div>
+          </section>
+
+          {/* Aervo Principle Card */}
+          <section
+            className="relative overflow-hidden rounded-3xl p-6 text-white shadow-md"
+            style={{ backgroundColor: sport.deep }}
+          >
+            <div className="absolute -right-8 -top-8 size-32 rounded-full border border-white/15 pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 size-36 rounded-full border border-white/10 pointer-events-none" />
+            <p className="relative mono-font text-[10px] uppercase tracking-[0.2em] text-white/70 font-semibold">
+              Aervo principle
+            </p>
+            <h3 className="relative display-font mt-2 text-2xl font-bold leading-tight tracking-tight">
+              Real athletes.<br />Real matches.
+            </h3>
+            <p className="relative mt-3 text-[13px] leading-relaxed text-white/80">
+              Everything in Aervo is driven by genuine local athletes and real game scores. Seamlessly scoped to your active sport.
+            </p>
+          </section>
+        </aside>
+      </div>
+
+      {/* Post Composer Modal */}
+      {composerOpen && <PostComposer onClose={() => setComposerOpen(false)} />}
+    </main>
+  );
+}
