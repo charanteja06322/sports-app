@@ -1,54 +1,70 @@
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { SportProvider } from './context/SportContext';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import { Sidebar } from './components/aervo/Sidebar';
+import { Topbar } from './components/aervo/Topbar';
+import { SportStrip } from './components/aervo/SportStrip';
+import { MobileBottomNav } from './components/aervo/MobileBottomNav';
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ProfilePage from './pages/ProfilePage';
-import TeamsPage from './pages/TeamsPage';
-import CreateTeamPage from './pages/CreateTeamPage';
-import TeamDetailPage from './pages/TeamDetailPage';
-import FriendsPage from './pages/FriendsPage';
-import SettingsPage from './pages/SettingsPage';
-import MatchesPage from './pages/MatchesPage';
-import NotFoundPage from './pages/NotFoundPage';
-import LoadingSpinner from './components/LoadingSpinner';
-import './App.css';
+import PlayersPage from './pages/PlayersPage';
+import GamesPage from './pages/GamesPage';
+import GameDetailPage from './pages/GameDetailPage';
+import ScoresPage from './pages/ScoresPage';
+import AervoSettingsPage from './pages/AervoSettingsPage';
 
-function App() {
+function AppLayout({ children }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <div className="aervo-app aervo-noise flex min-h-screen">
+      {/* Sidebar for Desktop & Drawer for Mobile */}
+      <div
+        className={`fixed inset-y-0 left-0 z-40 transition-transform duration-200 lg:static lg:translate-x-0 ${
+          menuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <Sidebar mobileClose={() => setMenuOpen(false)} />
+      </div>
+
+      {/* Mobile Backdrop */}
+      {menuOpen && (
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Close navigation overlay"
+          onClick={() => setMenuOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false); }}
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-xs lg:hidden"
+        />
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
+        <Topbar openMenu={() => setMenuOpen(true)} />
+        <SportStrip />
+        <div className="min-w-0 flex-1">
+          {children}
+        </div>
+        <MobileBottomNav />
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   return (
     <Router>
-      <AuthProvider>
-        <ThemeProvider>
-          <SportProvider>
-            <div className="App">
-              <Header />
-              <main>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/teams" element={<TeamsPage />} />
-                  <Route path="/teams/create" element={<CreateTeamPage />} />
-                  <Route path="/teams/:teamId" element={<TeamDetailPage />} />
-                  <Route path="/friends" element={<FriendsPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/matches" element={<MatchesPage />} />
-                  <Route path="/matches/create" element={<MatchesPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          </SportProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/players" element={<PlayersPage />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/:gameId" element={<GameDetailPage />} />
+          <Route path="/scores" element={<ScoresPage />} />
+          <Route path="/settings" element={<AervoSettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AppLayout>
     </Router>
   );
 }
 
-export default App;

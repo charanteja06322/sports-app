@@ -1,16 +1,72 @@
-# React + Vite
+# Aervo Sports Platform ⚽🏀🏏
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+An authentic multi-sport community platform and live scoring console built with **React**, **Vite**, **Electron**, and **Supabase (PostgreSQL)**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **⚛️ Native Electron Desktop App**: Run natively on macOS, Windows, and Linux.
+- **⚡ Supabase PostgreSQL Database**: Cloud database with tables for users, posts, post likes, comments, and match fixtures.
+- **⚽ 7 Authentic Sport Lenses**:
+  - Football (Terracotta `#ce7045`)
+  - Basketball
+  - Tennis
+  - Cricket
+  - Running
+  - Cycling
+  - Volleyball
+- **📊 Interactive Scoring Console**: Live touchpoint scoring with ball-by-ball and point counter mechanisms.
+- **🚫 Zero Mock Data**: Clean slate with real authentication, athlete registration, and photo uploads.
+- **🪶 Feather Vector Icons**: Clean UI navigation without emoji clutter.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## Quick Start
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Configure Environment
+Create a `.env` file in the root directory (see `.env.example`):
+```env
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres"
+PORT=5173
+```
+
+### 3. Launch the Application
+
+#### Electron Desktop App:
+```bash
+npm run dev
+# or npm start
+```
+This automatically boots the local Vite server and launches the native Electron desktop window.
+
+#### Web Browser:
+```bash
+npm run web
+```
+Visit `http://localhost:5173/` in your browser.
+
+---
+
+## Project Structure
+
+```
+├── electron/
+│   ├── main.cjs            # Electron main process (BrowserWindow)
+│   └── run-electron.js     # Automatic concurrent runner
+├── server/
+│   ├── db.js               # Supabase PostgreSQL connection & schema
+│   ├── apiHandler.js       # API middleware & endpoints (/api/*)
+│   └── server.js           # Standalone HTTP server
+├── src/
+│   ├── components/aervo/   # Sport strips, topbar, scoreboard, feed cards
+│   ├── pages/              # Home, Players, Games, Scores, Settings
+│   ├── store/              # Zustand state management (aervoStore)
+│   └── App.jsx             # Router & main layout
+└── package.json
+```

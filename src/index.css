@@ -2,18 +2,172 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles */
-html,
-body,
-#root {
-  height: 100%;
+:root {
+  --background: 43 36% 95%; /* #FAF7F2 warm organic paper */
+  --foreground: 184 24% 18%; /* #253638 deep forest slate */
+  --border: 39 22% 84%; /* #DDD6C8 subtle border */
+  --input: 39 22% 84%;
+  --ring: 167 48% 37%;
+  --card: 42 46% 98%; /* #FFFDF8 card surface */
+  --card-foreground: 184 24% 18%;
+  --card-border: 39 25% 88%;
+  --popover: 42 46% 98%;
+  --popover-foreground: 184 24% 18%;
+  --primary: 167 48% 37%; /* #277863 rich athletic emerald */
+  --primary-foreground: 42 46% 98%;
+  --secondary: 40 30% 90%;
+  --secondary-foreground: 184 24% 18%;
+  --muted: 40 26% 91%;
+  --muted-foreground: 184 11% 46%;
+  --accent: 25 83% 58%; /* #ce7045 terracotta */
+  --accent-foreground: 184 27% 14%;
+  --destructive: 5 67% 52%;
+  --destructive-foreground: 42 46% 98%;
+  --sidebar: 184 29% 15%; /* #1c2e30 dark pine sidebar */
+  --sidebar-foreground: 42 34% 92%;
+  --sidebar-border: 184 18% 25%;
+  --sidebar-primary: 25 83% 58%;
+  --sidebar-primary-foreground: 184 27% 14%;
+  --sidebar-accent: 184 21% 23%;
+  --sidebar-accent-foreground: 42 36% 95%;
+  --radius: 1rem;
+  --shadow-sm: 0 2px 9px rgba(35, 55, 52, .05);
+  --shadow-md: 0 16px 38px rgba(35, 55, 52, .09);
+  --shadow-lg: 0 26px 70px rgba(35, 55, 52, .14);
+}
+
+.dark {
+  --background: 184 27% 10%;
+  --foreground: 40 31% 93%;
+  --border: 184 17% 24%;
+  --input: 184 17% 24%;
+  --ring: 167 48% 49%;
+  --card: 184 23% 14%;
+  --card-foreground: 40 31% 93%;
+  --card-border: 184 17% 24%;
+  --popover: 184 23% 14%;
+  --popover-foreground: 40 31% 93%;
+  --primary: 167 48% 49%;
+  --primary-foreground: 184 27% 10%;
+  --secondary: 184 18% 20%;
+  --secondary-foreground: 40 31% 93%;
+  --muted: 184 18% 19%;
+  --muted-foreground: 40 12% 66%;
+  --accent: 25 83% 58%;
+  --accent-foreground: 184 27% 10%;
+  --destructive: 5 67% 57%;
+  --destructive-foreground: 40 31% 93%;
+  --sidebar: 184 30% 8%;
+  --sidebar-foreground: 40 31% 93%;
+  --sidebar-border: 184 18% 18%;
+  --sidebar-primary: 25 83% 58%;
+  --sidebar-primary-foreground: 184 27% 10%;
+  --sidebar-accent: 184 19% 17%;
+  --sidebar-accent-foreground: 40 31% 93%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.display-font {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mono-font {
+  font-family: 'DM Mono', monospace;
+}
+
+.aervo-app {
+  min-height: 100dvh;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  position: relative;
+}
+
+.aervo-noise::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: .028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+}
+
+@keyframes aervo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aervo-fade {
+  from {
+    opacity: 0;
+    transform: scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.aervo-enter {
+  animation: aervo-rise .52s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.aervo-fade {
+  animation: aervo-fade .38s ease both;
+}
+
+.action-ring:focus-visible {
+  outline: 3px solid hsl(var(--accent) / .5);
+  outline-offset: 3px;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background-color: hsl(var(--card));
+  padding: 0.7rem 0.85rem;
+  font-size: 0.85rem;
+  color: hsl(var(--foreground));
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 20px;
 }
