@@ -1,45 +1,17 @@
 const { app, BrowserWindow, shell } = require("electron");
 const path = require("path");
-const http = require("http");
 
 let mainWindow = null;
 
-function waitForServer(url, timeout = 15000) {
-  const start = Date.now();
-  return new Promise((resolve) => {
-    const check = () => {
-      http.get(url, (res) => {
-        if (res.statusCode >= 200 && res.statusCode < 400) {
-          resolve(true);
-        } else {
-          retry();
-        }
-      }).on("error", () => {
-        retry();
-      });
-    };
-
-    const retry = () => {
-      if (Date.now() - start > timeout) {
-        resolve(false);
-      } else {
-        setTimeout(check, 300);
-      }
-    };
-
-    check();
-  });
-}
-
-async function createWindow() {
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
     minWidth: 420,
     minHeight: 600,
-    title: "Aervo - Authentic Sports Platform",
+    title: "EZKORA - Authentic Sports Platform",
     backgroundColor: "#1c2e30",
-    show: false,
+    show: true, // Show immediately so it never hangs hidden
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -50,23 +22,30 @@ async function createWindow() {
   const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
 
   if (isDev) {
-    const serverReady = await waitForServer(devUrl);
-    if (serverReady) {
-      mainWindow.loadURL(devUrl);
-    } else {
-      mainWindow.loadFile(path.join(__dirname, "../dist/index.html")).catch(() => {
-        mainWindow.loadURL(devUrl);
-      });
-    }
+    mainWindow.loadURL(devUrl).catch(() => {
+      // If initial load fails, will be caught by did-fail-load handler below
+    });
+
+    // Auto-retry if Vite was still booting
+    let retryCount = 0;
+    mainWindow.webContents.on("did-fail-load", () => {
+      if (retryCount < 10) {
+        retryCount++;
+        setTimeout(() => {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.loadURL(devUrl).catch(() => {});
+          }
+        }, 500);
+      } else {
+        // Fallback to local built index.html if Vite is unreachable
+        mainWindow.loadFile(path.join(__dirname, "../dist/index.html")).catch(() => {});
+      }
+    });
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 
-  mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
-  });
-
-  // Open external links in default browser
+  // Open external links in user's default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http:") || url.startsWith("https:")) {
       shell.openExternal(url);

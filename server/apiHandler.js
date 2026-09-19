@@ -41,7 +41,7 @@ function parseBody(req) {
   });
 }
 
-export function handleAervoApi(req, res) {
+export function handleEzkoraApi(req, res) {
   const url = req.url ? req.url.split("?")[0] : "";
 
   // Handle CORS preflight
@@ -156,10 +156,12 @@ export function handleAervoApi(req, res) {
 
       return sendJson(res, 404, { error: "API route not found" });
     } catch (err) {
-      console.error("[Aervo API Error]", err);
+      console.error("[EZKORA API Error]", err);
       return sendJson(res, 500, { error: err.message });
     }
   })();
 
   return true;
 }
+
+export const handleAervoApi = handleEzkoraApi;

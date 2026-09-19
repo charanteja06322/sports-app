@@ -29,7 +29,7 @@ export function Topbar({ openMenu }) {
 
         <div className="hidden items-center gap-2.5 text-[12px] sm:flex">
           <span className="mono-font uppercase tracking-[0.16em] text-[#71807d]">
-            AERVO
+            EZKORA
           </span>
           <span className="w-1 h-1 rounded-full bg-[#DDD6C8]" />
           <span

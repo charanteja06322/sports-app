@@ -132,11 +132,13 @@ body {
   }
 }
 
-.aervo-enter {
+.aervo-enter,
+.ezkora-enter {
   animation: aervo-rise .52s cubic-bezier(.2, .8, .2, 1) both;
 }
 
-.aervo-fade {
+.aervo-fade,
+.ezkora-fade {
   animation: aervo-fade .38s ease both;
 }
 

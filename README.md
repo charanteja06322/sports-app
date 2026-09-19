@@ -1,4 +1,4 @@
-# Aervo Sports Platform ⚽🏀🏏
+# EZKORA Sports Platform ⚽🏀🏏
 
 An authentic multi-sport community platform and live scoring console built with **React**, **Vite**, **Electron**, and **Supabase (PostgreSQL)**.
 
@@ -66,7 +66,7 @@ Visit `http://localhost:5173/` in your browser.
 ├── src/
 │   ├── components/aervo/   # Sport strips, topbar, scoreboard, feed cards
 │   ├── pages/              # Home, Players, Games, Scores, Settings
-│   ├── store/              # Zustand state management (aervoStore)
+│   ├── store/              # Zustand state management (ezkoraStore)
 │   └── App.jsx             # Router & main layout
 └── package.json
 ```

@@ -9,13 +9,13 @@ import PlayersPage from './pages/PlayersPage';
 import GamesPage from './pages/GamesPage';
 import GameDetailPage from './pages/GameDetailPage';
 import ScoresPage from './pages/ScoresPage';
-import AervoSettingsPage from './pages/AervoSettingsPage';
+import EzkoraSettingsPage from './pages/EzkoraSettingsPage';
 
 function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="aervo-app aervo-noise flex min-h-screen">
+    <div className="ezkora-app aervo-app ezkora-noise aervo-noise flex min-h-screen">
       {/* Sidebar for Desktop & Drawer for Mobile */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transition-transform duration-200 lg:static lg:translate-x-0 ${
@@ -60,7 +60,7 @@ export default function App() {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/games/:gameId" element={<GameDetailPage />} />
           <Route path="/scores" element={<ScoresPage />} />
-          <Route path="/settings" element={<AervoSettingsPage />} />
+          <Route path="/settings" element={<EzkoraSettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppLayout>

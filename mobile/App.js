@@ -17,15 +17,15 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import Feather from "@expo/vector-icons/Feather";
 
-// 7 Authentic Aervo Sports Lenses (Football color #ce7045 strictly preserved)
+// 7 Authentic EZKORA Sports Lenses (Football color #ce7045 strictly preserved)
 const SPORTS = [
-  { name: "Football", accent: "#ce7045", wash: "#f3e3d8", deep: "#87442e", desc: "The beautiful game" },
-  { name: "Basketball", accent: "#d47336", wash: "#f5e6d5", deep: "#91461f", desc: "The next possession" },
-  { name: "Tennis", accent: "#b89b2e", wash: "#f2edd1", deep: "#756215", desc: "Find your rhythm" },
-  { name: "Cricket", accent: "#5e9a70", wash: "#e1eee2", deep: "#356b4b", desc: "The long game" },
-  { name: "Running", accent: "#4c9b81", wash: "#dcece5", deep: "#2c6e5a", desc: "One more kilometre" },
-  { name: "Cycling", accent: "#557fa9", wash: "#e0e9f0", deep: "#345b80", desc: "Keep the wheels turning" },
-  { name: "Volleyball", accent: "#9d6ab0", wash: "#ede3f1", deep: "#704781", desc: "Own the next point" },
+  { name: "Football", emoji: "⚽", accent: "#ce7045", wash: "#f3e3d8", deep: "#87442e", desc: "The beautiful game" },
+  { name: "Basketball", emoji: "🏀", accent: "#d47336", wash: "#f5e6d5", deep: "#91461f", desc: "The next possession" },
+  { name: "Tennis", emoji: "🎾", accent: "#b89b2e", wash: "#f2edd1", deep: "#756215", desc: "Find your rhythm" },
+  { name: "Cricket", emoji: "🏏", accent: "#5e9a70", wash: "#e1eee2", deep: "#356b4b", desc: "The long game" },
+  { name: "Running", emoji: "🏃", accent: "#4c9b81", wash: "#dcece5", deep: "#2c6e5a", desc: "One more kilometre" },
+  { name: "Cycling", emoji: "🚴", accent: "#557fa9", wash: "#e0e9f0", deep: "#345b80", desc: "Keep the wheels turning" },
+  { name: "Volleyball", emoji: "🏐", accent: "#9d6ab0", wash: "#ede3f1", deep: "#704781", desc: "Own the next point" },
 ];
 
 // Local network API endpoint (connects with Vite backend & Neon DB)
@@ -38,7 +38,7 @@ const GUEST_ATHLETE = {
   displayName: "Guest Athlete",
   avatarUrl: "",
   primarySport: "Football",
-  bio: "Welcome to Aervo. Register your athlete profile to post and join games.",
+  bio: "Welcome to EZKORA. Register your athlete profile to post and join games.",
 };
 
 // Clean Avatar component: renders image if uploaded, or initials fallback
@@ -345,10 +345,10 @@ export default function App() {
         <View style={styles.header}>
           <View style={styles.brandRow}>
             <View style={[styles.logoIcon, { backgroundColor: sportConfig.accent }]}>
-              <Text style={styles.logoSymbol}>A</Text>
+              <Text style={styles.logoSymbol}>E</Text>
             </View>
             <View>
-              <Text style={styles.brandTitle}>AERVO</Text>
+              <Text style={styles.brandTitle}>EZKORA</Text>
               <Text style={[styles.brandSubtitle, { color: sportConfig.accent }]}>
                 {sportConfig.desc}
               </Text>

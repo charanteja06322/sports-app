@@ -95,7 +95,7 @@ export function LogoMark({ light = false }) {
           <span className="absolute left-0 top-1/2 h-[2px] w-4 -translate-y-1/2 rotate-45 rounded-full bg-current" />
         </span>
       </span>
-      <span className="display-font text-[22px] font-bold tracking-[-0.06em]">aervo</span>
+      <span className="display-font text-[22px] font-bold tracking-[-0.06em]">EZKORA</span>
     </div>
   );
 }

@@ -27,14 +27,14 @@ export default function Footer() {
                   ⚡
                 </div>
               </div>
-              <span className="font-black text-xl tracking-tight text-white">PLAYFIELD AERVO</span>
+              <span className="font-black text-xl tracking-tight text-white">EZKORA SPORTS</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
               The next-generation multi-sport platform for live scoring, squad management, instant player IDs, and real-time tournament brackets.
             </p>
             <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xs bg-emerald-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-full w-fit">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>All Systems Operational • Neon PostgreSQL & Cloudinary HD</span>
+              <span>All Systems Operational • Supabase PostgreSQL</span>
             </div>
           </div>
 
@@ -80,7 +80,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-slate-500">
-            &copy; {currentYear} Playfield Aervo Sports Platform. Engineered for athletes and tournament directors.
+            &copy; {currentYear} EZKORA Sports Platform. Engineered for athletes and tournament directors.
           </p>
           <div className="flex items-center gap-4 text-slate-400">
             <span className="flex items-center gap-1">Built with <FiHeart className="text-emerald-400 inline" /> for Sports</span>

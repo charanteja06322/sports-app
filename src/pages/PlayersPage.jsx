@@ -36,7 +36,7 @@ export default function PlayersPage() {
       <PageHeader
         eyebrow="Player directory"
         title="Find your teammates."
-        body="Search by verified Aervo Player ID (e.g., PL-10001) or athlete name. Connections are real players across your sporting network."
+        body="Search by verified EZKORA Player ID (e.g., PL-10001) or athlete name. Connections are real players across your sporting network."
       />
 
       <div className="mt-9 grid gap-8 lg:grid-cols-[minmax(0,1fr)_330px]">

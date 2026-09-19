@@ -3,19 +3,19 @@ import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
-import { handleAervoApi } from './server/apiHandler.js'
+import { handleEzkoraApi } from './server/apiHandler.js'
 
-function aervoApiPlugin() {
+function ezkoraApiPlugin() {
   return {
-    name: 'aervo-api-plugin',
+    name: 'ezkora-api-plugin',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        handleAervoApi(req, res, next)
+        handleEzkoraApi(req, res, next)
       })
     },
     configurePreviewServer(server) {
       server.middlewares.use((req, res, next) => {
-        handleAervoApi(req, res, next)
+        handleEzkoraApi(req, res, next)
       })
     }
   }
@@ -23,7 +23,11 @@ function aervoApiPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), aervoApiPlugin()],
+  plugins: [react(), ezkoraApiPlugin()],
+  server: {
+    port: 5173,
+    host: '0.0.0.0',
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

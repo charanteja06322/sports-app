@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LOCAL_DB_PATH = path.resolve(__dirname, "../data/aervo_db.json");
+const LOCAL_DB_PATH = path.resolve(__dirname, "../data/ezkora_db.json");
 
 let pool = null;
 let isCloudConnected = false;
@@ -22,7 +22,7 @@ if (process.env.DATABASE_URL) {
       idleTimeoutMillis: 30000,
     });
   } catch (err) {
-    console.warn("[Aervo DB] Failed to instantiate pg Pool:", err.message);
+    console.warn("[EZKORA DB] Failed to instantiate pg Pool:", err.message);
   }
 }
 
@@ -48,7 +48,7 @@ function writeLocalDb(data) {
     fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(data, null, 2), "utf8");
     return data;
   } catch (e) {
-    console.error("[Aervo DB] Local write error:", e);
+    console.error("[EZKORA DB] Local write error:", e);
     return data;
   }
 }
@@ -56,7 +56,7 @@ function writeLocalDb(data) {
 // Ensure schema in Supabase is up to date
 export async function initDatabase() {
   if (!pool) {
-    console.log("[Aervo DB] No DATABASE_URL, using local JSON database.");
+    console.log("[EZKORA DB] No DATABASE_URL, using local JSON database.");
     return false;
   }
 
@@ -126,13 +126,13 @@ export async function initDatabase() {
         );
       `);
       isCloudConnected = true;
-      console.log("[Aervo DB] Connected to Supabase / PostgreSQL and verified schema successfully.");
+      console.log("[EZKORA DB] Connected to Supabase / PostgreSQL and verified schema successfully.");
       return true;
     } finally {
       client.release();
     }
   } catch (err) {
-    console.error("[Aervo DB] Error connecting to cloud database, falling back to local JSON:", err.message);
+    console.error("[EZKORA DB] Error connecting to cloud database, falling back to local JSON:", err.message);
     isCloudConnected = false;
     return false;
   }
@@ -237,7 +237,7 @@ export async function dbGetFeed() {
 
       return { posts, games, players, friends: [] };
     } catch (e) {
-      console.error("[Aervo DB] Feed fetch error Supabase:", e.message);
+      console.error("[EZKORA DB] Feed fetch error Supabase:", e.message);
     }
   }
 
@@ -264,7 +264,7 @@ export async function dbRegisterPlayer({ displayName, email, password, primarySp
       );
       return formatPlayer(res.rows[0]);
     } catch (e) {
-      console.error("[Aervo DB] Register error Supabase:", e.message);
+      console.error("[EZKORA DB] Register error Supabase:", e.message);
       throw e;
     }
   }
@@ -301,7 +301,7 @@ export async function dbLoginPlayer({ email, password }) {
       if (res.rows.length === 0) return null;
       return formatPlayer(res.rows[0]);
     } catch (e) {
-      console.error("[Aervo DB] Login error Supabase:", e.message);
+      console.error("[EZKORA DB] Login error Supabase:", e.message);
     }
   }
 
@@ -347,7 +347,7 @@ export async function dbUpdateProfile({ id, displayName, bio, primarySport, avat
         return formatPlayer(res.rows[0]);
       }
     } catch (e) {
-      console.error("[Aervo DB] Update profile error Supabase:", e.message);
+      console.error("[EZKORA DB] Update profile error Supabase:", e.message);
     }
   }
 
@@ -396,7 +396,7 @@ export async function dbCreatePost({ sport, author, caption, imagePath }) {
         createdAt: row.created_at,
       };
     } catch (e) {
-      console.error("[Aervo DB] Create post error Supabase:", e.message);
+      console.error("[EZKORA DB] Create post error Supabase:", e.message);
     }
   }
 
@@ -442,7 +442,7 @@ export async function dbToggleLike(postId, userId) {
       const newCount = parseInt(countRes.rows[0].count, 10);
       return { postId, hasLiked: check.rows.length === 0, likeCount: newCount };
     } catch (e) {
-      console.error("[Aervo DB] Toggle like error Supabase:", e.message);
+      console.error("[EZKORA DB] Toggle like error Supabase:", e.message);
     }
   }
 
@@ -484,7 +484,7 @@ export async function dbAddComment(postId, author, body) {
         createdAt: row.created_at,
       };
     } catch (e) {
-      console.error("[Aervo DB] Add comment error Supabase:", e.message);
+      console.error("[EZKORA DB] Add comment error Supabase:", e.message);
     }
   }
 
@@ -533,7 +533,7 @@ export async function dbCreateGame({ sport, title, location, scheduledAt, host }
         createdAt: row.created_at,
       };
     } catch (e) {
-      console.error("[Aervo DB] Create match error Supabase:", e.message);
+      console.error("[EZKORA DB] Create match error Supabase:", e.message);
     }
   }
 
@@ -565,9 +565,9 @@ export async function dbResetAll() {
   if (isCloudConnected && pool) {
     try {
       await pool.query(`TRUNCATE TABLE matches, post_comments, post_likes, posts, users CASCADE;`);
-      console.log("[Aervo DB] Supabase database wiped to 100% clean state.");
+      console.log("[EZKORA DB] Supabase database wiped to 100% clean state.");
     } catch (err) {
-      console.error("[Aervo DB] Error wiping Supabase tables:", err.message);
+      console.error("[EZKORA DB] Error wiping Supabase tables:", err.message);
     }
   }
   const clean = { version: 1, posts: [], games: [], players: [], friends: [], updatedAt: new Date().toISOString() };
