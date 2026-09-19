@@ -10,6 +10,8 @@ import GamesPage from './pages/GamesPage';
 import GameDetailPage from './pages/GameDetailPage';
 import ScoresPage from './pages/ScoresPage';
 import EzkoraSettingsPage from './pages/EzkoraSettingsPage';
+import LoginPage from './pages/LoginPage';
+import { useEzkoraStore } from './store/ezkoraStore';
 
 function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,6 +53,19 @@ function AppLayout({ children }) {
 }
 
 export default function App() {
+  const me = useEzkoraStore((s) => s.me);
+
+  if (!me) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+    );
+  }
+
   return (
     <Router>
       <AppLayout>
@@ -61,6 +76,7 @@ export default function App() {
           <Route path="/games/:gameId" element={<GameDetailPage />} />
           <Route path="/scores" element={<ScoresPage />} />
           <Route path="/settings" element={<EzkoraSettingsPage />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppLayout>

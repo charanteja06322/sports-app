@@ -4,9 +4,9 @@ export const SPORTS = [
   {
     name: "Football",
     descriptor: "The beautiful game",
-    accent: "#ce7045",
-    wash: "#f3e3d8",
-    deep: "#87442e",
+    accent: "#000000",
+    wash: "#ffffff",
+    deep: "#09090b",
     phrase: "the next fixture",
     iconKey: "football",
   },
@@ -101,6 +101,81 @@ export const useEzkoraStore = create((set, get) => ({
     }
   },
 
+  loginWithGoogle: async ({ email, displayName, avatarUrl, googleId }) => {
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, displayName, avatarUrl, googleId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.player) {
+          set((state) => ({
+            me: data.player,
+            allAthletes: state.allAthletes.some((a) => a.id === data.player.id)
+              ? state.allAthletes
+              : [...state.allAthletes, data.player],
+            players: state.players.some((p) => p.id === data.player.id)
+              ? state.players
+              : [...state.players, data.player],
+            activeSport: data.player.primarySport || get().activeSport,
+          }));
+          if (typeof window !== "undefined") {
+            localStorage.setItem("ezkora_active_user_id", String(data.player.id));
+          }
+          get().notifyChange();
+          return { success: true, player: data.player };
+        }
+      }
+      return { success: false, error: "Google authentication failed" };
+    } catch (e) {
+      console.error("Google login error:", e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  loginWithEmailOrId: async ({ identifier, password }) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: identifier, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.player) {
+          set((state) => ({
+            me: data.player,
+            allAthletes: state.allAthletes.some((a) => a.id === data.player.id)
+              ? state.allAthletes
+              : [...state.allAthletes, data.player],
+            players: state.players.some((p) => p.id === data.player.id)
+              ? state.players
+              : [...state.players, data.player],
+            activeSport: data.player.primarySport || get().activeSport,
+          }));
+          if (typeof window !== "undefined") {
+            localStorage.setItem("ezkora_active_user_id", String(data.player.id));
+          }
+          get().notifyChange();
+          return { success: true, player: data.player };
+        }
+      }
+      return { success: false, error: "Invalid athlete ID or email" };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  logout: () => {
+    set({ me: null });
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("ezkora_active_user_id");
+    }
+    get().notifyChange();
+  },
+
   createAthlete: async ({ displayName, bio, avatarUrl, primarySport }) => {
     const newAthlete = {
       id: Date.now(),
@@ -121,6 +196,10 @@ export const useEzkoraStore = create((set, get) => ({
       console.error(e);
     }
 
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ezkora_active_user_id", String(newAthlete.id));
+    }
+
     set((state) => ({
       me: newAthlete,
       allAthletes: [...state.allAthletes, newAthlete],
@@ -128,6 +207,7 @@ export const useEzkoraStore = create((set, get) => ({
       activeSport: newAthlete.primarySport,
     }));
     get().notifyChange();
+    return newAthlete;
   },
 
   updateProfile: async (updates) => {
@@ -422,7 +502,7 @@ export const useEzkoraStore = create((set, get) => ({
         const savedId = typeof window !== "undefined" ? localStorage.getItem("ezkora_active_user_id") : null;
         const currentMe = me 
           ? (athletes.find((a) => a.id === me.id) || me)
-          : (athletes.find((a) => String(a.id) === String(savedId)) || athletes[0] || null);
+          : (savedId ? (athletes.find((a) => String(a.id) === String(savedId)) || null) : null);
 
         set({
           posts: db.posts || [],

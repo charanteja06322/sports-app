@@ -11,6 +11,7 @@ import {
   dbCreateGame,
   dbJoinGame,
   dbResetAll,
+  dbGoogleLogin,
 } from "./db.js";
 
 // Initialize Supabase database on startup
@@ -106,6 +107,13 @@ export function handleEzkoraApi(req, res, next) {
         } else {
           return sendJson(res, 401, { success: false, error: "Invalid credentials" });
         }
+      }
+
+      // 5b. POST /api/auth/google
+      if (req.method === "POST" && url === "/api/auth/google") {
+        const body = await parseBody(req);
+        const player = await dbGoogleLogin(body);
+        return sendJson(res, 200, { success: true, player });
       }
 
       // 6. POST /api/posts

@@ -150,7 +150,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Aervo Principle Card */}
+          {/* EZKORA Principle Card */}
           <section
             className="relative overflow-hidden rounded-3xl p-6 text-white shadow-md"
             style={{ backgroundColor: sport.deep }}
@@ -158,13 +158,13 @@ export default function HomePage() {
             <div className="absolute -right-8 -top-8 size-32 rounded-full border border-white/15 pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 size-36 rounded-full border border-white/10 pointer-events-none" />
             <p className="relative mono-font text-[10px] uppercase tracking-[0.2em] text-white/70 font-semibold">
-              Aervo principle
+              EZKORA principle
             </p>
             <h3 className="relative display-font mt-2 text-2xl font-bold leading-tight tracking-tight">
               Real athletes.<br />Real matches.
             </h3>
             <p className="relative mt-3 text-[13px] leading-relaxed text-white/80">
-              Everything in Aervo is driven by genuine local athletes and real game scores. Seamlessly scoped to your active sport.
+              Everything in EZKORA is driven by genuine local athletes and real game scores. Seamlessly scoped to your active sport.
             </p>
           </section>
         </aside>

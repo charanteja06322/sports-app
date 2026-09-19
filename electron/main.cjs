@@ -42,8 +42,15 @@ function createWindow() {
   mainWindow.webContents.on("did-finish-load", async () => {
     try {
       const title = await mainWindow.webContents.executeJavaScript("document.title");
-      const rootChildren = await mainWindow.webContents.executeJavaScript("document.getElementById('root')?.children.length || 0");
-      console.log(`[Electron] Page rendered! Title: "${title}", Root DOM children: ${rootChildren}`);
+      setTimeout(async () => {
+        try {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            const rootChildren = await mainWindow.webContents.executeJavaScript("document.getElementById('root')?.children.length || 0");
+            const bodyText = await mainWindow.webContents.executeJavaScript("document.body.innerText.substring(0, 100)");
+            console.log(`[Electron] Page rendered! Title: "${title}", Root DOM children: ${rootChildren}, Content: "${bodyText.replace(/\n/g, ' ')}"`);
+          }
+        } catch {}
+      }, 600);
     } catch (e) {
       console.error("[Electron] Eval error:", e.message);
     }

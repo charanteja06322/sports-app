@@ -10,6 +10,7 @@ export function Topbar({ openMenu }) {
   const me = useAervoStore((s) => s.me);
   const allAthletes = useAervoStore((s) => s.allAthletes);
   const switchAthlete = useAervoStore((s) => s.switchAthlete);
+  const logout = useAervoStore((s) => s.logout);
 
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -172,6 +173,16 @@ export function Topbar({ openMenu }) {
                 >
                   Edit profile & settings
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    logout();
+                  }}
+                  className="text-xs font-bold text-red-600 hover:underline"
+                >
+                  Sign Out
+                </button>
               </div>
             </div>
           )}

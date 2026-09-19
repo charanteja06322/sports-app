@@ -312,6 +312,59 @@ export async function dbLoginPlayer({ email, password }) {
   return user ? formatPlayer(user) : null;
 }
 
+// 3b. Google Login / Registration
+export async function dbGoogleLogin({ email, displayName, avatarUrl, googleId }) {
+  const cleanEmail = (email || "").toLowerCase().trim();
+  const cleanName = (displayName || "Google Athlete").trim();
+  const cleanAvatar = avatarUrl || "";
+
+  if (isCloudConnected && pool) {
+    try {
+      // Check if user already exists in Supabase
+      const existing = await pool.query(
+        `SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1`,
+        [cleanEmail]
+      );
+      if (existing.rows.length > 0) {
+        return formatPlayer(existing.rows[0]);
+      }
+
+      // Create new user in Supabase with verified player ID
+      const publicId = "PL-" + Math.floor(100000 + Math.random() * 900000);
+      const res = await pool.query(
+        `INSERT INTO users (full_name, email, avatar_url, primary_sport, bio, player_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [cleanName, cleanEmail, cleanAvatar, "Football", "Verified athlete on EZKORA via Google", publicId]
+      );
+      return formatPlayer(res.rows[0]);
+    } catch (e) {
+      console.error("[EZKORA DB] Google Login error Supabase:", e.message);
+    }
+  }
+
+  // Local fallback
+  const local = readLocalDb();
+  let user = (local.players || []).find((p) => p.email && p.email.toLowerCase() === cleanEmail);
+  if (!user) {
+    const publicId = "PL-" + Math.floor(100000 + Math.random() * 900000);
+    user = {
+      id: crypto.randomUUID ? crypto.randomUUID() : "usr-" + Date.now(),
+      publicId,
+      displayName: cleanName,
+      email: cleanEmail,
+      avatarUrl: cleanAvatar,
+      bio: "Verified athlete on EZKORA via Google",
+      primarySport: "Football",
+      createdAt: new Date().toISOString(),
+    };
+    if (!local.players) local.players = [];
+    local.players.push(user);
+    writeLocalDb(local);
+  }
+  return formatPlayer(user);
+}
+
 // 4. Update Profile
 export async function dbUpdateProfile({ id, displayName, bio, primarySport, avatarUrl }) {
   if (isCloudConnected && pool) {
