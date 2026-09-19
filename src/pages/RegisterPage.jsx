@@ -155,7 +155,7 @@ export default function RegisterPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="athlete@playfield.sports"
+                      placeholder="athlete@ezkora.sports"
                       className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white text-xs placeholder:text-slate-500 transition-all outline-none"
                     />
                   </div>

@@ -72,7 +72,7 @@ export default function InteractiveScoreboardDemo() {
                 </span>
                 <span className="text-slate-400 text-xs font-semibold">Match Code: <strong className="text-white">M-7842</strong></span>
               </div>
-              <h4 className="text-lg font-black text-white tracking-tight mt-1">PlayField Stadium Scoring Console</h4>
+              <h4 className="text-lg font-black text-white tracking-tight mt-1">EZKORA Stadium Scoring Console</h4>
             </div>
           </div>
 

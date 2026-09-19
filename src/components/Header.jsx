@@ -57,7 +57,7 @@ export default function Header() {
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="font-black text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">
-                    PLAYFIELD
+                    EZKORA
                   </span>
                   <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
                     PRO
