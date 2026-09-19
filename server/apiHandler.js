@@ -41,7 +41,7 @@ function parseBody(req) {
   });
 }
 
-export function handleEzkoraApi(req, res) {
+export function handleEzkoraApi(req, res, next) {
   const url = req.url ? req.url.split("?")[0] : "";
 
   // Handle CORS preflight

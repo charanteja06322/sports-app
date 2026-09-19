@@ -23,6 +23,7 @@ function ezkoraApiPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [react(), ezkoraApiPlugin()],
   server: {
     port: 5173,

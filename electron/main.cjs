@@ -19,31 +19,52 @@ function createWindow() {
   });
 
   const isDev = process.env.NODE_ENV !== "production";
-  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+  const devUrl = process.env.VITE_DEV_SERVER_URL || "http://127.0.0.1:5173";
 
-  if (isDev) {
+  // Forward renderer console logs to terminal for real-time visibility
+  mainWindow.webContents.on("console-message", (event, level, message, line, sourceId) => {
+    console.log(`[Renderer] ${message}`);
+  });
+
+  mainWindow.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+    if (!isMainFrame || errorCode === -3) return;
+    console.warn(`[Electron] Load failed: ${validatedURL} (${errorCode}: ${errorDescription})`);
+    // If dev URL fails, fallback to local dist/index.html
+    if (isDev) {
+      setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.loadFile(path.join(__dirname, "../dist/index.html")).catch(() => {});
+        }
+      }, 1000);
+    }
+  });
+
+  mainWindow.webContents.on("did-finish-load", async () => {
+    try {
+      const title = await mainWindow.webContents.executeJavaScript("document.title");
+      const rootChildren = await mainWindow.webContents.executeJavaScript("document.getElementById('root')?.children.length || 0");
+      console.log(`[Electron] Page rendered! Title: "${title}", Root DOM children: ${rootChildren}`);
+    } catch (e) {
+      console.error("[Electron] Eval error:", e.message);
+    }
+  });
+
+  if (isDev && devUrl) {
+    console.log(`[Electron] Connecting to: ${devUrl}`);
     mainWindow.loadURL(devUrl).catch(() => {
-      // If initial load fails, will be caught by did-fail-load handler below
-    });
-
-    // Auto-retry if Vite was still booting
-    let retryCount = 0;
-    mainWindow.webContents.on("did-fail-load", () => {
-      if (retryCount < 10) {
-        retryCount++;
-        setTimeout(() => {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.loadURL(devUrl).catch(() => {});
-          }
-        }, 500);
-      } else {
-        // Fallback to local built index.html if Vite is unreachable
-        mainWindow.loadFile(path.join(__dirname, "../dist/index.html")).catch(() => {});
-      }
+      mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
     });
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  // Toggle DevTools with F12 or Cmd+Alt+I
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.key === "F12" || ((input.meta || input.control) && input.alt && input.key.toLowerCase() === "i")) {
+      mainWindow.webContents.toggleDevTools();
+      event.preventDefault();
+    }
+  });
 
   // Open external links in user's default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

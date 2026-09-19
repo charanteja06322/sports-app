@@ -70,7 +70,7 @@ async function run() {
       shell: true,
       env: {
         ...process.env,
-        VITE_DEV_SERVER_URL: "http://localhost:5173",
+        VITE_DEV_SERVER_URL: "http://127.0.0.1:5173",
       },
     });
 
