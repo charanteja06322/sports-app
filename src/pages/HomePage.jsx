@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
 import { PageHeader, Button, EmptyState, Avatar } from "../components/ezkora/CommonUI";
 import { PostCard } from "../components/ezkora/PostCard";
-import { Scoreboard } from "../components/ezkora/Scoreboard";
 import { IconPlus, IconArrowUpRight, IconClock, IconMapPin, IconMessageCircle } from "../components/ezkora/EzkoraIcons";
 
 export default function HomePage() {
@@ -66,18 +65,18 @@ export default function HomePage() {
                   <span>Photo</span>
                 </button>
                 <Link
-                  to="/scores"
+                  to="/matches"
                   className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 hover:bg-[#FAF7F2] hover:text-[#253638] transition-colors"
                 >
                   <span className="text-amber-600">🏆</span>
-                  <span>Live Score</span>
+                  <span>Matches & Scoring</span>
                 </Link>
                 <Link
-                  to="/games"
+                  to="/players"
                   className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 hover:bg-[#FAF7F2] hover:text-[#253638] transition-colors"
                 >
-                  <span className="text-blue-600">📅</span>
-                  <span>Match</span>
+                  <span className="text-blue-600">💬</span>
+                  <span>Chat</span>
                 </Link>
               </div>
               <Button
@@ -128,15 +127,11 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Live Match Scoreboard */}
-          <div className="pt-6">
-            <Scoreboard />
-          </div>
         </section>
 
         {/* Right Sidebar */}
         <aside className="space-y-6">
-          {/* Upcoming Games Card */}
+          {/* Upcoming Matches Card */}
           <section className="rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
@@ -147,11 +142,11 @@ export default function HomePage() {
                   On the calendar
                 </p>
                 <h2 className="display-font mt-1.5 text-xl font-bold tracking-tight text-[#253638]">
-                  Open {sport.name} Games
+                  Open {sport.name} Matches
                 </h2>
               </div>
               <Link
-                to="/games"
+                to="/matches"
                 className="grid size-8 place-items-center rounded-full bg-[#FAF7F2] text-[#277863] hover:bg-[#EAE4D7]"
               >
                 <IconArrowUpRight size={16} />
@@ -160,13 +155,13 @@ export default function HomePage() {
 
             {sportGames.length === 0 ? (
               <p className="mt-4 text-[13px] leading-relaxed text-[#71807d]">
-                No {sport.name.toLowerCase()} games scheduled yet. Set one up for your circle!
+                No {sport.name.toLowerCase()} matches scheduled yet. Set one up for your circle!
               </p>
             ) : (
               <div className="mt-4 space-y-3">
                 {sportGames.slice(0, 3).map((game) => (
                   <Link
-                    to={`/games/${game.id}`}
+                    to={`/matches/${game.id}`}
                     key={game.id}
                     className="block rounded-2xl border border-[#DDD6C8] p-3.5 transition-all hover:border-[#277863]/60 hover:bg-[#FAF7F2]/50"
                   >
@@ -190,10 +185,10 @@ export default function HomePage() {
 
             <div className="mt-5 border-t border-[#DDD6C8] pt-3">
               <Link
-                to="/games"
+                to="/matches"
                 className="inline-flex items-center gap-1 text-[12px] font-bold text-[#277863] hover:underline"
               >
-                View all games <IconArrowUpRight size={13} />
+                View all matches <IconArrowUpRight size={13} />
               </Link>
             </div>
           </section>

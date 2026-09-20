@@ -72,6 +72,14 @@ let broadcastChannel = null;
 if (typeof window !== "undefined" && window.BroadcastChannel) {
   try {
     broadcastChannel = new BroadcastChannel("ezkora_live_channel");
+  } catch {}
+}
+
+let initialChats = {};
+if (typeof window !== "undefined") {
+  try {
+    const savedChats = localStorage.getItem("ezkora_player_chats");
+    if (savedChats) initialChats = JSON.parse(savedChats);
   } catch {
     // fallback
   }
@@ -85,6 +93,8 @@ export const useEzkoraStore = create((set, get) => ({
   games: [],
   players: [],
   friends: [],
+  chats: initialChats,
+  activeChatId: null,
   isLoading: false,
   lastSynced: null,
   composerOpen: false,
@@ -522,6 +532,79 @@ export const useEzkoraStore = create((set, get) => ({
       console.error("Failed to respond to request:", e);
     }
     get().notifyChange();
+  },
+
+  setActiveChatId: (id) => set({ activeChatId: id }),
+
+  sendChatMessage: ({ toPlayerId, text, matchInvite = null, sharedPost = null }) => {
+    const me = get().me;
+    if (!me || !toPlayerId || (!text && !matchInvite && !sharedPost)) return;
+    const convKey = [String(me.id), String(toPlayerId)].sort().join("_");
+
+    const newMsg = {
+      id: "msg_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
+      fromId: String(me.id),
+      toId: String(toPlayerId),
+      text: text ? String(text).trim() : "",
+      matchInvite,
+      sharedPost,
+      timestamp: new Date().toISOString(),
+    };
+
+    set((state) => {
+      const existing = state.chats[convKey] || [];
+      const updatedList = [...existing, newMsg];
+      const updatedChats = { ...state.chats, [convKey]: updatedList };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("ezkora_player_chats", JSON.stringify(updatedChats));
+      }
+      return { chats: updatedChats };
+    });
+
+    get().notifyChange();
+
+    // Friendly reply simulation for realistic social chat
+    setTimeout(() => {
+      const targetPlayer = get().players.find((p) => String(p.id) === String(toPlayerId));
+      if (!targetPlayer) return;
+
+      let replyText = "Awesome! See you on court!";
+      if (matchInvite) {
+        replyText = `Accepted your match invite for ${matchInvite.sport || "the game"}! I'm in! 🏆`;
+      } else if (text && (text.toLowerCase().includes("when") || text.toLowerCase().includes("time"))) {
+        replyText = "I'm free around 5:30 PM today! Let's play!";
+      } else if (text && (text.toLowerCase().includes("score") || text.toLowerCase().includes("match"))) {
+        replyText = "Good match! Check the verified score on my profile.";
+      } else {
+        const replies = [
+          "Hey! Let's get a game scheduled soon.",
+          "Sounds great! Looking forward to it.",
+          "Nice! Let me know when the next session is.",
+          "Got it! Count me in."
+        ];
+        replyText = replies[Math.floor(Math.random() * replies.length)];
+      }
+
+      const replyMsg = {
+        id: "msg_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
+        fromId: String(toPlayerId),
+        toId: String(me.id),
+        text: replyText,
+        matchInvite: null,
+        timestamp: new Date().toISOString(),
+      };
+
+      set((state) => {
+        const existing = state.chats[convKey] || [];
+        const updatedList = [...existing, replyMsg];
+        const updatedChats = { ...state.chats, [convKey]: updatedList };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("ezkora_player_chats", JSON.stringify(updatedChats));
+        }
+        return { chats: updatedChats };
+      });
+      get().notifyChange();
+    }, 1200);
   },
 
   clearAllData: async () => {

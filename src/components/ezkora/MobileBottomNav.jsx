@@ -16,9 +16,8 @@ export function MobileBottomNav() {
 
   const tabs = [
     { href: "/", label: "Home", icon: <IconCompass size={20} /> },
-    { href: "/players", label: "Players", icon: <IconUsers size={20} /> },
-    { href: "/games", label: "Games", icon: <IconCalendar size={20} /> },
-    { href: "/scores", label: "Scores", icon: <IconTrophy size={20} /> },
+    { href: "/players", label: "Chat", icon: <IconUsers size={20} /> },
+    { href: "/matches", label: "Matches", icon: <IconTrophy size={20} /> },
     { href: "/settings", label: "Profile", icon: <IconSettings size={20} /> },
   ];
 

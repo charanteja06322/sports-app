@@ -9,6 +9,7 @@ import PlayersPage from './pages/PlayersPage';
 import GamesPage from './pages/GamesPage';
 import GameDetailPage from './pages/GameDetailPage';
 import ScoresPage from './pages/ScoresPage';
+import MatchesPage from './pages/MatchesPage';
 import EzkoraSettingsPage from './pages/EzkoraSettingsPage';
 import LoginPage from './pages/LoginPage';
 import { PostComposer } from './components/ezkora/PostComposer';
@@ -78,9 +79,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/players" element={<PlayersPage />} />
-          <Route path="/games" element={<GamesPage />} />
+          <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/matches/:gameId" element={<GameDetailPage />} />
+          <Route path="/games" element={<Navigate to="/matches" replace />} />
           <Route path="/games/:gameId" element={<GameDetailPage />} />
-          <Route path="/scores" element={<ScoresPage />} />
+          <Route path="/scores" element={<Navigate to="/matches" replace />} />
           <Route path="/settings" element={<EzkoraSettingsPage />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />

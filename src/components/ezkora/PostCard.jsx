@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { IconHeart, IconMessageCircle, IconClock } from "./EzkoraIcons";
+import { Link } from "react-router-dom";
 import { Avatar, Button } from "./CommonUI";
 import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
@@ -22,8 +23,19 @@ export function PostCard({ post }) {
   const me = useEzkoraStore((s) => s.me);
   const toggleLike = useEzkoraStore((s) => s.toggleLikePost);
   const addComment = useEzkoraStore((s) => s.addComment);
+  const players = useEzkoraStore((s) => s.players);
+  const allAthletes = useEzkoraStore((s) => s.allAthletes);
+  const sendChatMessage = useEzkoraStore((s) => s.sendChatMessage);
+  const setActiveChatId = useEzkoraStore((s) => s.setActiveChatId);
+
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [sharedStatus, setSharedStatus] = useState("");
+
+  const friends = (players.length > 0 ? players : allAthletes).filter(
+    (p) => p && String(p.id) !== String(me?.id) && p.publicId !== me?.publicId
+  );
 
   const sportConfig =
     SPORTS.find((s) => s.name === post.sport) || SPORTS[0];
@@ -37,6 +49,30 @@ export function PostCard({ post }) {
     addComment(post.id, commentText.trim());
     setCommentText("");
     setCommentsOpen(true);
+  };
+
+  const handleShareToFriend = (friend) => {
+    sendChatMessage({
+      toPlayerId: friend.id,
+      text: `Check out this ${post.sport} highlight by ${post.author?.displayName || "an athlete"}: "${post.caption?.slice(0, 70) || ""}"`,
+      sharedPost: {
+        id: post.id,
+        author: post.author,
+        caption: post.caption,
+        imagePath: post.imagePath,
+        sport: post.sport,
+      },
+    });
+    setSharedStatus(`✓ Sent to ${friend.displayName} in Chat!`);
+    setTimeout(() => setSharedStatus(""), 3000);
+  };
+
+  const handleCopyPostLink = () => {
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.origin + "/#/");
+      setSharedStatus("✓ Post link copied!");
+      setTimeout(() => setSharedStatus(""), 2500);
+    }
   };
 
   return (
@@ -108,7 +144,98 @@ export function PostCard({ post }) {
           <IconMessageCircle size={18} />
           <span>{post.comments?.length || post.commentCount || 0}</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setShareModalOpen(true)}
+          className="action-ring inline-flex items-center gap-1.5 text-[13px] font-bold text-[#71807d] hover:text-[#253638] ml-auto"
+          title="Share post to friends in chat"
+        >
+          <span>✈️</span>
+          <span>Share</span>
+        </button>
       </div>
+
+      {/* Share to Friends Modal */}
+      {shareModalOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="ezkora-fade w-full max-w-sm rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#DDD6C8] pb-3">
+              <div>
+                <h3 className="display-font text-base font-bold text-[#18181b]">
+                  Share to Friends
+                </h3>
+                <p className="mono-font text-[10px] text-[#71807d]">
+                  Send this {post.sport} post directly in chat
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShareModalOpen(false)}
+                className="grid size-7 place-items-center rounded-full text-[#71807d] hover:bg-[#EAE4D7] hover:text-black font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {sharedStatus && (
+              <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-200 p-2.5 text-center text-xs font-bold text-emerald-800">
+                {sharedStatus}
+              </div>
+            )}
+
+            <div className="mt-4 max-h-60 overflow-y-auto space-y-2">
+              {friends.length === 0 ? (
+                <p className="text-center text-xs text-[#71807d] py-4">
+                  No other athletes yet. Use the copy link button below!
+                </p>
+              ) : (
+                friends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] hover:bg-white transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Avatar player={friend} size="sm" />
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-[#18181b]">
+                          {friend.displayName}
+                        </p>
+                        <p className="mono-font text-[10px] text-[#71807d]">
+                          {friend.publicId}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleShareToFriend(friend)}
+                      className="text-[11px] py-1 px-3"
+                    >
+                      Send
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between border-t border-[#DDD6C8] pt-3 gap-2">
+              <Button
+                variant="quiet"
+                onClick={handleCopyPostLink}
+                className="text-xs flex-1"
+              >
+                📋 Copy Link
+              </Button>
+              <Link
+                to="/players"
+                onClick={() => setShareModalOpen(false)}
+                className="text-xs font-bold text-[#277863] hover:underline"
+              >
+                Go to Chat →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Expandable Comments Drawer */}
       {commentsOpen && (

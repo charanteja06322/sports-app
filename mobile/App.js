@@ -110,8 +110,9 @@ const SPORTS = [
 ];
 
 export default function App() {
-  // Navigation: "home" | "players" | "games" | "scores" | "profile"
+  // Navigation: "home" | "players" | "matches" | "profile"
   const [currentTab, setCurrentTab] = useState("home");
+  const [matchesSubTab, setMatchesSubTab] = useState("fixtures"); // "fixtures" | "scoring" | "results"
 
   // Active Sport Lens
   const [activeSport, setActiveSport] = useState("Football");
@@ -585,27 +586,30 @@ export default function App() {
               <View style={styles.spotlightActionsRow}>
                 <TouchableOpacity
                   style={[styles.spotlightBtn, { backgroundColor: currentSport.accent }]}
-                  onPress={() => setCurrentTab("scores")}
+                  onPress={() => {
+                    setCurrentTab("matches");
+                    setMatchesSubTab("scoring");
+                  }}
                 >
                   <Ionicons
-                    name={activeSport === "Running" || activeSport === "Cycling" ? "stats-chart" : "game-controller"}
+                    name={activeSport === "Running" || activeSport === "Cycling" ? "stats-chart" : "trophy"}
                     size={15}
                     color="#FFFFFF"
                   />
                   <Text style={styles.spotlightBtnText}>
                     {activeSport === "Running"
-                      ? "Open Telemetry & Trends"
+                      ? "Running Metrics"
                       : activeSport === "Cycling"
-                      ? "Open Ride Dashboard"
-                      : "Open Easy Scoring"}
+                      ? "Ride Dashboard"
+                      : "Live Matches & Scoring"}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.spotlightOutlineBtn}
                   onPress={() => setComposerOpen(true)}
                 >
-                  <Ionicons name="create-outline" size={15} color={THEME.text} />
-                  <Text style={styles.spotlightOutlineBtnText}>Share Post</Text>
+                  <Ionicons name="camera-outline" size={15} color={THEME.text} />
+                  <Text style={styles.spotlightOutlineBtnText}>New Photo Post</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -636,13 +640,16 @@ export default function App() {
 
               <TouchableOpacity
                 style={styles.quickCard}
-                onPress={() => setCurrentTab("games")}
+                onPress={() => {
+                  setCurrentTab("matches");
+                  setMatchesSubTab("fixtures");
+                }}
               >
                 <View style={[styles.quickCardIcon, { backgroundColor: "rgba(225, 29, 72, 0.12)" }]}>
-                  <Ionicons name="calendar" size={17} color="#e11d48" />
+                  <Ionicons name="trophy" size={17} color="#e11d48" />
                 </View>
-                <Text style={styles.quickCardTitle}>Fixtures</Text>
-                <Text style={styles.quickCardDesc}>Schedule match</Text>
+                <Text style={styles.quickCardTitle}>Matches Hub</Text>
+                <Text style={styles.quickCardDesc}>Fixtures & Scores</Text>
               </TouchableOpacity>
             </View>
 
@@ -867,87 +874,9 @@ export default function App() {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 3: GAMES & FIXTURES */}
+        {/* UNIFIED TAB: MATCHES & SCORING */}
         {/* ==================================================== */}
-        {currentTab === "games" && (
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <View style={styles.playersTopHeader}>
-              <View>
-                <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / FIXTURES</Text>
-                <Text style={styles.sectionHeading}>Scheduled Games</Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
-                onPress={() => setAddGameOpen(true)}
-              >
-                <Ionicons name="add" size={16} color="#FFFFFF" />
-                <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>Schedule Match</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Zero Mock Data: Clean Fixtures */}
-            {games.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Ionicons name="calendar-outline" size={28} color={THEME.textMuted} />
-                <Text style={styles.emptyTitle}>No scheduled fixtures yet.</Text>
-                <Text style={styles.emptyDesc}>
-                  Schedule your first {currentSport.name.toLowerCase()} match, friendly scrimmage,
-                  or invite a friend to play.
-                </Text>
-                <TouchableOpacity
-                  style={[styles.emptyActionBtn, { backgroundColor: currentSport.accent }]}
-                  onPress={() => setAddGameOpen(true)}
-                >
-                  <Ionicons name="add-circle" size={16} color="#FFFFFF" />
-                  <Text style={styles.emptyActionBtnText}>Schedule First Game</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              games.map((g) => (
-                <View key={g.id} style={styles.gameCard}>
-                  <View style={styles.gameCardHeader}>
-                    <Text style={styles.gameCardSport}>{g.sport} Fixture</Text>
-                    <Text style={styles.gameCardVenue}>{g.venue}</Text>
-                  </View>
-                  <View style={styles.gameMatchupRow}>
-                    <Text style={styles.gameTeam}>{g.teamA}</Text>
-                    <Text style={styles.gameVs}>VS</Text>
-                    <Text style={styles.gameTeam}>{g.teamB}</Text>
-                  </View>
-                  <View style={styles.gameCardFooter}>
-                    <Text style={styles.gameCardDate}>{g.date}</Text>
-                    <TouchableOpacity
-                      style={[styles.gameScoreBtn, { backgroundColor: currentSport.accent }]}
-                      onPress={() => {
-                        if (activeSport === "Badminton") {
-                          setBadmintonP1(g.teamA);
-                          setBadmintonP2(g.teamB);
-                        } else if (activeSport === "Football") {
-                          setFootballTeamA(g.teamA);
-                          setFootballTeamB(g.teamB);
-                        } else {
-                          setStrikerName(g.teamA);
-                          setNonStrikerName(g.teamB);
-                        }
-                        setCurrentTab("scores");
-                      }}
-                    >
-                      <Text style={styles.gameScoreBtnText}>Open Easy Scoring</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))
-            )}
-          </ScrollView>
-        )}
-
-        {/* ==================================================== */}
-        {/* TAB 4: EASY SCORING CONSOLE (Interactive & Cool) */}
-        {/* ==================================================== */}
-        {currentTab === "scores" && (
+        {currentTab === "matches" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -955,38 +884,139 @@ export default function App() {
             <View style={styles.playersTopHeader}>
               <View>
                 <Text style={styles.sectionEyebrow}>
-                  {activeSport === "Running"
-                    ? "RUNNING / TELEMETRY & TRENDS"
-                    : activeSport === "Cycling"
-                    ? "CYCLING / TELEMETRY & ELEVATION"
-                    : `${currentSport.name.toUpperCase()} / EASY SCORING`}
+                  {currentSport.name.toUpperCase()} / COMPETITION
                 </Text>
-                <Text style={styles.sectionHeading}>
-                  {activeSport === "Running"
-                    ? "Endurance Tracker"
-                    : activeSport === "Cycling"
-                    ? "Velo Ride Tracker"
-                    : "Stadium Console"}
-                </Text>
+                <Text style={styles.sectionHeading}>Matches & Scoring</Text>
               </View>
+              {matchesSubTab === "fixtures" ? (
+                <TouchableOpacity
+                  style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
+                  onPress={() => setAddGameOpen(true)}
+                >
+                  <Ionicons name="add" size={16} color="#FFFFFF" />
+                  <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>Schedule Match</Text>
+                </TouchableOpacity>
+              ) : matchesSubTab === "scoring" ? (
+                <TouchableOpacity
+                  style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
+                  onPress={handleFinalizeMatch}
+                >
+                  <Ionicons
+                    name={activeSport === "Running" || activeSport === "Cycling" ? "checkmark-circle" : "checkmark-done"}
+                    size={14}
+                    color="#FFFFFF"
+                  />
+                  <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>
+                    {activeSport === "Running" || activeSport === "Cycling" ? "Log Session" : "Finalize Score"}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {/* Segmented Sub-Tabs */}
+            <View style={styles.segmentedTabs}>
               <TouchableOpacity
-                style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
-                onPress={handleFinalizeMatch}
+                style={[styles.segmentBtn, matchesSubTab === "fixtures" && styles.segmentBtnActive]}
+                onPress={() => setMatchesSubTab("fixtures")}
               >
-                <Ionicons
-                  name={activeSport === "Running" || activeSport === "Cycling" ? "checkmark-circle" : "checkmark-done"}
-                  size={14}
-                  color="#FFFFFF"
-                />
-                <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>
-                  {activeSport === "Running"
-                    ? "Log Run Session"
-                    : activeSport === "Cycling"
-                    ? "Log Ride Session"
-                    : "Finalize Match"}
+                <Text
+                  style={[
+                    styles.segmentBtnText,
+                    matchesSubTab === "fixtures" && styles.segmentBtnTextActive,
+                  ]}
+                >
+                  Fixtures ({games.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.segmentBtn, matchesSubTab === "scoring" && styles.segmentBtnActive]}
+                onPress={() => setMatchesSubTab("scoring")}
+              >
+                <Text
+                  style={[
+                    styles.segmentBtnText,
+                    matchesSubTab === "scoring" && styles.segmentBtnTextActive,
+                  ]}
+                >
+                  Live Scoring
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.segmentBtn, matchesSubTab === "results" && styles.segmentBtnActive]}
+                onPress={() => setMatchesSubTab("results")}
+              >
+                <Text
+                  style={[
+                    styles.segmentBtnText,
+                    matchesSubTab === "results" && styles.segmentBtnTextActive,
+                  ]}
+                >
+                  Results ({matchRecords.length})
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* SUB-VIEW 1: FIXTURES */}
+            {matchesSubTab === "fixtures" && (
+              <View>
+                {games.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <Ionicons name="calendar-outline" size={28} color={THEME.textMuted} />
+                    <Text style={styles.emptyTitle}>No scheduled fixtures yet.</Text>
+                    <Text style={styles.emptyDesc}>
+                      Schedule your first {currentSport.name.toLowerCase()} match, friendly scrimmage,
+                      or invite a friend to play.
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.emptyActionBtn, { backgroundColor: currentSport.accent }]}
+                      onPress={() => setAddGameOpen(true)}
+                    >
+                      <Ionicons name="add-circle" size={16} color="#FFFFFF" />
+                      <Text style={styles.emptyActionBtnText}>Schedule First Game</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  games.map((g) => (
+                    <View key={g.id} style={styles.gameCard}>
+                      <View style={styles.gameCardHeader}>
+                        <Text style={styles.gameCardSport}>{g.sport} Fixture</Text>
+                        <Text style={styles.gameCardVenue}>{g.venue}</Text>
+                      </View>
+                      <View style={styles.gameMatchupRow}>
+                        <Text style={styles.gameTeam}>{g.teamA}</Text>
+                        <Text style={styles.gameVs}>VS</Text>
+                        <Text style={styles.gameTeam}>{g.teamB}</Text>
+                      </View>
+                      <View style={styles.gameCardFooter}>
+                        <Text style={styles.gameCardDate}>{g.date}</Text>
+                        <TouchableOpacity
+                          style={[styles.gameScoreBtn, { backgroundColor: currentSport.accent }]}
+                          onPress={() => {
+                            if (activeSport === "Badminton") {
+                              setBadmintonP1(g.teamA);
+                              setBadmintonP2(g.teamB);
+                            } else if (activeSport === "Football") {
+                              setFootballTeamA(g.teamA);
+                              setFootballTeamB(g.teamB);
+                            } else {
+                              setStrikerName(g.teamA);
+                              setNonStrikerName(g.teamB);
+                            }
+                            setMatchesSubTab("scoring");
+                          }}
+                        >
+                          <Text style={styles.gameScoreBtnText}>Live Scoreboard</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+
+            {/* SUB-VIEW 2: LIVE SCORING CONSOLE */}
+            {matchesSubTab === "scoring" && (
+              <View>
 
             {/* SPORT SPECIFIC EASY SCORING UI */}
 
@@ -1272,17 +1302,6 @@ export default function App() {
                     <Ionicons name="timer-outline" size={15} color={THEME.text} />
                     <Text style={styles.controlBtnText}>+5 Min</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.controlBtn}
-                    onPress={() => {
-                      setFootballScoreA(0);
-                      setFootballScoreB(0);
-                      setFootballMinute(0);
-                    }}
-                  >
-                    <Ionicons name="refresh" size={15} color={THEME.text} />
-                    <Text style={styles.controlBtnText}>Reset</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1451,18 +1470,6 @@ export default function App() {
                       Target: {runTarget === 10 ? "10K" : runTarget === 21.1 ? "21.1K" : "42.2K"}
                     </Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.telemetryActionReset}
-                    onPress={() => {
-                      setRunDistance(0);
-                      setRunSteps(0);
-                      setRunCalories(0);
-                      setRunPace("0'00\"");
-                    }}
-                  >
-                    <Ionicons name="refresh" size={15} color={THEME.textMuted} />
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1628,18 +1635,6 @@ export default function App() {
                       Target: {cycleTarget === 35 ? "35K" : cycleTarget === 60 ? "60K" : "100K"}
                     </Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.telemetryActionReset}
-                    onPress={() => {
-                      setCycleDistance(0);
-                      setCycleElevation(0);
-                      setCycleCalories(0);
-                      setCycleSpeed(0);
-                    }}
-                  >
-                    <Ionicons name="refresh" size={15} color={THEME.textMuted} />
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1726,17 +1721,6 @@ export default function App() {
                     <Ionicons name="time-outline" size={15} color={THEME.text} />
                     <Text style={styles.controlBtnText}>Next Quarter</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.controlBtn}
-                    onPress={() => {
-                      setBballScoreA(0);
-                      setBballScoreB(0);
-                      setBballQuarter(1);
-                    }}
-                  >
-                    <Ionicons name="refresh" size={15} color={THEME.text} />
-                    <Text style={styles.controlBtnText}>Reset</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1799,51 +1783,46 @@ export default function App() {
                     <Ionicons name="refresh" size={15} color="#9d6ab0" />
                     <Text style={[styles.controlBtnText, { color: "#9d6ab0" }]}>Next Set</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.controlBtn}
-                    onPress={() => {
-                      setVballScoreA(0);
-                      setVballScoreB(0);
-                      setVballSet(1);
-                    }}
-                  >
-                    <Ionicons name="refresh" size={15} color={THEME.text} />
-                    <Text style={styles.controlBtnText}>Reset</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
+              </View>
+            )}
 
-            {/* FINALIZED MATCH & ACTIVITY ARCHIVES */}
-            <View style={styles.sectionHeaderRow}>
+            {/* SUB-VIEW 3: RESULTS / ARCHIVE */}
+            {matchesSubTab === "results" && (
               <View>
-                <Text style={styles.sectionEyebrow}>OFFICIAL ARCHIVE</Text>
-                <Text style={styles.sectionHeading}>Session & Match Records</Text>
-              </View>
-            </View>
-
-            {matchRecords.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Ionicons name="trophy-outline" size={24} color={THEME.textMuted} />
-                <Text style={styles.emptyTitle}>No finalized sessions yet.</Text>
-                <Text style={styles.emptyDesc}>
-                  Once you finish easy scoring a game or log a running/cycling session, tap "Log Session" or "Finalize Match" to save official records here.
-                </Text>
-              </View>
-            ) : (
-              matchRecords.map((rec) => (
-                <View key={rec.id} style={styles.recordCard}>
-                  <View style={styles.recordHeader}>
-                    <Text style={styles.recordSport}>
-                      {rec.sport === "Running" || rec.sport === "Cycling"
-                        ? `${rec.sport} Activity Log`
-                        : `${rec.sport} Official Result`}
-                    </Text>
-                    <Text style={styles.recordDate}>{rec.date} · {rec.finalizedAt}</Text>
+                <View style={styles.sectionHeaderRow}>
+                  <View>
+                    <Text style={styles.sectionEyebrow}>OFFICIAL ARCHIVE</Text>
+                    <Text style={styles.sectionHeading}>Session & Match Records</Text>
                   </View>
-                  <Text style={styles.recordSummary}>{rec.summary}</Text>
                 </View>
-              ))
+
+                {matchRecords.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <Ionicons name="trophy-outline" size={24} color={THEME.textMuted} />
+                    <Text style={styles.emptyTitle}>No finalized sessions yet.</Text>
+                    <Text style={styles.emptyDesc}>
+                      Once you finish easy scoring a game or log a running/cycling session, tap "Log Session" or "Finalize Match" to save official records here.
+                    </Text>
+                  </View>
+                ) : (
+                  matchRecords.map((rec) => (
+                    <View key={rec.id} style={styles.recordCard}>
+                      <View style={styles.recordHeader}>
+                        <Text style={styles.recordSport}>
+                          {rec.sport === "Running" || rec.sport === "Cycling"
+                            ? `${rec.sport} Activity Log`
+                            : `${rec.sport} Official Result`}
+                        </Text>
+                        <Text style={styles.recordDate}>{rec.date} · {rec.finalizedAt}</Text>
+                      </View>
+                      <Text style={styles.recordSummary}>{rec.summary}</Text>
+                    </View>
+                  ))
+                )}
+              </View>
             )}
           </ScrollView>
         )}
@@ -1894,19 +1873,54 @@ export default function App() {
             </View>
 
             <View style={styles.settingsCard}>
-              <Text style={styles.settingsHeading}>ACCOUNT & SYNC</Text>
+              <Text style={styles.settingsHeading}>SETTINGS & ACCOUNT</Text>
               <View style={styles.settingsRow}>
-                <MaterialCommunityIcons name={currentSport.icon} size={18} color={THEME.text} />
-                <Text style={styles.settingsText}>Active Sport Lens: {currentSport.name}</Text>
+                <Ionicons name="shield-checkmark-outline" size={18} color={THEME.accent} />
+                <Text style={styles.settingsText}>Verified Athlete ID: {currentUser.playerId}</Text>
               </View>
               <View style={styles.settingsRow}>
-                <Ionicons name="people-outline" size={18} color={THEME.text} />
-                <Text style={styles.settingsText}>Player ID: {currentUser.playerId}</Text>
+                <Ionicons name="notifications-outline" size={18} color={THEME.text} />
+                <Text style={styles.settingsText}>Match Alerts: Enabled</Text>
               </View>
-              <View style={styles.settingsRow}>
-                <Ionicons name="cloud-done-outline" size={18} color={THEME.accent} />
-                <Text style={styles.settingsText}>EZKORA Cloud Database: Connected</Text>
-              </View>
+              <TouchableOpacity
+                style={{
+                  marginTop: 14,
+                  backgroundColor: THEME.danger,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 13,
+                  borderRadius: 16,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 3,
+                  elevation: 2,
+                }}
+                onPress={() => {
+                  Alert.alert(
+                    "Sign Out of EZKORA",
+                    "Are you sure you want to sign out?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Sign Out",
+                        style: "destructive",
+                        onPress: () => {
+                          Alert.alert("Signed Out", "You have signed out of EZKORA.");
+                          setCurrentTab("home");
+                        },
+                      },
+                    ]
+                  );
+                }}
+              >
+                <Ionicons name="log-out-outline" size={18} color="#FFFFFF" />
+                <Text style={{ color: "#FFFFFF", fontWeight: "800", fontSize: 13 }}>
+                  Sign Out / Logout of EZKORA
+                </Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
         )}
@@ -1918,9 +1932,8 @@ export default function App() {
       <View style={styles.bottomNav}>
         {[
           { key: "home", label: "Home", icon: "compass" },
-          { key: "players", label: "Players", icon: "people" },
-          { key: "games", label: "Games", icon: "calendar" },
-          { key: "scores", label: "Scores", icon: "game-controller" },
+          { key: "players", label: "Chat", icon: "chatbubbles" },
+          { key: "matches", label: "Matches", icon: "trophy" },
           { key: "profile", label: "Profile", icon: "person" },
         ].map((tab) => {
           const isActive = currentTab === tab.key;

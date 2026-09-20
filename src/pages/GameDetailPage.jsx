@@ -110,10 +110,10 @@ export default function GameDetailPage() {
   return (
     <main className="mx-auto max-w-[950px] px-5 pb-20 pt-8 sm:px-8 lg:px-10 lg:pt-12">
       <Link
-        to="/games"
+        to="/matches"
         className="inline-flex items-center gap-2 text-[13px] font-bold text-[#71807d] hover:text-[#253638]"
       >
-        <IconArrowLeft size={16} /> All {game.sport} games
+        <IconArrowLeft size={16} /> All {game.sport} matches
       </Link>
 
       {/* Main Fixture Card */}
@@ -158,7 +158,7 @@ export default function GameDetailPage() {
               </span>
             )}
 
-            {!isFinished && (
+            {!isFinished && isHost && (
               <Button
                 onClick={() => setScoringOpen(true)}
                 variant="outline"
@@ -166,6 +166,12 @@ export default function GameDetailPage() {
               >
                 <IconTrophy size={14} /> Record / Finalize Score
               </Button>
+            )}
+
+            {!isFinished && !isHost && (
+              <span className="inline-flex items-center gap-1.5 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] px-3.5 py-2 text-xs font-bold text-[#71807d]">
+                👁️ Spectator View (Host: {game.host?.displayName || "Organizer"})
+              </span>
             )}
           </div>
         </div>

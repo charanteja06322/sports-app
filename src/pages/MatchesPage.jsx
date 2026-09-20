@@ -1,343 +1,426 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  FiZap, 
-  FiCalendar, 
-  FiClock, 
-  FiMapPin, 
-  FiUsers, 
-  FiPlusCircle, 
-  FiActivity, 
-  FiFilter, 
-  FiPlay,
-  FiAward,
-  FiCheckCircle
-} from 'react-icons/fi';
-
-const ALL_MATCHES = [
-  {
-    id: 'm1',
-    sport: 'Cricket',
-    emoji: '🏏',
-    format: 'T20 (20.0 Overs)',
-    league: 'Hyderabad Premier Cup',
-    status: 'LIVE',
-    matchCode: 'M-1001',
-    teamA: { name: 'Falcons Squad', score: '186/3', overs: '16.4 ov', logo: '🦅' },
-    teamB: { name: 'Titans XI', score: '178/8', overs: '20.0 ov', logo: '⚡' },
-    venue: 'Gymkhana Cricket Grounds, Secunderabad',
-    situation: 'Falcons need 9 runs in 20 balls (Kohli 74* off 48b)',
-    host: 'Virat Kohli (PL-10001)',
-  },
-  {
-    id: 'm2',
-    sport: 'Football',
-    emoji: '⚽',
-    format: '11v11 (90 Mins)',
-    league: 'Champions Super League',
-    status: 'LIVE',
-    matchCode: 'M-2042',
-    teamA: { name: 'City Strikers', score: '2', overs: '74 min', logo: '🏙️' },
-    teamB: { name: 'Royal Madrid', score: '1', overs: '74 min', logo: '👑' },
-    venue: 'Gachibowli Stadium, Hyderabad',
-    situation: 'Haaland scored 68th min • City leading',
-    host: 'Erling H. (PL-20402)',
-  },
-  {
-    id: 'm3',
-    sport: 'Basketball',
-    emoji: '🏀',
-    format: '4 Quarters (12m)',
-    league: 'National Hoop Tour',
-    status: 'LIVE',
-    matchCode: 'M-3081',
-    teamA: { name: 'Lakers Elite', score: '108', overs: 'Q4 01:20', logo: '🟣' },
-    teamB: { name: 'Warriors BC', score: '104', overs: 'Q4 01:20', logo: '🟡' },
-    venue: 'Indoor Basketball Arena',
-    situation: 'Curry 32 Pts • Lakers in possession',
-    host: 'LeBron J. (PL-30011)',
-  },
-  {
-    id: 'm4',
-    sport: 'Badminton',
-    emoji: '🏸',
-    format: 'Best of 3 Sets (21 Pts)',
-    league: 'All India Badminton Masters',
-    status: 'UPCOMING',
-    matchCode: 'M-4012',
-    teamA: { name: 'L. Sen (IND)', score: '-', overs: 'Tomorrow', logo: '🏸' },
-    teamB: { name: 'V. Axelsen (DEN)', score: '-', overs: '4:00 PM', logo: '🏸' },
-    venue: 'Pullela Gopichand Academy, Hyderabad',
-    situation: 'Men Singles Quarter-Final',
-    host: 'Academy Director (PL-40192)',
-  },
-  {
-    id: 'm5',
-    sport: 'Cricket',
-    emoji: '🏏',
-    format: 'T20 Turf Match',
-    league: 'Corporate Weekend Trophy',
-    status: 'COMPLETED',
-    matchCode: 'M-1090',
-    teamA: { name: 'Cyber Titans', score: '164/6', overs: '20.0 ov', logo: '💻' },
-    teamB: { name: 'Fintech Lions', score: '165/4', overs: '18.2 ov', logo: '🦁' },
-    venue: 'Skyline Turf Arena, Madhapur',
-    situation: 'Fintech Lions won by 6 wickets (POTM: Rahul K.)',
-    host: 'Rahul Kumar (PL-839201)',
-  },
-];
-
-const SPORTS_FILTERS = ['All Sports', 'Cricket', 'Football', 'Basketball', 'Badminton', 'Tennis', 'Volleyball'];
-const STATUS_FILTERS = ['ALL', 'LIVE', 'UPCOMING', 'COMPLETED'];
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
+import { PageHeader, Button, EmptyState, Field, Avatar } from "../components/ezkora/CommonUI";
+import { Scoreboard } from "../components/ezkora/Scoreboard";
+import {
+  IconPlus,
+  IconCalendar,
+  IconClock,
+  IconMapPin,
+  IconArrowUpRight,
+  IconX,
+  IconTrophy,
+  IconUsers,
+  SportIcon,
+} from "../components/ezkora/EzkoraIcons";
 
 export default function MatchesPage() {
-  const [selectedSport, setSelectedSport] = useState('All Sports');
-  const [selectedStatus, setSelectedStatus] = useState('ALL');
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  const [matchCodeInput, setMatchCodeInput] = useState('');
-  const [joinedMessage, setJoinedMessage] = useState('');
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
+  const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
+  const games = useEzkoraStore((s) => s.games);
+  const allAthletes = useEzkoraStore((s) => s.allAthletes);
+  const addGame = useEzkoraStore((s) => s.addGame);
 
-  const filteredMatches = ALL_MATCHES.filter((m) => {
-    const matchSport = selectedSport === 'All Sports' || m.sport.toLowerCase() === selectedSport.toLowerCase();
-    const matchStatus = selectedStatus === 'ALL' || m.status === selectedStatus;
-    return matchSport && matchStatus;
-  });
+  // Tab: "fixtures" | "scoreboard" | "results"
+  const [activeTab, setActiveTab] = useState("fixtures");
 
-  const handleJoinByCode = (e) => {
+  // Create match modal state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [formSport, setFormSport] = useState(activeSportName);
+  const [formTitle, setFormTitle] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formLocation, setFormLocation] = useState("");
+  const [invitePlayerId, setInvitePlayerId] = useState("");
+  const [selectedInviteAthletes, setSelectedInviteAthletes] = useState([]);
+
+  React.useEffect(() => {
+    setFormSport(activeSportName);
+  }, [activeSportName]);
+
+  // Filter games by sport
+  const sportGames = games.filter((g) => g.sport === activeSportName);
+  const activeFixtures = sportGames.filter((g) => g.status !== "finished");
+  const completedResults = sportGames.filter((g) => g.status === "finished");
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (matchCodeInput.trim()) {
-      setJoinedMessage(`Joined match ${matchCodeInput.toUpperCase()} as Spectator/Player!`);
-      setTimeout(() => {
-        setJoinedMessage('');
-        setShowJoinModal(false);
-        setMatchCodeInput('');
-      }, 2000);
+    if (!formTitle.trim()) return;
+
+    let invited = [...selectedInviteAthletes];
+    if (invitePlayerId.trim()) {
+      const cleanId = invitePlayerId.trim().toUpperCase();
+      const found = allAthletes.find(
+        (a) => a.publicId?.toUpperCase() === cleanId || a.displayName?.toLowerCase() === cleanId.toLowerCase()
+      );
+      if (found && !invited.some((i) => i.id === found.id)) {
+        invited.push(found);
+      }
+    }
+
+    addGame({
+      sport: formSport,
+      title: formTitle.trim(),
+      scheduledAt: formDate ? new Date(formDate).toISOString() : new Date().toISOString(),
+      location: formLocation.trim() || "Local Sports Arena",
+      invitedPlayers: invited,
+    });
+
+    setFormTitle("");
+    setFormDate("");
+    setFormLocation("");
+    setInvitePlayerId("");
+    setSelectedInviteAthletes([]);
+    setCreateOpen(false);
+  };
+
+  const toggleInviteAthlete = (athlete) => {
+    if (selectedInviteAthletes.some((a) => a.id === athlete.id)) {
+      setSelectedInviteAthletes(selectedInviteAthletes.filter((a) => a.id !== athlete.id));
+    } else {
+      setSelectedInviteAthletes([...selectedInviteAthletes, athlete]);
     }
   };
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-screen py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
-        {/* Top Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider mb-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span>Live Stadium Engine</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Live & Scheduled Matches
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Ball-by-ball updates, live scoreboards, and instant match code invites.
-            </p>
-          </div>
+    <main className="mx-auto max-w-[1160px] px-4 sm:px-8 lg:px-10 pb-20 pt-8">
+      {/* Unified Page Header */}
+      <PageHeader
+        eyebrow={`${sport.name} / Matches & Scoring`}
+        title="Competition & Game Hub."
+        body={`Organize ${sport.name.toLowerCase()} matches, invite athletes via Player ID or QR code, track live scoring, and record official results.`}
+        action={
+          <Button
+            onClick={() => setCreateOpen(true)}
+            style={{ backgroundColor: sport.accent }}
+            className="text-white shadow-md hover:brightness-105"
+          >
+            <IconPlus size={16} />
+            <span>Create Match</span>
+          </Button>
+        }
+      />
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button
-              onClick={() => setShowJoinModal(true)}
-              className="flex-1 sm:flex-initial px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/50 text-white font-bold text-xs uppercase tracking-wider transition-all"
-            >
-              🎟️ Join with Code
-            </button>
+      {/* Unified Navigation Switcher Tabs */}
+      <div className="mt-8 flex rounded-2xl border border-[#DDD6C8] bg-white p-1.5 text-xs font-bold shadow-xs">
+        <button
+          type="button"
+          onClick={() => setActiveTab("fixtures")}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 transition-all ${
+            activeTab === "fixtures"
+              ? "bg-[#18181b] text-white shadow-sm"
+              : "text-[#71807d] hover:text-[#18181b] hover:bg-[#FAF7F2]"
+          }`}
+        >
+          <IconCalendar size={15} />
+          <span>Active Fixtures ({activeFixtures.length})</span>
+        </button>
 
-            <button
-              onClick={() => setShowJoinModal(true)}
-              className="flex-1 sm:flex-initial px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center justify-center gap-2"
-            >
-              <FiPlusCircle className="w-4 h-4" />
-              <span>Create Match</span>
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab("scoreboard")}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 transition-all ${
+            activeTab === "scoreboard"
+              ? "bg-[#18181b] text-white shadow-sm"
+              : "text-[#71807d] hover:text-[#18181b] hover:bg-[#FAF7F2]"
+          }`}
+        >
+          <IconTrophy size={15} />
+          <span>Live Scoring Console</span>
+        </button>
 
-        {/* Filters */}
-        <div className="space-y-4">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-            {STATUS_FILTERS.map((st) => (
-              <button
-                key={st}
-                onClick={() => setSelectedStatus(st)}
-                className={`px-4 py-2 rounded-full text-xs font-black tracking-wider transition-all ${
-                  selectedStatus === st
-                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-              >
-                {st === 'LIVE' ? '🔴 LIVE' : st}
-              </button>
-            ))}
-          </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab("results")}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 transition-all ${
+            activeTab === "results"
+              ? "bg-[#18181b] text-white shadow-sm"
+              : "text-[#71807d] hover:text-[#18181b] hover:bg-[#FAF7F2]"
+          }`}
+        >
+          <IconCheck size={15} />
+          <span>Completed Results ({completedResults.length})</span>
+        </button>
+      </div>
 
-          {/* Sport Selector Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {SPORTS_FILTERS.map((sp) => (
-              <button
-                key={sp}
-                onClick={() => setSelectedSport(sp)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-                  selectedSport === sp
-                    ? 'bg-slate-800 text-emerald-400 border-emerald-500/50 shadow-sm'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                {sp}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Matches Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredMatches.map((m) => (
-            <div
-              key={m.id}
-              className="p-1 rounded-3xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-slate-800/90 shadow-xl hover:border-emerald-500/50 transition-all duration-300 group"
-            >
-              <div className="bg-slate-950/95 p-6 rounded-[22px] space-y-5">
-                
-                {/* Match Header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{m.emoji}</span>
-                    <div>
-                      <h3 className="text-sm font-black text-white">{m.league}</h3>
-                      <span className="text-[11px] text-slate-400 font-semibold">{m.format}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {m.status === 'LIVE' ? (
-                      <span className="px-2.5 py-1 rounded-full bg-red-950 border border-red-500/40 text-red-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                        LIVE SCORING
-                      </span>
-                    ) : m.status === 'COMPLETED' ? (
-                      <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300 text-[10px] font-black uppercase">
-                        FINISHED
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-1 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-400 text-[10px] font-black uppercase">
-                        UPCOMING
-                      </span>
-                    )}
-                    <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 text-[10px] font-mono font-bold border border-slate-800">
-                      {m.matchCode}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Scoreboard Arena */}
-                <div className="grid grid-cols-2 gap-4 py-4 px-4 bg-slate-900/60 rounded-2xl border border-slate-800/80 items-center">
-                  
-                  {/* Team A */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl p-1 bg-slate-800 rounded-lg">{m.teamA.logo}</span>
-                      <span className="font-extrabold text-white text-sm truncate">{m.teamA.name}</span>
-                    </div>
-                    <div className="text-2xl font-black text-emerald-400">{m.teamA.score}</div>
-                    <div className="text-[11px] text-slate-400 font-medium">{m.teamA.overs}</div>
-                  </div>
-
-                  {/* Team B */}
-                  <div className="space-y-1 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="font-extrabold text-white text-sm truncate">{m.teamB.name}</span>
-                      <span className="text-xl p-1 bg-slate-800 rounded-lg">{m.teamB.logo}</span>
-                    </div>
-                    <div className="text-2xl font-black text-cyan-400">{m.teamB.score}</div>
-                    <div className="text-[11px] text-slate-400 font-medium">{m.teamB.overs}</div>
-                  </div>
-
-                </div>
-
-                {/* Situation & Location */}
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 bg-slate-900/40 rounded-xl border border-slate-800/60 text-slate-300 font-semibold flex items-center justify-between">
-                    <span>⚡ {m.situation}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1.5"><FiMapPin className="text-emerald-400" /> {m.venue}</span>
-                    <span className="text-slate-500">Host: {m.host}</span>
-                  </div>
-                </div>
-
-                {/* Footer Action */}
-                <div className="pt-2">
-                  <button
-                    onClick={() => alert(`Opening Live Match Console for ${m.matchCode}...`)}
-                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider border border-slate-800 hover:border-emerald-500/50 transition-all flex items-center justify-center gap-2 group-hover:border-emerald-500/40"
-                  >
-                    <FiPlay className="text-emerald-400 w-3.5 h-3.5" />
-                    <span>Open Live Scoring Stadium Console</span>
-                  </button>
-                </div>
-
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Join Match Modal */}
-        {showJoinModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-            <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-md w-full space-y-6 shadow-2xl">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-black text-white">Join Match by Code</h3>
-                <button
-                  onClick={() => setShowJoinModal(false)}
-                  className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+      {/* TAB CONTENT: 1. ACTIVE FIXTURES */}
+      {activeTab === "fixtures" && (
+        <div className="mt-8">
+          {activeFixtures.length === 0 ? (
+            <EmptyState
+              icon={<IconCalendar size={24} />}
+              title={`No active ${sport.name.toLowerCase()} matches scheduled.`}
+              body="Schedule a new fixture, invite opponents or teammates via their Player ID, and score live."
+              action={
+                <Button onClick={() => setCreateOpen(true)}>
+                  <IconPlus size={15} />
+                  <span>Create the first match</span>
+                </Button>
+              }
+            />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {activeFixtures.map((game) => (
+                <Link
+                  key={game.id}
+                  to={`/games/${game.id}`}
+                  className="group rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#277863]/60 hover:shadow-md"
                 >
-                  ✕
-                </button>
-              </div>
-
-              {joinedMessage ? (
-                <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-center text-xs">
-                  {joinedMessage}
-                </div>
-              ) : (
-                <form onSubmit={handleJoinByCode} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Enter 6-Character Match Code (e.g. M-1001)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={matchCodeInput}
-                      onChange={(e) => setMatchCodeInput(e.target.value.toUpperCase())}
-                      placeholder="M-XXXX"
-                      maxLength={6}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-center text-lg font-black tracking-widest focus:border-emerald-500 outline-none"
+                  <div className="flex items-start justify-between gap-3">
+                    <span
+                      className="rounded-full px-3 py-1 text-[11px] font-bold text-white shadow-xs"
+                      style={{ backgroundColor: sport.deep }}
+                    >
+                      SCHEDULED
+                    </span>
+                    <IconArrowUpRight
+                      size={18}
+                      className="text-[#71807d] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-                    <button type="button" className="p-3 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-400">
-                      🔵 Join Team A
-                    </button>
-                    <button type="button" className="p-3 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-400">
-                      🔴 Join Team B
-                    </button>
+                  <h3 className="display-font mt-4 text-xl font-bold leading-snug text-[#253638]">
+                    {game.title}
+                  </h3>
+
+                  <div className="mt-4 space-y-2 text-xs text-[#71807d]">
+                    <p className="flex items-center gap-2">
+                      <IconClock size={14} />
+                      <span>
+                        {new Date(game.scheduledAt).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </p>
+                    {game.location && (
+                      <p className="flex items-center gap-2">
+                        <IconMapPin size={14} />
+                        <span className="truncate">{game.location}</span>
+                      </p>
+                    )}
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20"
-                  >
-                    Enter Live Scoreboard
-                  </button>
-                </form>
-              )}
+                  <div className="mt-6 flex items-center justify-between border-t border-[#DDD6C8] pt-4 text-xs font-semibold text-[#71807d]">
+                    <span>Host: {game.host?.displayName || "Captain"}</span>
+                    <span className="text-[#277863] font-bold flex items-center gap-1">
+                      <IconUsers size={14} />
+                      {game.players?.length || 1} on roster →
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-      </div>
-    </div>
+      {/* TAB CONTENT: 2. LIVE SCORING CONSOLE */}
+      {activeTab === "scoreboard" && (
+        <div className="mt-8 space-y-6">
+          <Scoreboard />
+        </div>
+      )}
+
+      {/* TAB CONTENT: 3. COMPLETED RESULTS */}
+      {activeTab === "results" && (
+        <div className="mt-8 space-y-4">
+          {completedResults.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-[#DDD6C8] bg-white p-12 text-center">
+              <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-[#FAF7F2] text-[#71807d] mb-3">
+                <IconTrophy size={24} />
+              </div>
+              <h3 className="display-font text-lg font-bold text-[#18181b]">
+                No completed {sport.name.toLowerCase()} matches yet
+              </h3>
+              <p className="mt-1 text-xs text-[#71807d] max-w-sm mx-auto">
+                Once an organizer scores and concludes an active match, verified results will appear here and sync to all participants' profiles.
+              </p>
+            </div>
+          ) : (
+            completedResults.map((game) => (
+              <Link
+                key={game.id}
+                to={`/games/${game.id}`}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[#DDD6C8] bg-white p-5 shadow-xs hover:border-[#277863] transition-colors"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="grid size-12 place-items-center rounded-2xl bg-[#FAF7F2] text-[#18181b] shadow-xs">
+                    <SportIcon name={game.sport} size={22} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="mono-font text-[10px] font-bold uppercase text-[#71807d]">
+                        {game.sport}
+                      </span>
+                      <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-[9px] font-bold">
+                        FINAL SCORE
+                      </span>
+                    </div>
+                    <h4 className="display-font text-base font-bold text-[#18181b] mt-0.5">
+                      {game.title}
+                    </h4>
+                    <p className="text-xs text-[#71807d] mt-0.5">
+                      {game.location} · {new Date(game.scheduledAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <p className="mono-font text-xl sm:text-2xl font-black text-[#277863]">
+                    {game.score || "Completed"}
+                  </p>
+                  <span className="text-[11px] font-bold text-[#71807d] hover:text-[#18181b]">
+                    {game.players?.length || 1} players on roster →
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Modal: Create Match */}
+      {createOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-xs">
+          <form
+            onSubmit={handleSubmit}
+            className="ezkora-fade max-h-[92vh] overflow-y-auto w-full max-w-[520px] rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <p
+                  className="mono-font text-[10px] uppercase tracking-[0.2em] font-semibold"
+                  style={{ color: sport.deep }}
+                >
+                  Create Match Fixture
+                </p>
+                <h2 className="display-font mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#253638]">
+                  Set match details & invite.
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreateOpen(false)}
+                className="grid size-8 place-items-center rounded-full text-[#71807d] hover:bg-[#EAE4D7]"
+              >
+                <IconX size={18} />
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <Field label="Sport Discipline">
+                <select
+                  value={formSport}
+                  onChange={(e) => setFormSport(e.target.value)}
+                  className="field font-semibold"
+                >
+                  {SPORTS.map((s) => (
+                    <option key={s.name} value={s.name}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Match / Fixture Title">
+                <input
+                  required
+                  type="text"
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  placeholder={`e.g. ${formSport} Singles Championship, Evening Session`}
+                  className="field"
+                />
+              </Field>
+
+              <Field label="When (Date & Time)">
+                <input
+                  required
+                  type="datetime-local"
+                  value={formDate}
+                  onChange={(e) => setFormDate(e.target.value)}
+                  className="field"
+                />
+              </Field>
+
+              <Field label="Venue / Court Location">
+                <input
+                  type="text"
+                  value={formLocation}
+                  onChange={(e) => setFormLocation(e.target.value)}
+                  placeholder="e.g. Court 3, Central Sports Complex"
+                  className="field"
+                />
+              </Field>
+
+              {/* Player ID Invite Section */}
+              <div className="rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-4">
+                <p className="mono-font text-[10px] font-bold uppercase tracking-wider text-[#277863] mb-1">
+                  Invite Players (Via Player ID or Roster)
+                </p>
+                <p className="text-[11px] text-[#71807d] mb-3">
+                  Enter an athlete's Player ID (e.g. <code>PL-512391</code>) or select from active players to invite them.
+                </p>
+
+                <input
+                  type="text"
+                  value={invitePlayerId}
+                  onChange={(e) => setInvitePlayerId(e.target.value)}
+                  placeholder="Enter Player ID (PL-XXXXXX)"
+                  className="w-full rounded-xl border border-[#DDD6C8] bg-white px-3 py-2 text-xs font-mono font-bold text-[#18181b] placeholder:font-sans placeholder:font-normal placeholder:text-[#9BA6A3] focus:outline-none focus:border-[#18181b]"
+                />
+
+                {allAthletes.length > 1 && (
+                  <div className="mt-3 pt-3 border-t border-[#DDD6C8]/60">
+                    <p className="text-[10px] font-bold text-[#71807d] mb-1.5 uppercase">
+                      Quick Add Athletes:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allAthletes.map((ath) => {
+                        const isSelected = selectedInviteAthletes.some((a) => a.id === ath.id);
+                        return (
+                          <button
+                            key={ath.id}
+                            type="button"
+                            onClick={() => toggleInviteAthlete(ath)}
+                            className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs transition-all ${
+                              isSelected
+                                ? "bg-[#18181b] text-white font-bold"
+                                : "bg-white border border-[#DDD6C8] text-[#253638] hover:border-[#18181b]"
+                            }`}
+                          >
+                            <Avatar player={ath} size="xs" />
+                            <span>{ath.displayName}</span>
+                            <span className="mono-font text-[9px] opacity-75">({ath.publicId})</span>
+                            {isSelected && <span>✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2.5 pt-3 border-t border-[#DDD6C8]">
+              <Button variant="quiet" onClick={() => setCreateOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                style={{ backgroundColor: sport.accent }}
+                className="text-white shadow-md"
+              >
+                Create Match & Send Invites
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+    </main>
   );
 }

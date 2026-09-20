@@ -12,9 +12,8 @@ export function Sidebar({ mobileClose }) {
 
   const links = [
     { href: "/", label: "Home", icon: <IconCompass size={18} /> },
-    { href: "/players", label: "Players", icon: <IconUsers size={18} /> },
-    { href: "/games", label: "Games", icon: <IconCalendar size={18} /> },
-    { href: "/scores", label: "Scores", icon: <IconTrophy size={18} /> },
+    { href: "/players", label: "Players & Chat", icon: <IconUsers size={18} /> },
+    { href: "/matches", label: "Matches", icon: <IconTrophy size={18} /> },
   ];
 
   return (

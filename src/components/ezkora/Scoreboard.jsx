@@ -6,11 +6,15 @@ import { Button } from "./CommonUI";
 export function Scoreboard() {
   const activeSport = useEzkoraStore((s) => s.activeSport);
   const games = useEzkoraStore((s) => s.games);
+  const me = useEzkoraStore((s) => s.me);
   const recordMatchScore = useEzkoraStore((s) => s.recordMatchScore);
   const sportConfig = SPORTS.find((s) => s.name === activeSport) || SPORTS[0];
 
   const [selectedMatchId, setSelectedMatchId] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const selectedMatch = games.find((g) => String(g.id) === String(selectedMatchId));
+  const isHost = !selectedMatch || (selectedMatch.host?.id === me?.id || selectedMatch.host?.publicId === me?.publicId);
 
   const activeMatches = games.filter(
     (g) => g.sport === activeSport && g.status !== "finished"
@@ -164,7 +168,11 @@ export function Scoreboard() {
 
         {selectedMatchId && (
           <div className="flex items-center gap-2">
-            {saveSuccess ? (
+            {!isHost ? (
+              <span className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 font-bold text-amber-800">
+                👁️ Spectator Mode (Host: {selectedMatch?.host?.displayName || "Organizer"})
+              </span>
+            ) : saveSuccess ? (
               <span className="font-bold text-[#277863]">✓ Score saved to match & all player profiles!</span>
             ) : (
               <Button onClick={handleSaveToMatch} className="text-xs py-1.5 px-3.5 shadow-xs">
@@ -174,6 +182,16 @@ export function Scoreboard() {
           </div>
         )}
       </div>
+
+      {/* Spectator notice banner */}
+      {selectedMatchId && !isHost && (
+        <div className="mt-3 flex items-center gap-2.5 rounded-2xl border border-amber-300 bg-amber-50/80 p-3 text-xs text-amber-900">
+          <span className="text-base">👁️</span>
+          <div>
+            <span className="font-bold">Live Spectator View:</span> Only the match organizer ({selectedMatch?.host?.displayName || "Host"}) can score this match. Live score is synchronized in real-time.
+          </div>
+        </div>
+      )}
 
       {/* Sport-specific console */}
       <div className="mt-6">
@@ -239,25 +257,20 @@ export function Scoreboard() {
                   <button
                     key={run}
                     type="button"
+                    disabled={!isHost}
                     onClick={() => addCricketRun(run)}
-                    className="action-ring flex-1 min-w-[50px] rounded-xl border border-[#DDD6C8] bg-white py-2.5 text-sm font-black text-[#253638] shadow-xs hover:border-[#277863] hover:bg-[#FAF7F2] active:scale-95 transition-all"
+                    className="action-ring flex-1 min-w-[50px] rounded-xl border border-[#DDD6C8] bg-white py-2.5 text-sm font-black text-[#253638] shadow-xs hover:border-[#277863] hover:bg-[#FAF7F2] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   >
                     +{run}
                   </button>
                 ))}
                 <button
                   type="button"
+                  disabled={!isHost}
                   onClick={addCricketWicket}
-                  className="action-ring flex-1 min-w-[60px] rounded-xl bg-[#bd5549] py-2.5 text-sm font-black text-white shadow-xs hover:brightness-110 active:scale-95 transition-all"
+                  className="action-ring flex-1 min-w-[60px] rounded-xl bg-[#bd5549] py-2.5 text-sm font-black text-white shadow-xs hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   Wicket
-                </button>
-                <button
-                  type="button"
-                  onClick={resetCricket}
-                  className="action-ring rounded-xl border border-[#DDD6C8] bg-[#EAE4D7] px-3 py-2.5 text-xs font-bold text-[#71807d] hover:text-[#253638]"
-                >
-                  Reset
                 </button>
               </div>
             </div>
@@ -288,27 +301,18 @@ export function Scoreboard() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => setFootballHome((h) => h + 1)} className="flex-1 min-w-[140px]">
+              <Button disabled={!isHost} onClick={() => setFootballHome((h) => h + 1)} className="flex-1 min-w-[140px]">
                 Goal Home
               </Button>
-              <Button onClick={() => setFootballAway((a) => a + 1)} className="flex-1 min-w-[140px]">
+              <Button disabled={!isHost} onClick={() => setFootballAway((a) => a + 1)} className="flex-1 min-w-[140px]">
                 Goal Away
               </Button>
               <Button
+                disabled={!isHost}
                 variant="quiet"
                 onClick={() => setFootballMinute((m) => Math.min(90, m + 1))}
               >
                 +1 Min
-              </Button>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setFootballHome(0);
-                  setFootballAway(0);
-                  setFootballMinute(0);
-                }}
-              >
-                Reset
               </Button>
             </div>
           </div>
@@ -338,21 +342,11 @@ export function Scoreboard() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => setBbHome((h) => h + 1)}>Team A +1 FT</Button>
-              <Button onClick={() => setBbHome((h) => h + 2)}>Team A +2 FG</Button>
-              <Button onClick={() => setBbHome((h) => h + 3)}>Team A +3 3PT</Button>
-              <Button variant="quiet" onClick={() => setBbAway((a) => a + 2)}>Team B +2 FG</Button>
-              <Button variant="quiet" onClick={() => setBbAway((a) => a + 3)}>Team B +3 3PT</Button>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setBbHome(0);
-                  setBbAway(0);
-                  setBbQuarter("Q1");
-                }}
-              >
-                Reset
-              </Button>
+              <Button disabled={!isHost} onClick={() => setBbHome((h) => h + 1)}>Team A +1 FT</Button>
+              <Button disabled={!isHost} onClick={() => setBbHome((h) => h + 2)}>Team A +2 FG</Button>
+              <Button disabled={!isHost} onClick={() => setBbHome((h) => h + 3)}>Team A +3 3PT</Button>
+              <Button disabled={!isHost} variant="quiet" onClick={() => setBbAway((a) => a + 2)}>Team B +2 FG</Button>
+              <Button disabled={!isHost} variant="quiet" onClick={() => setBbAway((a) => a + 3)}>Team B +3 3PT</Button>
             </div>
           </div>
         )}
@@ -382,18 +376,21 @@ export function Scoreboard() {
 
             <div className="flex flex-wrap gap-2">
               <Button
+                disabled={!isHost}
                 style={{ backgroundColor: "#e11d48", borderColor: "#e11d48" }}
                 onClick={() => setBadmintonP1((p) => p + 1)}
               >
                 +1 Point Player 1
               </Button>
               <Button
+                disabled={!isHost}
                 style={{ backgroundColor: "#e11d48", borderColor: "#e11d48" }}
                 onClick={() => setBadmintonP2((p) => p + 1)}
               >
                 +1 Point Player 2
               </Button>
               <Button
+                disabled={!isHost}
                 variant="quiet"
                 onClick={() => {
                   setBadmintonSet((s) => s + 1);
@@ -402,16 +399,6 @@ export function Scoreboard() {
                 }}
               >
                 Next Set
-              </Button>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setBadmintonP1(0);
-                  setBadmintonP2(0);
-                  setBadmintonSet(1);
-                }}
-              >
-                Reset
               </Button>
             </div>
           </div>
@@ -540,6 +527,7 @@ export function Scoreboard() {
             {/* Quick Action Controls */}
             <div className="flex flex-wrap gap-2">
               <Button
+                disabled={!isHost}
                 style={{ backgroundColor: "#4c9b81", borderColor: "#4c9b81" }}
                 onClick={() => {
                   setRunDistance((d) => Number((d + 0.5).toFixed(2)));
@@ -551,6 +539,7 @@ export function Scoreboard() {
                 +0.5 KM Logged
               </Button>
               <Button
+                disabled={!isHost}
                 variant="quiet"
                 onClick={() => {
                   setRunSteps((s) => s + 500);
@@ -562,21 +551,11 @@ export function Scoreboard() {
                 +500 Steps
               </Button>
               <Button
+                disabled={!isHost}
                 variant="quiet"
                 onClick={() => setRunTarget((t) => (t === 10 ? 21.1 : 10))}
               >
                 Target: {runTarget === 10 ? "Set 21K Half" : "Set 10K"}
-              </Button>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setRunDistance(0);
-                  setRunSteps(0);
-                  setRunCalories(0);
-                  setRunPace("0'00\"");
-                }}
-              >
-                Reset Run
               </Button>
             </div>
           </div>
@@ -702,6 +681,7 @@ export function Scoreboard() {
             {/* Quick Controls */}
             <div className="flex flex-wrap gap-2">
               <Button
+                disabled={!isHost}
                 style={{ backgroundColor: "#557fa9", borderColor: "#557fa9" }}
                 onClick={() => {
                   setCycleDistance((d) => Number((d + 2.0).toFixed(1)));
@@ -713,6 +693,7 @@ export function Scoreboard() {
                 +2.0 KM Logged
               </Button>
               <Button
+                disabled={!isHost}
                 variant="quiet"
                 onClick={() => {
                   setCycleElevation((e) => e + 50);
@@ -720,17 +701,6 @@ export function Scoreboard() {
                 }}
               >
                 +50m Climbing
-              </Button>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setCycleDistance(0);
-                  setCycleElevation(0);
-                  setCycleCalories(0);
-                  setCycleSpeed(0);
-                }}
-              >
-                Reset Ride
               </Button>
             </div>
           </div>
@@ -754,20 +724,11 @@ export function Scoreboard() {
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={() => setRallyScoreA((s) => s + 1)} className="flex-1">
+              <Button disabled={!isHost} onClick={() => setRallyScoreA((s) => s + 1)} className="flex-1">
                 +1 Point Team 1
               </Button>
-              <Button onClick={() => setRallyScoreB((s) => s + 1)} className="flex-1" variant="quiet">
+              <Button disabled={!isHost} onClick={() => setRallyScoreB((s) => s + 1)} className="flex-1" variant="quiet">
                 +1 Point Team 2
-              </Button>
-              <Button
-                variant="quiet"
-                onClick={() => {
-                  setRallyScoreA(0);
-                  setRallyScoreB(0);
-                }}
-              >
-                Reset
               </Button>
             </div>
           </div>

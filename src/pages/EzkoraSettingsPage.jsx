@@ -136,9 +136,9 @@ export default function EzkoraSettingsPage() {
           <Button
             variant="danger"
             onClick={handleLogout}
-            className="flex items-center gap-2 text-xs font-bold shadow-xs"
+            className="flex items-center gap-2 text-xs font-bold shadow-xs px-4 py-2.5"
           >
-            <span>Sign Out</span>
+            <span>🚪 Sign Out / Logout</span>
           </Button>
         }
       />
@@ -183,6 +183,15 @@ export default function EzkoraSettingsPage() {
                   >
                     <span>📱 Scan QR</span>
                   </button>
+
+                  {/* Settings / Logout button */}
+                  <Button
+                    variant="danger"
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold"
+                  >
+                    <span>🚪 Logout</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -300,7 +309,7 @@ export default function EzkoraSettingsPage() {
               </h3>
             </div>
             <Link
-              to="/games"
+              to="/matches"
               className="text-xs font-bold text-[#277863] hover:underline"
             >
               + Join / Create Match →
@@ -320,11 +329,8 @@ export default function EzkoraSettingsPage() {
                   When you or your opponent finalize a match score in the scoring console, the official result and points breakdown are automatically attributed to your profile here.
                 </p>
                 <div className="mt-4 flex justify-center gap-3">
-                  <Link to="/games">
-                    <Button className="text-xs">Schedule a Match</Button>
-                  </Link>
-                  <Link to="/scores">
-                    <Button variant="outline" className="text-xs">Open Scoreboard</Button>
+                  <Link to="/matches">
+                    <Button className="text-xs">Go to Matches</Button>
                   </Link>
                 </div>
               </div>
@@ -362,7 +368,7 @@ export default function EzkoraSettingsPage() {
                         {m.score || "Match Finished"}
                       </p>
                       <Link
-                        to={`/games/${m.id}`}
+                        to={`/matches/${m.id}`}
                         className="text-[11px] font-bold text-[#71807d] hover:text-[#253638] hover:underline"
                       >
                         View Fixture Details →
@@ -441,47 +447,6 @@ export default function EzkoraSettingsPage() {
                 className="size-5 accent-[#18181b] cursor-pointer"
               />
             </div>
-
-            {/* Cloud Real-Time Sync Frequency */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2]">
-              <div>
-                <p className="text-sm font-bold text-[#253638]">
-                  Live Background Cloud Sync
-                </p>
-                <p className="text-xs text-[#71807d]">
-                  Background polling rate with the cloud Supabase database for real-time multiplayer updates.
-                </p>
-              </div>
-              <select
-                value={syncInterval}
-                onChange={(e) => handleSettingChange("syncInterval", e.target.value)}
-                className="rounded-xl border border-[#DDD6C8] bg-white px-3 py-1.5 text-xs font-bold text-[#253638] focus:outline-none"
-              >
-                <option value="realtime">Real-Time (3 seconds)</option>
-                <option value="standard">Standard (8 seconds)</option>
-                <option value="manual">Manual / On-Demand</option>
-              </select>
-            </div>
-
-            {/* Supabase Cloud Connection Status */}
-            <div className="flex items-center justify-between p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
-              <div className="flex items-center gap-3">
-                <span className="grid size-3 place-items-center">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
-                </span>
-                <div>
-                  <p className="text-xs font-bold text-emerald-900">
-                    Supabase PostgreSQL Cloud Database
-                  </p>
-                  <p className="text-[11px] text-emerald-700">
-                    Connected to aws-0-ap-southeast-1.pooler.supabase.com:6543
-                  </p>
-                </div>
-              </div>
-              <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                ACTIVE & HEALTHY
-              </span>
-            </div>
           </div>
         </section>
 
@@ -557,14 +522,14 @@ export default function EzkoraSettingsPage() {
           </div>
         </section>
 
-        {/* 5. Account Sign Out & Database Reset */}
+        {/* 5. Settings & Logout Session */}
         <section className="rounded-3xl border border-red-200 bg-red-50/50 p-6 sm:p-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="display-font text-lg font-bold text-red-900">
-              Account Session & Data Tools
+              Settings & Logout Session
             </h3>
             <p className="mt-1 text-xs text-red-700/80">
-              Sign out of your active session or reset all local/cloud fixtures to a fresh slate.
+              Sign out of your active athlete account or reset fixtures to a fresh slate.
             </p>
           </div>
 
@@ -583,9 +548,9 @@ export default function EzkoraSettingsPage() {
             <Button
               variant="danger"
               onClick={handleLogout}
-              className="text-xs font-bold shadow-sm"
+              className="text-xs font-bold shadow-sm px-5 py-2.5"
             >
-              Sign Out of EZKORA
+              🚪 Sign Out / Logout of EZKORA
             </Button>
           </div>
         </section>
