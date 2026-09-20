@@ -226,6 +226,34 @@ export default function App() {
   const [footballMinute, setFootballMinute] = useState(0);
   const [footballEvents, setFootballEvents] = useState([]);
 
+  // Running Telemetry State (Steps, Distance, Target, Trend)
+  const [runDistance, setRunDistance] = useState(6.4);
+  const [runSteps, setRunSteps] = useState(8420);
+  const [runTarget, setRunTarget] = useState(10.0);
+  const [runPace, setRunPace] = useState("5'18\"");
+  const [runCalories, setRunCalories] = useState(485);
+
+  // Cycling Telemetry State (Distance, Target, Elevation, Speed)
+  const [cycleDistance, setCycleDistance] = useState(24.8);
+  const [cycleTarget, setCycleTarget] = useState(35.0);
+  const [cycleSpeed, setCycleSpeed] = useState(26.4);
+  const [cycleElevation, setCycleElevation] = useState(240);
+  const [cycleCalories, setCycleCalories] = useState(620);
+
+  // Basketball Scoring
+  const [bballTeamA, setBballTeamA] = useState("Warriors");
+  const [bballTeamB, setBballTeamB] = useState("Lakers");
+  const [bballScoreA, setBballScoreA] = useState(0);
+  const [bballScoreB, setBballScoreB] = useState(0);
+  const [bballQuarter, setBballQuarter] = useState(1);
+
+  // Volleyball Scoring
+  const [vballTeamA, setVballTeamA] = useState("Spikers");
+  const [vballTeamB, setVballTeamB] = useState("Blockers");
+  const [vballScoreA, setVballScoreA] = useState(0);
+  const [vballScoreB, setVballScoreB] = useState(0);
+  const [vballSet, setVballSet] = useState(1);
+
   // Completed Match Records
   const [matchRecords, setMatchRecords] = useState([]);
 
@@ -425,16 +453,26 @@ export default function App() {
     }
   };
 
-  // Finalize Match and Save to Records
+  // Finalize Match or Log Session and Save to Records
   const handleFinalizeMatch = () => {
     let summary = "";
     if (activeSport === "Cricket") {
       summary = `${cricketRuns}/${cricketWickets} in ${cricketOverCount}.${cricketBallsInOver} overs`;
     } else if (activeSport === "Badminton") {
       summary = `${badmintonP1} ${badmintonScore1} - ${badmintonScore2} ${badmintonP2} (Set ${badmintonSet})`;
+    } else if (activeSport === "Running") {
+      summary = `${runDistance.toFixed(2)} km covered · ${runSteps.toLocaleString()} steps · Pace: ${runPace} · ${runCalories} kcal`;
+    } else if (activeSport === "Cycling") {
+      summary = `${cycleDistance.toFixed(1)} km ride · +${cycleElevation}m elev · Speed: ${cycleSpeed} km/h · ${cycleCalories} kcal`;
+    } else if (activeSport === "Basketball") {
+      summary = `${bballTeamA} ${bballScoreA} - ${bballScoreB} ${bballTeamB} (Q${bballQuarter})`;
+    } else if (activeSport === "Volleyball") {
+      summary = `${vballTeamA} ${vballScoreA} - ${vballScoreB} ${vballTeamB} (Set ${vballSet})`;
     } else {
       summary = `${footballTeamA} ${footballScoreA} - ${footballScoreB} ${footballTeamB}`;
     }
+
+    const isEndurance = activeSport === "Running" || activeSport === "Cycling";
 
     const record = {
       id: Date.now().toString(),
@@ -445,7 +483,12 @@ export default function App() {
     };
 
     setMatchRecords([record, ...matchRecords]);
-    Alert.alert("Match Finalized!", `Official score record saved to ${activeSport} archives.`);
+    Alert.alert(
+      isEndurance ? "Activity Logged!" : "Match Finalized!",
+      isEndurance
+        ? `Session logged and added to your official ${activeSport} activity records.`
+        : `Official score record saved to ${activeSport} archives.`
+    );
   };
 
   return (
@@ -552,10 +595,26 @@ export default function App() {
                   <MaterialCommunityIcons name={currentSport.icon} size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.spotlightMeta}>
-                  <Text style={styles.spotlightEyebrow}>EASY SCORING READY</Text>
-                  <Text style={styles.spotlightTitle}>{currentSport.name} Match Console</Text>
+                  <Text style={styles.spotlightEyebrow}>
+                    {activeSport === "Running"
+                      ? "ENDURANCE & PEDOMETER"
+                      : activeSport === "Cycling"
+                      ? "VELO TELEMETRY & ELEVATION"
+                      : "EASY SCORING READY"}
+                  </Text>
+                  <Text style={styles.spotlightTitle}>
+                    {activeSport === "Running"
+                      ? "Running & Step Tracker"
+                      : activeSport === "Cycling"
+                      ? "Cycling & Elevation Tracker"
+                      : `${currentSport.name} Match Console`}
+                  </Text>
                   <Text style={styles.spotlightDesc}>
-                    Ball-by-ball, point tracking, and live striker stats.
+                    {activeSport === "Running"
+                      ? `${runDistance.toFixed(2)} km covered · ${runSteps.toLocaleString()} steps · Target: ${runTarget.toFixed(1)} km (${Math.min(100, Math.round((runDistance / runTarget) * 100))}%)`
+                      : activeSport === "Cycling"
+                      ? `${cycleDistance.toFixed(1)} km ride · +${cycleElevation}m elev · Target: ${cycleTarget.toFixed(0)} km (${Math.min(100, Math.round((cycleDistance / cycleTarget) * 100))}%)`
+                      : "Ball-by-ball, point tracking, and live striker stats."}
                   </Text>
                 </View>
               </View>
@@ -565,8 +624,18 @@ export default function App() {
                   style={[styles.spotlightBtn, { backgroundColor: currentSport.accent }]}
                   onPress={() => setCurrentTab("scores")}
                 >
-                  <Ionicons name="game-controller" size={15} color="#FFFFFF" />
-                  <Text style={styles.spotlightBtnText}>Open Easy Scoring</Text>
+                  <Ionicons
+                    name={activeSport === "Running" || activeSport === "Cycling" ? "stats-chart" : "game-controller"}
+                    size={15}
+                    color="#FFFFFF"
+                  />
+                  <Text style={styles.spotlightBtnText}>
+                    {activeSport === "Running"
+                      ? "Open Telemetry & Trends"
+                      : activeSport === "Cycling"
+                      ? "Open Ride Dashboard"
+                      : "Open Easy Scoring"}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.spotlightOutlineBtn}
@@ -922,15 +991,37 @@ export default function App() {
           >
             <View style={styles.playersTopHeader}>
               <View>
-                <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / EASY SCORING</Text>
-                <Text style={styles.sectionHeading}>Stadium Console</Text>
+                <Text style={styles.sectionEyebrow}>
+                  {activeSport === "Running"
+                    ? "RUNNING / TELEMETRY & TRENDS"
+                    : activeSport === "Cycling"
+                    ? "CYCLING / TELEMETRY & ELEVATION"
+                    : `${currentSport.name.toUpperCase()} / EASY SCORING`}
+                </Text>
+                <Text style={styles.sectionHeading}>
+                  {activeSport === "Running"
+                    ? "Endurance Tracker"
+                    : activeSport === "Cycling"
+                    ? "Velo Ride Tracker"
+                    : "Stadium Console"}
+                </Text>
               </View>
               <TouchableOpacity
                 style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
                 onPress={handleFinalizeMatch}
               >
-                <Ionicons name="checkmark-done" size={14} color="#FFFFFF" />
-                <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>Finalize Match</Text>
+                <Ionicons
+                  name={activeSport === "Running" || activeSport === "Cycling" ? "checkmark-circle" : "checkmark-done"}
+                  size={14}
+                  color="#FFFFFF"
+                />
+                <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>
+                  {activeSport === "Running"
+                    ? "Log Run Session"
+                    : activeSport === "Cycling"
+                    ? "Log Ride Session"
+                    : "Finalize Match"}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -1233,28 +1324,542 @@ export default function App() {
               </View>
             )}
 
-            {/* FINALIZED MATCH ARCHIVES */}
+            {/* --- 4. RUNNING TELEMETRY & TREND CHECK --- */}
+            {activeSport === "Running" && (
+              <View style={styles.consoleCard}>
+                {/* Top Metrics Row */}
+                <View style={styles.telemetryHero}>
+                  <View>
+                    <Text style={[styles.telemetryTag, { color: "#4c9b81" }]}>DISTANCE COVERED</Text>
+                    <View style={styles.telemetryNumberRow}>
+                      <Text style={styles.telemetryBigNum}>{runDistance.toFixed(2)}</Text>
+                      <Text style={styles.telemetryUnit}>km</Text>
+                    </View>
+                  </View>
+                  <View style={styles.telemetryHeroRight}>
+                    <Text style={styles.telemetryTag}>PEDOMETER</Text>
+                    <View style={styles.telemetryNumberRow}>
+                      <Text style={styles.telemetryMidNum}>{runSteps.toLocaleString()}</Text>
+                      <Text style={styles.telemetryUnitSmall}>steps</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Target Progress Bar */}
+                <View style={styles.telemetryTargetBox}>
+                  <View style={styles.telemetryTargetMeta}>
+                    <Text style={styles.telemetryTargetLabel}>Target: {runTarget.toFixed(1)} km</Text>
+                    <Text style={[styles.telemetryTargetPercent, { color: "#4c9b81" }]}>
+                      {Math.min(100, Math.round((runDistance / runTarget) * 100))}% Completed
+                    </Text>
+                  </View>
+                  <View style={styles.progressBarTrack}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          backgroundColor: "#4c9b81",
+                          width: `${Math.min(100, Math.round((runDistance / runTarget) * 100))}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+
+                {/* 4 Telemetry Metrics Grid */}
+                <View style={styles.telemetryGrid}>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>AVG PACE</Text>
+                    <Text style={styles.telemetryMetricVal}>{runPace} /km</Text>
+                  </View>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>ACTIVE CAL</Text>
+                    <Text style={styles.telemetryMetricVal}>{runCalories} kcal</Text>
+                  </View>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>ELAPSED TIME</Text>
+                    <Text style={styles.telemetryMetricVal}>34m 12s</Text>
+                  </View>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>AVG CADENCE</Text>
+                    <Text style={styles.telemetryMetricVal}>168 spm</Text>
+                  </View>
+                </View>
+
+                {/* 7-Day Running Trend Chart */}
+                <View style={styles.trendContainer}>
+                  <View style={styles.trendHeader}>
+                    <View>
+                      <Text style={[styles.trendTag, { color: "#4c9b81" }]}>WEEKLY RUNNING TREND</Text>
+                      <Text style={styles.trendTitle}>Last 7 Days Mileage</Text>
+                    </View>
+                    <View style={styles.trendTotalBox}>
+                      <Text style={styles.trendTotalKm}>43.4 km</Text>
+                      <Text style={[styles.trendGrowth, { color: "#4c9b81" }]}>+12% vs LW</Text>
+                    </View>
+                  </View>
+
+                  {/* Visual Bar Chart */}
+                  <View style={styles.trendBarsRow}>
+                    {[
+                      { day: "Mon", km: 5.2, active: false },
+                      { day: "Tue", km: 7.0, active: false },
+                      { day: "Wed", km: 0.0, active: false, rest: true },
+                      { day: "Thu", km: 6.5, active: false },
+                      { day: "Fri", km: 8.1, active: false },
+                      { day: "Sat", km: 10.2, active: false },
+                      { day: "Sun", km: runDistance, active: true },
+                    ].map((bar) => {
+                      const pct = bar.km === 0 ? 4 : Math.min(100, (bar.km / 12) * 100);
+                      return (
+                        <View key={bar.day} style={styles.trendBarCol}>
+                          <Text style={styles.trendBarKmLabel}>
+                            {bar.rest ? "Rest" : `${bar.km.toFixed(1)}k`}
+                          </Text>
+                          <View style={styles.trendBarSlot}>
+                            <View
+                              style={[
+                                styles.trendBarPill,
+                                {
+                                  height: `${pct}%`,
+                                  backgroundColor: bar.active ? "#4c9b81" : "rgba(76, 155, 129, 0.4)",
+                                },
+                              ]}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.trendBarDayLabel,
+                              bar.active && { color: "#4c9b81", fontWeight: "900" },
+                            ]}
+                          >
+                            {bar.day}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Quick Telemetry Actions */}
+                <View style={styles.telemetryActions}>
+                  <TouchableOpacity
+                    style={[styles.telemetryActionBtn, { backgroundColor: "#4c9b81" }]}
+                    onPress={() => {
+                      setRunDistance((d) => Number((d + 0.5).toFixed(2)));
+                      setRunSteps((s) => s + 650);
+                      setRunCalories((c) => c + 35);
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color="#FFFFFF" />
+                    <Text style={styles.telemetryActionBtnText}>+0.5 km</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.telemetryActionOutline}
+                    onPress={() => {
+                      setRunSteps((s) => s + 500);
+                      setRunDistance((d) => Number((d + 0.38).toFixed(2)));
+                      setRunCalories((c) => c + 25);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="shoe-print" size={15} color={THEME.text} />
+                    <Text style={styles.telemetryActionOutlineText}>+500 Steps</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.telemetryActionOutline}
+                    onPress={() => {
+                      if (runTarget === 10) setRunTarget(21.1);
+                      else if (runTarget === 21.1) setRunTarget(42.2);
+                      else setRunTarget(10);
+                    }}
+                  >
+                    <Ionicons name="flag-outline" size={15} color={THEME.text} />
+                    <Text style={styles.telemetryActionOutlineText}>
+                      Target: {runTarget === 10 ? "10K" : runTarget === 21.1 ? "21.1K" : "42.2K"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.telemetryActionReset}
+                    onPress={() => {
+                      setRunDistance(0);
+                      setRunSteps(0);
+                      setRunCalories(0);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color={THEME.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* --- 5. CYCLING TELEMETRY & TREND CHECK --- */}
+            {activeSport === "Cycling" && (
+              <View style={styles.consoleCard}>
+                {/* Top Metrics Row */}
+                <View style={styles.telemetryHero}>
+                  <View>
+                    <Text style={[styles.telemetryTag, { color: "#557fa9" }]}>RIDE DISTANCE</Text>
+                    <View style={styles.telemetryNumberRow}>
+                      <Text style={styles.telemetryBigNum}>{cycleDistance.toFixed(1)}</Text>
+                      <Text style={styles.telemetryUnit}>km</Text>
+                    </View>
+                  </View>
+                  <View style={styles.telemetryHeroRight}>
+                    <Text style={styles.telemetryTag}>ELEVATION GAIN</Text>
+                    <View style={styles.telemetryNumberRow}>
+                      <Text style={styles.telemetryMidNum}>+{cycleElevation}</Text>
+                      <Text style={styles.telemetryUnitSmall}>m</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Target Progress Bar */}
+                <View style={styles.telemetryTargetBox}>
+                  <View style={styles.telemetryTargetMeta}>
+                    <Text style={styles.telemetryTargetLabel}>Ride Target: {cycleTarget.toFixed(0)} km</Text>
+                    <Text style={[styles.telemetryTargetPercent, { color: "#557fa9" }]}>
+                      {Math.min(100, Math.round((cycleDistance / cycleTarget) * 100))}% Completed
+                    </Text>
+                  </View>
+                  <View style={styles.progressBarTrack}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          backgroundColor: "#557fa9",
+                          width: `${Math.min(100, Math.round((cycleDistance / cycleTarget) * 100))}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+
+                {/* 4 Telemetry Metrics Grid */}
+                <View style={styles.telemetryGrid}>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>AVG SPEED</Text>
+                    <Text style={styles.telemetryMetricVal}>{cycleSpeed} km/h</Text>
+                  </View>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>ACTIVE CAL</Text>
+                    <Text style={styles.telemetryMetricVal}>{cycleCalories} kcal</Text>
+                  </View>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>ELAPSED TIME</Text>
+                    <Text style={styles.telemetryMetricVal}>56m 20s</Text>
+                  </View>
+                  <View style={styles.telemetryMetricItem}>
+                    <Text style={styles.telemetryMetricLabel}>AVG POWER</Text>
+                    <Text style={styles.telemetryMetricVal}>185 W</Text>
+                  </View>
+                </View>
+
+                {/* 7-Day Cycling Trend Chart */}
+                <View style={styles.trendContainer}>
+                  <View style={styles.trendHeader}>
+                    <View>
+                      <Text style={[styles.trendTag, { color: "#557fa9" }]}>WEEKLY CYCLING TREND</Text>
+                      <Text style={styles.trendTitle}>Last 7 Days Mileage</Text>
+                    </View>
+                    <View style={styles.trendTotalBox}>
+                      <Text style={styles.trendTotalKm}>142.6 km</Text>
+                      <Text style={[styles.trendGrowth, { color: "#557fa9" }]}>+8% vs LW</Text>
+                    </View>
+                  </View>
+
+                  {/* Visual Bar Chart */}
+                  <View style={styles.trendBarsRow}>
+                    {[
+                      { day: "Mon", km: 18.5, active: false },
+                      { day: "Tue", km: 22.0, active: false },
+                      { day: "Wed", km: 0.0, active: false, rest: true },
+                      { day: "Thu", km: 28.4, active: false },
+                      { day: "Fri", km: 15.0, active: false },
+                      { day: "Sat", km: 34.0, active: false },
+                      { day: "Sun", km: cycleDistance, active: true },
+                    ].map((bar) => {
+                      const pct = bar.km === 0 ? 4 : Math.min(100, (bar.km / 40) * 100);
+                      return (
+                        <View key={bar.day} style={styles.trendBarCol}>
+                          <Text style={styles.trendBarKmLabel}>
+                            {bar.rest ? "Rest" : `${bar.km.toFixed(0)}k`}
+                          </Text>
+                          <View style={styles.trendBarSlot}>
+                            <View
+                              style={[
+                                styles.trendBarPill,
+                                {
+                                  height: `${pct}%`,
+                                  backgroundColor: bar.active ? "#557fa9" : "rgba(85, 127, 169, 0.4)",
+                                },
+                              ]}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.trendBarDayLabel,
+                              bar.active && { color: "#557fa9", fontWeight: "900" },
+                            ]}
+                          >
+                            {bar.day}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Quick Telemetry Actions */}
+                <View style={styles.telemetryActions}>
+                  <TouchableOpacity
+                    style={[styles.telemetryActionBtn, { backgroundColor: "#557fa9" }]}
+                    onPress={() => {
+                      setCycleDistance((d) => Number((d + 2.0).toFixed(1)));
+                      setCycleElevation((e) => e + 25);
+                      setCycleCalories((c) => c + 55);
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color="#FFFFFF" />
+                    <Text style={styles.telemetryActionBtnText}>+2.0 km</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.telemetryActionOutline}
+                    onPress={() => {
+                      setCycleElevation((e) => e + 50);
+                      setCycleCalories((c) => c + 40);
+                    }}
+                  >
+                    <MaterialCommunityIcons name="elevation-rise" size={15} color={THEME.text} />
+                    <Text style={styles.telemetryActionOutlineText}>+50m Elev</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.telemetryActionOutline}
+                    onPress={() => {
+                      if (cycleTarget === 35) setCycleTarget(60);
+                      else if (cycleTarget === 60) setCycleTarget(100);
+                      else setCycleTarget(35);
+                    }}
+                  >
+                    <Ionicons name="flag-outline" size={15} color={THEME.text} />
+                    <Text style={styles.telemetryActionOutlineText}>
+                      Target: {cycleTarget === 35 ? "35K" : cycleTarget === 60 ? "60K" : "100K"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.telemetryActionReset}
+                    onPress={() => {
+                      setCycleDistance(0);
+                      setCycleElevation(0);
+                      setCycleCalories(0);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color={THEME.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* --- 6. BASKETBALL EASY SCORING --- */}
+            {activeSport === "Basketball" && (
+              <View style={styles.consoleCard}>
+                <View style={[styles.badmintonTopBadge, { backgroundColor: "#f5e6d5" }]}>
+                  <MaterialCommunityIcons name="basketball" size={18} color="#d47336" />
+                  <Text style={[styles.badmintonTitle, { color: "#d47336" }]}>
+                    QUARTER {bballQuarter} · HARDWOOD CONSOLE
+                  </Text>
+                </View>
+
+                <View style={styles.badmintonScoreBoard}>
+                  <View style={styles.playerScoreCol}>
+                    <TextInput
+                      style={styles.badmintonPlayerInput}
+                      value={bballTeamA}
+                      onChangeText={setBballTeamA}
+                    />
+                    <Text style={styles.bigScoreDigit}>{bballScoreA}</Text>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <TouchableOpacity
+                        style={[styles.pointAddBtn, { backgroundColor: "#d47336", paddingHorizontal: 10 }]}
+                        onPress={() => setBballScoreA((s) => s + 1)}
+                      >
+                        <Text style={styles.pointAddBtnText}>+1</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.pointAddBtn, { backgroundColor: "#d47336", paddingHorizontal: 10 }]}
+                        onPress={() => setBballScoreA((s) => s + 2)}
+                      >
+                        <Text style={styles.pointAddBtnText}>+2</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.pointAddBtn, { backgroundColor: "#d47336", paddingHorizontal: 10 }]}
+                        onPress={() => setBballScoreA((s) => s + 3)}
+                      >
+                        <Text style={styles.pointAddBtnText}>+3</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.badmintonDivider}>
+                    <Text style={styles.badmintonDividerText}>VS</Text>
+                  </View>
+
+                  <View style={styles.playerScoreCol}>
+                    <TextInput
+                      style={styles.badmintonPlayerInput}
+                      value={bballTeamB}
+                      onChangeText={setBballTeamB}
+                    />
+                    <Text style={styles.bigScoreDigit}>{bballScoreB}</Text>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <TouchableOpacity
+                        style={[styles.pointAddBtn, { backgroundColor: "#d47336", paddingHorizontal: 10 }]}
+                        onPress={() => setBballScoreB((s) => s + 1)}
+                      >
+                        <Text style={styles.pointAddBtnText}>+1</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.pointAddBtn, { backgroundColor: "#d47336", paddingHorizontal: 10 }]}
+                        onPress={() => setBballScoreB((s) => s + 2)}
+                      >
+                        <Text style={styles.pointAddBtnText}>+2</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.pointAddBtn, { backgroundColor: "#d47336", paddingHorizontal: 10 }]}
+                        onPress={() => setBballScoreB((s) => s + 3)}
+                      >
+                        <Text style={styles.pointAddBtnText}>+3</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.scoringBottomControls}>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => setBballQuarter((q) => (q < 4 ? q + 1 : 1))}
+                  >
+                    <Ionicons name="time-outline" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Next Quarter</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setBballScoreA(0);
+                      setBballScoreB(0);
+                      setBballQuarter(1);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Reset</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* --- 7. VOLLEYBALL EASY SCORING --- */}
+            {activeSport === "Volleyball" && (
+              <View style={styles.consoleCard}>
+                <View style={[styles.badmintonTopBadge, { backgroundColor: "#ede3f1" }]}>
+                  <MaterialCommunityIcons name="volleyball" size={18} color="#9d6ab0" />
+                  <Text style={[styles.badmintonTitle, { color: "#9d6ab0" }]}>
+                    SET {vballSet} · RALLY POINT SYSTEM
+                  </Text>
+                </View>
+
+                <View style={styles.badmintonScoreBoard}>
+                  <View style={styles.playerScoreCol}>
+                    <TextInput
+                      style={styles.badmintonPlayerInput}
+                      value={vballTeamA}
+                      onChangeText={setVballTeamA}
+                    />
+                    <Text style={styles.bigScoreDigit}>{vballScoreA}</Text>
+                    <TouchableOpacity
+                      style={[styles.pointAddBtn, { backgroundColor: "#9d6ab0" }]}
+                      onPress={() => setVballScoreA((s) => s + 1)}
+                    >
+                      <Text style={styles.pointAddBtnText}>+1 Point</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.badmintonDivider}>
+                    <Text style={styles.badmintonDividerText}>VS</Text>
+                  </View>
+
+                  <View style={styles.playerScoreCol}>
+                    <TextInput
+                      style={styles.badmintonPlayerInput}
+                      value={vballTeamB}
+                      onChangeText={setVballTeamB}
+                    />
+                    <Text style={styles.bigScoreDigit}>{vballScoreB}</Text>
+                    <TouchableOpacity
+                      style={[styles.pointAddBtn, { backgroundColor: "#9d6ab0" }]}
+                      onPress={() => setVballScoreB((s) => s + 1)}
+                    >
+                      <Text style={styles.pointAddBtnText}>+1 Point</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.scoringBottomControls}>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setVballSet((s) => s + 1);
+                      setVballScoreA(0);
+                      setVballScoreB(0);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color="#9d6ab0" />
+                    <Text style={[styles.controlBtnText, { color: "#9d6ab0" }]}>Next Set</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setVballScoreA(0);
+                      setVballScoreB(0);
+                      setVballSet(1);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Reset</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* FINALIZED MATCH & ACTIVITY ARCHIVES */}
             <View style={styles.sectionHeaderRow}>
               <View>
                 <Text style={styles.sectionEyebrow}>OFFICIAL ARCHIVE</Text>
-                <Text style={styles.sectionHeading}>Finalized Matches</Text>
+                <Text style={styles.sectionHeading}>Session & Match Records</Text>
               </View>
             </View>
 
             {matchRecords.length === 0 ? (
               <View style={styles.emptyCard}>
                 <Ionicons name="trophy-outline" size={24} color={THEME.textMuted} />
-                <Text style={styles.emptyTitle}>No finalized matches yet.</Text>
+                <Text style={styles.emptyTitle}>No finalized sessions yet.</Text>
                 <Text style={styles.emptyDesc}>
-                  Once you finish easy scoring a game, tap "Finalize Match" to save official records
-                  here.
+                  Once you finish easy scoring a game or log a running/cycling session, tap "Log Session" or "Finalize Match" to save official records here.
                 </Text>
               </View>
             ) : (
               matchRecords.map((rec) => (
                 <View key={rec.id} style={styles.recordCard}>
                   <View style={styles.recordHeader}>
-                    <Text style={styles.recordSport}>{rec.sport} Official Result</Text>
+                    <Text style={styles.recordSport}>
+                      {rec.sport === "Running" || rec.sport === "Cycling"
+                        ? `${rec.sport} Activity Log`
+                        : `${rec.sport} Official Result`}
+                    </Text>
                     <Text style={styles.recordDate}>{rec.date} · {rec.finalizedAt}</Text>
                   </View>
                   <Text style={styles.recordSummary}>{rec.summary}</Text>
@@ -3177,6 +3782,234 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "800",
+  },
+
+  // TELEMETRY & TREND STYLES (Running & Cycling)
+  telemetryHero: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+  },
+  telemetryHeroRight: {
+    alignItems: "flex-end",
+  },
+  telemetryTag: {
+    color: THEME.textMuted,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  telemetryNumberRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+    marginTop: 2,
+  },
+  telemetryBigNum: {
+    color: THEME.text,
+    fontSize: 38,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  telemetryMidNum: {
+    color: THEME.text,
+    fontSize: 26,
+    fontWeight: "900",
+  },
+  telemetryUnit: {
+    color: THEME.textMuted,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  telemetryUnitSmall: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  telemetryTargetBox: {
+    gap: 6,
+    paddingVertical: 4,
+  },
+  telemetryTargetMeta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  telemetryTargetLabel: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  telemetryTargetPercent: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  progressBarTrack: {
+    height: 8,
+    backgroundColor: "#EAE4D7",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  telemetryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: THEME.cardBorder,
+  },
+  telemetryMetricItem: {
+    flex: 1,
+    minWidth: "45%",
+    backgroundColor: THEME.cardInner,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  telemetryMetricLabel: {
+    color: THEME.textMuted,
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  telemetryMetricVal: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+  trendContainer: {
+    backgroundColor: THEME.cardInner,
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    gap: 10,
+  },
+  trendHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+  },
+  trendTag: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  trendTitle: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 1,
+  },
+  trendTotalBox: {
+    alignItems: "flex-end",
+  },
+  trendTotalKm: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  trendGrowth: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  trendBarsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    height: 120,
+    paddingTop: 6,
+  },
+  trendBarCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  trendBarKmLabel: {
+    color: THEME.textMuted,
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  trendBarSlot: {
+    flex: 1,
+    width: 22,
+    backgroundColor: "#FAF7F2",
+    borderRadius: 6,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    padding: 2,
+  },
+  trendBarPill: {
+    width: "100%",
+    borderRadius: 4,
+    minHeight: 4,
+  },
+  trendBarDayLabel: {
+    color: THEME.textMuted,
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  telemetryActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 4,
+  },
+  telemetryActionBtn: {
+    flex: 1,
+    minWidth: 90,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  telemetryActionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  telemetryActionOutline: {
+    flex: 1,
+    minWidth: 95,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  telemetryActionOutlineText: {
+    color: THEME.text,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  telemetryActionReset: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

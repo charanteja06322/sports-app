@@ -23,13 +23,26 @@ export function ScoreboardDemo() {
   const [bbAway, setBbAway] = useState(0);
   const [bbQuarter, setBbQuarter] = useState("Q1");
 
-  // Tennis state
-  const [tennisPointsHome, setTennisPointsHome] = useState("0");
-  const [tennisPointsAway, setTennisPointsAway] = useState("0");
-  const [tennisGamesHome, setTennisGamesHome] = useState(0);
-  const [tennisGamesAway, setTennisGamesAway] = useState(0);
+  // Badminton state
+  const [badmintonP1, setBadmintonP1] = useState(0);
+  const [badmintonP2, setBadmintonP2] = useState(0);
+  const [badmintonSet, setBadmintonSet] = useState(1);
 
-  // General point/split state
+  // Running telemetry state
+  const [runDistance, setRunDistance] = useState(6.4);
+  const [runSteps, setRunSteps] = useState(8420);
+  const [runTarget, setRunTarget] = useState(10.0);
+  const [runPace, setRunPace] = useState("5'18\"");
+  const [runCalories, setRunCalories] = useState(485);
+
+  // Cycling telemetry state
+  const [cycleDistance, setCycleDistance] = useState(24.8);
+  const [cycleTarget, setCycleTarget] = useState(35.0);
+  const [cycleSpeed, setCycleSpeed] = useState(26.4);
+  const [cycleElevation, setCycleElevation] = useState(240);
+  const [cycleCalories, setCycleCalories] = useState(620);
+
+  // Volleyball state
   const [rallyScoreA, setRallyScoreA] = useState(0);
   const [rallyScoreB, setRallyScoreB] = useState(0);
 
@@ -271,72 +284,58 @@ export function ScoreboardDemo() {
           </div>
         )}
 
-        {activeSport === "Tennis" && (
+        {activeSport === "Badminton" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-3 items-center rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-6 text-center">
+            <div className="grid grid-cols-3 items-center gap-4 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-6 text-center">
               <div>
                 <p className="mono-font text-xs font-bold text-[#71807d]">PLAYER 1</p>
-                <div className="display-font mt-1 text-4xl font-black text-[#253638]">
-                  Games: {tennisGamesHome}
+                <div className="display-font mt-1 text-5xl font-black text-[#253638]">
+                  {badmintonP1}
                 </div>
-                <p className="display-font text-2xl font-bold text-[#b89b2e] mt-1">
-                  Point: {tennisPointsHome}
-                </p>
               </div>
               <div>
-                <span className="inline-block rounded-full bg-[#b89b2e] px-3 py-1 font-bold text-xs text-white">
-                  SET 1
+                <span className="inline-block rounded-full bg-[#e11d48] px-3.5 py-1 font-bold text-xs text-white">
+                  SET {badmintonSet}
                 </span>
-                <p className="mt-2 text-xs text-[#71807d]">Match In Progress</p>
+                <p className="mt-2 text-xs text-[#71807d]">Match Point 21</p>
               </div>
               <div>
                 <p className="mono-font text-xs font-bold text-[#71807d]">PLAYER 2</p>
-                <div className="display-font mt-1 text-4xl font-black text-[#253638]">
-                  Games: {tennisGamesAway}
+                <div className="display-font mt-1 text-5xl font-black text-[#253638]">
+                  {badmintonP2}
                 </div>
-                <p className="display-font text-2xl font-bold text-[#71807d] mt-1">
-                  Point: {tennisPointsAway}
-                </p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <Button
-                onClick={() => {
-                  const sequence = ["0", "15", "30", "40", "Game"];
-                  const idx = sequence.indexOf(tennisPointsHome);
-                  if (idx < 3) setTennisPointsHome(sequence[idx + 1]);
-                  else {
-                    setTennisPointsHome("0");
-                    setTennisPointsAway("0");
-                    setTennisGamesHome((g) => g + 1);
-                  }
-                }}
+                style={{ backgroundColor: "#e11d48", borderColor: "#e11d48" }}
+                onClick={() => setBadmintonP1((p) => p + 1)}
               >
-                Point Player 1
+                +1 Point Player 1
+              </Button>
+              <Button
+                style={{ backgroundColor: "#e11d48", borderColor: "#e11d48" }}
+                onClick={() => setBadmintonP2((p) => p + 1)}
+              >
+                +1 Point Player 2
               </Button>
               <Button
                 variant="quiet"
                 onClick={() => {
-                  const sequence = ["0", "15", "30", "40", "Game"];
-                  const idx = sequence.indexOf(tennisPointsAway);
-                  if (idx < 3) setTennisPointsAway(sequence[idx + 1]);
-                  else {
-                    setTennisPointsHome("0");
-                    setTennisPointsAway("0");
-                    setTennisGamesAway((g) => g + 1);
-                  }
+                  setBadmintonSet((s) => s + 1);
+                  setBadmintonP1(0);
+                  setBadmintonP2(0);
                 }}
               >
-                Point Player 2
+                Next Set
               </Button>
               <Button
                 variant="quiet"
                 onClick={() => {
-                  setTennisPointsHome("0");
-                  setTennisPointsAway("0");
-                  setTennisGamesHome(0);
-                  setTennisGamesAway(0);
+                  setBadmintonP1(0);
+                  setBadmintonP2(0);
+                  setBadmintonSet(1);
                 }}
               >
                 Reset
@@ -345,7 +344,307 @@ export function ScoreboardDemo() {
           </div>
         )}
 
-        {(activeSport === "Volleyball" || activeSport === "Running" || activeSport === "Cycling") && (
+        {activeSport === "Running" && (
+          <div className="space-y-6">
+            {/* Primary Telemetry Card */}
+            <div className="rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="mono-font text-xs font-bold uppercase tracking-wider text-[#4c9b81]">
+                    DISTANCE COVERED
+                  </p>
+                  <div className="display-font mt-1 text-5xl font-black text-[#253638]">
+                    {runDistance.toFixed(2)}{" "}
+                    <span className="text-xl font-bold text-[#71807d]">km</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="mono-font text-xs font-bold uppercase tracking-wider text-[#71807d]">
+                    PEDOMETER
+                  </p>
+                  <div className="display-font mt-1 text-3xl font-black text-[#253638]">
+                    {runSteps.toLocaleString()}{" "}
+                    <span className="text-base font-semibold text-[#71807d]">steps</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Target Progress Bar */}
+              <div className="mt-5 space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold text-[#71807d]">
+                  <span>Target: {runTarget.toFixed(1)} km</span>
+                  <span className="font-bold text-[#4c9b81]">
+                    {Math.min(100, Math.round((runDistance / runTarget) * 100))}% Completed
+                  </span>
+                </div>
+                <div className="h-3 w-full overflow-hidden rounded-full bg-[#EAE4D7]">
+                  <div
+                    className="h-full rounded-full bg-[#4c9b81] transition-all duration-300"
+                    style={{
+                      width: `${Math.min(100, Math.round((runDistance / runTarget) * 100))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#DDD6C8] pt-4 sm:grid-cols-4">
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">AVG PACE</p>
+                  <p className="text-lg font-bold text-[#253638]">{runPace} /km</p>
+                </div>
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">ACTIVE CAL</p>
+                  <p className="text-lg font-bold text-[#253638]">{runCalories} kcal</p>
+                </div>
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">ELAPSED TIME</p>
+                  <p className="text-lg font-bold text-[#253638]">34m 12s</p>
+                </div>
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">AVG CADENCE</p>
+                  <p className="text-lg font-bold text-[#253638]">168 spm</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Weekly Activity Trend Chart */}
+            <div className="rounded-2xl border border-[#DDD6C8] bg-white p-5 shadow-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#DDD6C8]">
+                <div>
+                  <p className="mono-font text-[10px] font-bold uppercase tracking-wider text-[#4c9b81]">
+                    WEEKLY RUNNING TREND
+                  </p>
+                  <p className="text-sm font-bold text-[#253638]">Last 7 Days Mileage</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-base font-black text-[#253638]">43.4 km</span>
+                  <span className="ml-1.5 text-[11px] font-bold text-[#4c9b81]">+12% vs LW</span>
+                </div>
+              </div>
+
+              {/* Trend Bars */}
+              <div className="mt-4 flex items-end justify-between gap-2 pt-2">
+                {[
+                  { day: "Mon", km: 5.2, active: false },
+                  { day: "Tue", km: 7.0, active: false },
+                  { day: "Wed", km: 0.0, active: false, rest: true },
+                  { day: "Thu", km: 6.5, active: false },
+                  { day: "Fri", km: 8.1, active: false },
+                  { day: "Sat", km: 10.2, active: false },
+                  { day: "Sun", km: runDistance, active: true },
+                ].map((item) => (
+                  <div key={item.day} className="flex flex-1 flex-col items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-[#71807d]">
+                      {item.rest ? "Rest" : `${item.km.toFixed(1)}k`}
+                    </span>
+                    <div className="h-24 w-full max-w-[28px] rounded-lg bg-[#FAF7F2] p-1 flex items-end">
+                      <div
+                        className={`w-full rounded-md transition-all duration-300 ${
+                          item.active ? "bg-[#4c9b81]" : "bg-[#4c9b81]/40"
+                        }`}
+                        style={{ height: item.km === 0 ? "4px" : `${Math.min(100, (item.km / 12) * 100)}%` }}
+                      />
+                    </div>
+                    <span
+                      className={`text-[11px] font-bold ${
+                        item.active ? "text-[#4c9b81]" : "text-[#71807d]"
+                      }`}
+                    >
+                      {item.day}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Action Controls */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                style={{ backgroundColor: "#4c9b81", borderColor: "#4c9b81" }}
+                onClick={() => {
+                  setRunDistance((d) => d + 0.5);
+                  setRunSteps((s) => s + 650);
+                  setRunCalories((c) => c + 35);
+                }}
+              >
+                +0.5 KM Logged
+              </Button>
+              <Button
+                variant="quiet"
+                onClick={() => {
+                  setRunSteps((s) => s + 500);
+                  setRunDistance((d) => d + 0.38);
+                }}
+              >
+                +500 Steps
+              </Button>
+              <Button
+                variant="quiet"
+                onClick={() => setRunTarget((t) => (t === 10 ? 21.1 : 10))}
+              >
+                Target: {runTarget === 10 ? "Set 21K Half" : "Set 10K"}
+              </Button>
+              <Button
+                variant="quiet"
+                onClick={() => {
+                  setRunDistance(0);
+                  setRunSteps(0);
+                  setRunCalories(0);
+                }}
+              >
+                Reset Run
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {activeSport === "Cycling" && (
+          <div className="space-y-6">
+            {/* Primary Cycling Telemetry Card */}
+            <div className="rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="mono-font text-xs font-bold uppercase tracking-wider text-[#557fa9]">
+                    RIDE DISTANCE
+                  </p>
+                  <div className="display-font mt-1 text-5xl font-black text-[#253638]">
+                    {cycleDistance.toFixed(1)}{" "}
+                    <span className="text-xl font-bold text-[#71807d]">km</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="mono-font text-xs font-bold uppercase tracking-wider text-[#71807d]">
+                    ELEVATION GAIN
+                  </p>
+                  <div className="display-font mt-1 text-3xl font-black text-[#253638]">
+                    +{cycleElevation}{" "}
+                    <span className="text-base font-semibold text-[#71807d]">m</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Target Progress Bar */}
+              <div className="mt-5 space-y-1.5">
+                <div className="flex justify-between text-xs font-semibold text-[#71807d]">
+                  <span>Ride Target: {cycleTarget.toFixed(0)} km</span>
+                  <span className="font-bold text-[#557fa9]">
+                    {Math.min(100, Math.round((cycleDistance / cycleTarget) * 100))}% Completed
+                  </span>
+                </div>
+                <div className="h-3 w-full overflow-hidden rounded-full bg-[#EAE4D7]">
+                  <div
+                    className="h-full rounded-full bg-[#557fa9] transition-all duration-300"
+                    style={{
+                      width: `${Math.min(100, Math.round((cycleDistance / cycleTarget) * 100))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#DDD6C8] pt-4 sm:grid-cols-4">
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">AVG SPEED</p>
+                  <p className="text-lg font-bold text-[#253638]">{cycleSpeed} km/h</p>
+                </div>
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">ACTIVE CAL</p>
+                  <p className="text-lg font-bold text-[#253638]">{cycleCalories} kcal</p>
+                </div>
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">RIDE TIME</p>
+                  <p className="text-lg font-bold text-[#253638]">56m 20s</p>
+                </div>
+                <div>
+                  <p className="mono-font text-[10px] text-[#71807d]">AVG POWER</p>
+                  <p className="text-lg font-bold text-[#253638]">185 W</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Weekly Cycling Trend Chart */}
+            <div className="rounded-2xl border border-[#DDD6C8] bg-white p-5 shadow-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#DDD6C8]">
+                <div>
+                  <p className="mono-font text-[10px] font-bold uppercase tracking-wider text-[#557fa9]">
+                    WEEKLY CYCLING TREND
+                  </p>
+                  <p className="text-sm font-bold text-[#253638]">7 Days Riding Distance</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-base font-black text-[#253638]">164.8 km</span>
+                  <span className="ml-1.5 text-[11px] font-bold text-[#557fa9]">+18% vs LW</span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-end justify-between gap-2 pt-2">
+                {[
+                  { day: "Mon", km: 20 },
+                  { day: "Tue", km: 0, rest: true },
+                  { day: "Wed", km: 32 },
+                  { day: "Thu", km: 15 },
+                  { day: "Fri", km: 28 },
+                  { day: "Sat", km: 45 },
+                  { day: "Sun", km: cycleDistance, active: true },
+                ].map((item) => (
+                  <div key={item.day} className="flex flex-1 flex-col items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-[#71807d]">
+                      {item.rest ? "Rest" : `${item.km.toFixed(0)}k`}
+                    </span>
+                    <div className="h-24 w-full max-w-[28px] rounded-lg bg-[#FAF7F2] p-1 flex items-end">
+                      <div
+                        className={`w-full rounded-md transition-all duration-300 ${
+                          item.active ? "bg-[#557fa9]" : "bg-[#557fa9]/40"
+                        }`}
+                        style={{ height: item.km === 0 ? "4px" : `${Math.min(100, (item.km / 50) * 100)}%` }}
+                      />
+                    </div>
+                    <span
+                      className={`text-[11px] font-bold ${
+                        item.active ? "text-[#557fa9]" : "text-[#71807d]"
+                      }`}
+                    >
+                      {item.day}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Controls */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                style={{ backgroundColor: "#557fa9", borderColor: "#557fa9" }}
+                onClick={() => {
+                  setCycleDistance((d) => d + 2.0);
+                  setCycleCalories((c) => c + 50);
+                  setCycleElevation((e) => e + 20);
+                }}
+              >
+                +2.0 KM Logged
+              </Button>
+              <Button
+                variant="quiet"
+                onClick={() => setCycleElevation((e) => e + 50)}
+              >
+                +50m Climbing
+              </Button>
+              <Button
+                variant="quiet"
+                onClick={() => {
+                  setCycleDistance(0);
+                  setCycleElevation(0);
+                  setCycleCalories(0);
+                }}
+              >
+                Reset Ride
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {activeSport === "Volleyball" && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-6 text-center">
               <div>
