@@ -12,9 +12,14 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.ezkora.sports",
+      "package": "com.charanteja06322.ezkora",
       "adaptiveIcon": {
         "backgroundColor": "#091117"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "918c033d-172d-4b92-adc5-0718534d3e00"
       }
     }
   }
