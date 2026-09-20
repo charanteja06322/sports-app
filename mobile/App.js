@@ -12,34 +12,37 @@ import {
   StatusBar,
   Dimensions,
   Platform,
+  Alert,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
-// Exact Web App Theme (Heritage Sports Palette)
+// Exact Web App Signature Colors
 const THEME = {
-  bg: "#FAF7F2",               // Warm ivory canvas
-  headerBg: "#1c2e30",         // Deep pine teal signature header
-  headerBorder: "#2d4447",     // Header subtle divider
+  bg: "#FAF7F2",               // Warm ivory paper canvas
+  headerBg: "#1c2e30",         // Deep pine teal header
+  headerBorder: "#2d4447",     // Header border
   headerText: "#FAF7F2",       // Warm ivory text
-  headerSub: "rgba(250, 247, 242, 0.7)",
+  headerSub: "rgba(250, 247, 242, 0.75)",
   card: "#FFFFFF",             // Clean white cards
   cardBorder: "#DDD6C8",       // Warm parchment border
-  cardInner: "#FAF7F2",        // Warm inner background
-  text: "#253638",             // Deep forest text
+  cardInner: "#FAF7F2",        // Inner background
+  text: "#253638",             // Deep forest charcoal
   textMuted: "#71807d",        // Sage gray
-  textSub: "#8e9e9a",          // Muted sage
+  textSub: "#8e9e9a",          // Light sage
   accent: "#277863",           // Forest emerald
-  accentLight: "rgba(39, 120, 99, 0.1)",
+  accentLight: "rgba(39, 120, 99, 0.12)",
   danger: "#ce4545",
-  bottomNavBg: "#1c2e30",      // Deep pine teal bottom bar
+  dangerLight: "rgba(206, 69, 69, 0.1)",
+  warning: "#d47336",
+  bottomNavBg: "#1c2e30",
   bottomNavBorder: "#2d4447",
   bottomNavActive: "#FAF7F2",
   bottomNavInactive: "#71807d",
 };
 
-// Sports Lenses (Matching Web App ezkoraStore.js with Badminton replacing Tennis)
+// Sports Lenses (Badminton updated to Vibrant Crimson #e11d48 - No blue!)
 const SPORTS = [
   {
     id: "Football",
@@ -55,9 +58,9 @@ const SPORTS = [
     name: "Badminton",
     icon: "badminton",
     descriptor: "Speed and precision",
-    accent: "#0284c7",
-    wash: "#e0f2fe",
-    deep: "#0369a1",
+    accent: "#e11d48", // Vibrant Crimson (No blue)
+    wash: "#ffe4e6",
+    deep: "#9f1239",
   },
   {
     id: "Cricket",
@@ -110,126 +113,346 @@ export default function App() {
   // Navigation: "home" | "players" | "games" | "scores" | "profile"
   const [currentTab, setCurrentTab] = useState("home");
 
-  // Active Sport Lens (default Football)
+  // Active Sport Lens
   const [activeSport, setActiveSport] = useState("Football");
+  const currentSport = SPORTS.find((s) => s.id === activeSport) || SPORTS[0];
 
-  // Real User Data (No Mock Data)
+  // User Identity
+  const currentUser = {
+    name: "Charan Teja",
+    handle: "@charanteja",
+    playerId: "PL-512391",
+    avatar: "CT",
+  };
+
+  // --- PLAYERS & FRIENDS STATE ---
+  const [playerSubTab, setPlayerSubTab] = useState("friends"); // "friends" | "directory" | "invites"
+  const [friends, setFriends] = useState([
+    {
+      id: "f1",
+      name: "Aman Varma",
+      playerId: "PL-842109",
+      role: "Badminton Singles · #4",
+      sport: "Badminton",
+      online: true,
+      messages: [
+        { sender: "them", text: "Hey Charan, up for a match tomorrow morning?", time: "10:15 AM" },
+        { sender: "me", text: "Definitely! Let's book the indoor court at 7 AM.", time: "10:18 AM" },
+      ],
+    },
+    {
+      id: "f2",
+      name: "Vikram Reddy",
+      playerId: "PL-720341",
+      role: "Cricket All-Rounder · #18",
+      sport: "Cricket",
+      online: true,
+      messages: [
+        { sender: "them", text: "Match is scheduled for Sunday. Don't forget your gear.", time: "Yesterday" },
+      ],
+    },
+    {
+      id: "f3",
+      name: "Siddharth Rao",
+      playerId: "PL-391482",
+      role: "Football Striker · #9",
+      sport: "Football",
+      online: false,
+      messages: [],
+    },
+  ]);
+
+  const [pendingInvites, setPendingInvites] = useState([
+    { id: "inv1", name: "Rohan Kapoor", playerId: "PL-619420", sport: "Badminton", role: "Smash Specialist" },
+    { id: "inv2", name: "Karthik Nair", playerId: "PL-902381", sport: "Cricket", role: "Opening Batsman" },
+  ]);
+
+  // Modals for Friends
+  const [addFriendModalOpen, setAddFriendModalOpen] = useState(false);
+  const [inputFriendId, setInputFriendId] = useState("");
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [scanQrOpen, setScanQrOpen] = useState(false);
+  const [scannedCode, setScannedCode] = useState("");
+
+  // Chat Modal State
+  const [activeChatFriend, setActiveChatFriend] = useState(null);
+  const [chatInputText, setChatInputText] = useState("");
+
+  // --- POSTS (FEED) STATE ---
   const [posts, setPosts] = useState([]);
-  const [athletes, setAthletes] = useState([]);
-  const [games, setGames] = useState([]);
-  const [completedMatches, setCompletedMatches] = useState([]);
-
-  // Modals
   const [composerOpen, setComposerOpen] = useState(false);
-  const [postContent, setPostContent] = useState("");
+  const [postText, setPostText] = useState("");
 
-  const [addAthleteOpen, setAddAthleteOpen] = useState(false);
-  const [newAthleteName, setNewAthleteName] = useState("");
-  const [newAthleteRole, setNewAthleteRole] = useState("");
-  const [newAthleteJersey, setNewAthleteJersey] = useState("");
-
+  // --- GAMES STATE ---
+  const [games, setGames] = useState([]);
+  const [gameFilter, setGameFilter] = useState("all");
   const [addGameOpen, setAddGameOpen] = useState(false);
   const [newTeamA, setNewTeamA] = useState("");
   const [newTeamB, setNewTeamB] = useState("");
-  const [newGameVenue, setNewGameVenue] = useState("");
+  const [newVenue, setNewVenue] = useState("");
 
-  // Live Scoring Console State
-  const [consoleTeamA, setConsoleTeamA] = useState("Home Team");
-  const [consoleTeamB, setConsoleTeamB] = useState("Away Team");
-  const [scoreA, setScoreA] = useState(0);
-  const [scoreB, setScoreB] = useState(0);
-  const [gameTimer, setGameTimer] = useState(0);
-  const [isMatchActive, setIsMatchActive] = useState(false);
+  // --- EASY SCORING CONSOLE STATE (Inspired by WhatsApp Designs) ---
+  // Cricket Scoring
+  const [cricketRuns, setCricketRuns] = useState(0);
+  const [cricketWickets, setCricketWickets] = useState(0);
+  const [cricketBallsInOver, setCricketBallsInOver] = useState(0);
+  const [cricketOverCount, setCricketOverCount] = useState(0);
+  const [overTimeline, setOverTimeline] = useState([]);
+  const [strikerName, setStrikerName] = useState("Player 1");
+  const [strikerRuns, setStrikerRuns] = useState(0);
+  const [strikerBalls, setStrikerBalls] = useState(0);
+  const [nonStrikerName, setNonStrikerName] = useState("Player 2");
+  const [nonStrikerRuns, setNonStrikerRuns] = useState(0);
+  const [nonStrikerBalls, setNonStrikerBalls] = useState(0);
+  const [bowlerName, setBowlerName] = useState("Bowler");
+  const [bowlerOvers, setBowlerOvers] = useState("0.0");
+  const [bowlerRunsGiven, setBowlerRunsGiven] = useState(0);
+  const [bowlerWickets, setBowlerWickets] = useState(0);
 
-  // Search
-  const [searchQuery, setSearchQuery] = useState("");
+  // Badminton Scoring (No Blue, Speed & Precision)
+  const [badmintonP1, setBadmintonP1] = useState("Player 1");
+  const [badmintonP2, setBadmintonP2] = useState("Player 2");
+  const [badmintonScore1, setBadmintonScore1] = useState(0);
+  const [badmintonScore2, setBadmintonScore2] = useState(0);
+  const [badmintonSet, setBadmintonSet] = useState(1);
+  const [badmintonServer, setBadmintonServer] = useState(1);
+  const [badmintonCourt, setBadmintonCourt] = useState("Right Court (Even)");
 
-  // Current Active Sport
-  const currentSport = SPORTS.find((s) => s.id === activeSport) || SPORTS[0];
+  // Football Scoring
+  const [footballTeamA, setFootballTeamA] = useState("Home FC");
+  const [footballTeamB, setFootballTeamB] = useState("Away FC");
+  const [footballScoreA, setFootballScoreA] = useState(0);
+  const [footballScoreB, setFootballScoreB] = useState(0);
+  const [footballMinute, setFootballMinute] = useState(0);
+  const [footballEvents, setFootballEvents] = useState([]);
 
-  // Filtered by sport
-  const sportPosts = posts.filter((p) => p.sport === activeSport);
-  const sportAthletes = athletes.filter(
-    (a) =>
-      a.sport === activeSport &&
-      (a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.role.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-  const sportGames = games.filter((g) => g.sport === activeSport);
-  const sportRecords = completedMatches.filter((m) => m.sport === activeSport);
+  // Completed Match Records
+  const [matchRecords, setMatchRecords] = useState([]);
 
-  const handleCreatePost = () => {
-    if (!postContent.trim()) return;
-    const newPost = {
+  // -------------------------------------------------------------
+  // HANDLERS
+  // -------------------------------------------------------------
+
+  // Add Friend by Player ID
+  const handleAddFriendById = () => {
+    const trimmed = inputFriendId.trim().toUpperCase();
+    if (!trimmed) return;
+    if (friends.some((f) => f.playerId === trimmed)) {
+      Alert.alert("Already Friends", "This athlete is already in your friends list.");
+      return;
+    }
+    const newFriend = {
       id: Date.now().toString(),
-      author: "Charan Teja",
-      avatar: "CT",
+      name: `Athlete (${trimmed})`,
+      playerId: trimmed,
+      role: `${activeSport} Player`,
+      sport: activeSport,
+      online: true,
+      messages: [
+        { sender: "them", text: "Connected! Let's organize a game sometime.", time: "Just now" },
+      ],
+    };
+    setFriends([newFriend, ...friends]);
+    setInputFriendId("");
+    setAddFriendModalOpen(false);
+    Alert.alert("Friend Added!", `Connected with ${trimmed}. You can now chat directly.`);
+  };
+
+  // Add friend via QR Code scan
+  const handleAddScannedFriend = () => {
+    const code = scannedCode.trim() || "PL-992014";
+    const newFriend = {
+      id: Date.now().toString(),
+      name: "Scanned Athlete",
+      playerId: code,
+      role: `${activeSport} Player`,
+      sport: activeSport,
+      online: true,
+      messages: [
+        { sender: "them", text: "Hey! Scanned your QR code at the stadium.", time: "Just now" },
+      ],
+    };
+    setFriends([newFriend, ...friends]);
+    setScannedCode("");
+    setScanQrOpen(false);
+    Alert.alert("QR Code Verified", `Successfully added ${code} to your friends.`);
+  };
+
+  // Accept Invite
+  const handleAcceptInvite = (invite) => {
+    setPendingInvites(pendingInvites.filter((inv) => inv.id !== invite.id));
+    const newFriend = {
+      id: Date.now().toString(),
+      name: invite.name,
+      playerId: invite.playerId,
+      role: invite.role,
+      sport: invite.sport,
+      online: true,
+      messages: [{ sender: "them", text: "Thanks for accepting! When are we playing?", time: "Just now" }],
+    };
+    setFriends([newFriend, ...friends]);
+  };
+
+  // Chat Send
+  const handleSendMessage = () => {
+    if (!chatInputText.trim() || !activeChatFriend) return;
+    const newMsg = {
+      sender: "me",
+      text: chatInputText.trim(),
       time: "Just now",
-      sport: activeSport,
-      body: postContent.trim(),
-      likes: 0,
-      comments: 0,
     };
-    setPosts([newPost, ...posts]);
-    setPostContent("");
-    setComposerOpen(false);
+    const updated = friends.map((f) => {
+      if (f.id === activeChatFriend.id) {
+        return { ...f, messages: [...f.messages, newMsg] };
+      }
+      return f;
+    });
+    setFriends(updated);
+    setActiveChatFriend({
+      ...activeChatFriend,
+      messages: [...activeChatFriend.messages, newMsg],
+    });
+    setChatInputText("");
   };
 
-  const handleAddAthlete = () => {
-    if (!newAthleteName.trim()) return;
-    const newAth = {
-      id: Date.now().toString(),
-      name: newAthleteName.trim(),
-      role: newAthleteRole.trim() || "Athlete",
-      jersey: newAthleteJersey.trim() || "#7",
-      sport: activeSport,
+  // Send Match Challenge in Chat
+  const handleSendMatchChallenge = () => {
+    if (!activeChatFriend) return;
+    const challengeMsg = {
+      sender: "me",
+      text: `🏆 MATCH CHALLENGE: Let's play a ${activeSport} fixture! Tap to accept and set venue.`,
+      time: "Just now",
+      isChallenge: true,
     };
-    setAthletes([...athletes, newAth]);
-    setNewAthleteName("");
-    setNewAthleteRole("");
-    setNewAthleteJersey("");
-    setAddAthleteOpen(false);
+    const updated = friends.map((f) => {
+      if (f.id === activeChatFriend.id) {
+        return { ...f, messages: [...f.messages, challengeMsg] };
+      }
+      return f;
+    });
+    setFriends(updated);
+    setActiveChatFriend({
+      ...activeChatFriend,
+      messages: [...activeChatFriend.messages, challengeMsg],
+    });
   };
 
-  const handleScheduleGame = () => {
-    if (!newTeamA.trim() || !newTeamB.trim()) return;
-    const newG = {
-      id: Date.now().toString(),
-      sport: activeSport,
-      teamA: newTeamA.trim(),
-      teamB: newTeamB.trim(),
-      venue: newGameVenue.trim() || "Local Ground",
-      status: "upcoming",
-      date: "Today",
-    };
-    setGames([...games, newG]);
-    setNewTeamA("");
-    setNewTeamB("");
-    setNewGameVenue("");
-    setAddGameOpen(false);
+  // Cricket Scoring Logic
+  const handleCricketBall = (type) => {
+    let runs = 0;
+    let ballLabel = type;
+
+    if (type === "W") {
+      setCricketWickets((w) => Math.min(10, w + 1));
+      setBowlerWickets((bw) => bw + 1);
+      setStrikerBalls((b) => b + 1);
+    } else if (type === "WD" || type === "NB") {
+      setCricketRuns((r) => r + 1);
+      setBowlerRunsGiven((br) => br + 1);
+      // Extras do not count as a legal ball in over
+      setOverTimeline([...overTimeline, type]);
+      return;
+    } else {
+      runs = parseInt(type, 10) || 0;
+      setCricketRuns((r) => r + runs);
+      setStrikerRuns((sr) => sr + runs);
+      setStrikerBalls((sb) => sb + 1);
+      setBowlerRunsGiven((br) => br + runs);
+
+      // Strike rotation on odd runs
+      if (runs % 2 !== 0) {
+        swapCricketStrike();
+      }
+    }
+
+    const nextBallsInOver = cricketBallsInOver + 1;
+    setOverTimeline([...overTimeline, ballLabel]);
+
+    if (nextBallsInOver >= 6) {
+      setCricketOverCount((o) => o + 1);
+      setCricketBallsInOver(0);
+      setBowlerOvers(`${cricketOverCount + 1}.0`);
+      setOverTimeline([]);
+      swapCricketStrike(); // Automatic strike rotation at end of over
+    } else {
+      setCricketBallsInOver(nextBallsInOver);
+      setBowlerOvers(`${cricketOverCount}.${nextBallsInOver}`);
+    }
   };
 
-  const handleSaveMatchScore = () => {
+  const swapCricketStrike = () => {
+    const tempName = strikerName;
+    const tempRuns = strikerRuns;
+    const tempBalls = strikerBalls;
+
+    setStrikerName(nonStrikerName);
+    setStrikerRuns(nonStrikerRuns);
+    setStrikerBalls(nonStrikerBalls);
+
+    setNonStrikerName(tempName);
+    setNonStrikerRuns(tempRuns);
+    setNonStrikerBalls(tempBalls);
+  };
+
+  const undoCricketBall = () => {
+    if (overTimeline.length === 0) return;
+    const last = overTimeline[overTimeline.length - 1];
+    setOverTimeline(overTimeline.slice(0, -1));
+    if (last === "W") {
+      setCricketWickets((w) => Math.max(0, w - 1));
+    } else if (last === "WD" || last === "NB") {
+      setCricketRuns((r) => Math.max(0, r - 1));
+    } else {
+      const r = parseInt(last, 10) || 0;
+      setCricketRuns((prev) => Math.max(0, prev - r));
+      setStrikerRuns((sr) => Math.max(0, sr - r));
+    }
+    setCricketBallsInOver((b) => Math.max(0, b - 1));
+  };
+
+  // Badminton Point Logic
+  const handleBadmintonPoint = (playerNum) => {
+    if (playerNum === 1) {
+      const nextScore = badmintonScore1 + 1;
+      setBadmintonScore1(nextScore);
+      setBadmintonServer(1);
+      setBadmintonCourt(nextScore % 2 === 0 ? "Right Court (Even)" : "Left Court (Odd)");
+    } else {
+      const nextScore = badmintonScore2 + 1;
+      setBadmintonScore2(nextScore);
+      setBadmintonServer(2);
+      setBadmintonCourt(nextScore % 2 === 0 ? "Right Court (Even)" : "Left Court (Odd)");
+    }
+  };
+
+  // Finalize Match and Save to Records
+  const handleFinalizeMatch = () => {
+    let summary = "";
+    if (activeSport === "Cricket") {
+      summary = `${cricketRuns}/${cricketWickets} in ${cricketOverCount}.${cricketBallsInOver} overs`;
+    } else if (activeSport === "Badminton") {
+      summary = `${badmintonP1} ${badmintonScore1} - ${badmintonScore2} ${badmintonP2} (Set ${badmintonSet})`;
+    } else {
+      summary = `${footballTeamA} ${footballScoreA} - ${footballScoreB} ${footballTeamB}`;
+    }
+
     const record = {
       id: Date.now().toString(),
       sport: activeSport,
-      teamA: consoleTeamA,
-      teamB: consoleTeamB,
-      scoreA,
-      scoreB,
+      summary,
       date: "Today",
+      finalizedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
-    setCompletedMatches([record, ...completedMatches]);
-    setScoreA(0);
-    setScoreB(0);
-    setIsMatchActive(false);
+
+    setMatchRecords([record, ...matchRecords]);
+    Alert.alert("Match Finalized!", `Official score record saved to ${activeSport} archives.`);
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1c2e30" translucent />
 
-      {/* TOPBAR — Deep pine teal header with safe area padding */}
+      {/* TOPBAR — Deep pine teal (#1c2e30) with safe area margin */}
       <View style={styles.topbar}>
         <View style={styles.topbarLeft}>
           <View style={styles.brandRow}>
@@ -249,9 +472,16 @@ export default function App() {
           <TouchableOpacity
             style={styles.iconButton}
             activeOpacity={0.7}
-            onPress={() => setComposerOpen(true)}
+            onPress={() => setQrModalOpen(true)}
           >
-            <Ionicons name="add" size={20} color={THEME.headerText} />
+            <Ionicons name="qr-code-outline" size={19} color={THEME.headerText} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            activeOpacity={0.7}
+            onPress={() => setAddFriendModalOpen(true)}
+          >
+            <Ionicons name="person-add-outline" size={18} color={THEME.headerText} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.avatarButton}
@@ -263,7 +493,7 @@ export default function App() {
         </View>
       </View>
 
-      {/* SPORT STRIP — Authentic web sport strip with individual sport accent colors */}
+      {/* SPORT STRIP — Web-aligned selector with distinct sport colors (Badminton #e11d48) */}
       <View style={styles.sportStripContainer}>
         <ScrollView
           horizontal
@@ -303,15 +533,17 @@ export default function App() {
         </ScrollView>
       </View>
 
-      {/* MAIN BODY AREA — Warm Ivory Canvas */}
+      {/* MAIN SCREEN BODY */}
       <View style={styles.content}>
-        {/* HOME TAB */}
+        {/* ==================================================== */}
+        {/* TAB 1: HOME */}
+        {/* ==================================================== */}
         {currentTab === "home" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* Active Sport Spotlight Card */}
+            {/* Live Easy Scoring Spotlight Banner */}
             <View style={styles.spotlightCard}>
               <View style={styles.spotlightTop}>
                 <View
@@ -320,114 +552,118 @@ export default function App() {
                   <MaterialCommunityIcons name={currentSport.icon} size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.spotlightMeta}>
-                  <Text style={styles.spotlightEyebrow}>ACTIVE LENS</Text>
-                  <Text style={styles.spotlightTitle}>{currentSport.name}</Text>
-                  <Text style={styles.spotlightDesc}>{currentSport.descriptor}</Text>
+                  <Text style={styles.spotlightEyebrow}>EASY SCORING READY</Text>
+                  <Text style={styles.spotlightTitle}>{currentSport.name} Match Console</Text>
+                  <Text style={styles.spotlightDesc}>
+                    Ball-by-ball, point tracking, and live striker stats.
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.spotlightActionsRow}>
                 <TouchableOpacity
                   style={[styles.spotlightBtn, { backgroundColor: currentSport.accent }]}
-                  onPress={() => setComposerOpen(true)}
+                  onPress={() => setCurrentTab("scores")}
                 >
-                  <Ionicons name="create-outline" size={15} color="#FFFFFF" />
-                  <Text style={styles.spotlightBtnText}>Share a moment</Text>
+                  <Ionicons name="game-controller" size={15} color="#FFFFFF" />
+                  <Text style={styles.spotlightBtnText}>Open Easy Scoring</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.spotlightOutlineBtn}
-                  onPress={() => setCurrentTab("scores")}
+                  onPress={() => setComposerOpen(true)}
                 >
-                  <Ionicons name="timer-outline" size={15} color={THEME.text} />
-                  <Text style={styles.spotlightOutlineBtnText}>Score Match</Text>
+                  <Ionicons name="create-outline" size={15} color={THEME.text} />
+                  <Text style={styles.spotlightOutlineBtnText}>Share Post</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Quick Navigation Cards */}
+            {/* Quick Action Tiles */}
             <View style={styles.quickGrid}>
               <TouchableOpacity
                 style={styles.quickCard}
                 onPress={() => setCurrentTab("players")}
               >
                 <View style={[styles.quickCardIcon, { backgroundColor: THEME.accentLight }]}>
-                  <Ionicons name="people" size={18} color={THEME.accent} />
+                  <Ionicons name="chatbubbles" size={17} color={THEME.accent} />
                 </View>
-                <Text style={styles.quickCardTitle}>Athletes</Text>
-                <Text style={styles.quickCardDesc}>Roster & Directory</Text>
+                <Text style={styles.quickCardTitle}>Friends & Chat</Text>
+                <Text style={styles.quickCardDesc}>{friends.length} athletes</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.quickCard}
+                onPress={() => setAddFriendModalOpen(true)}
+              >
+                <View style={[styles.quickCardIcon, { backgroundColor: "rgba(212, 115, 54, 0.12)" }]}>
+                  <Ionicons name="qr-code" size={17} color="#d47336" />
+                </View>
+                <Text style={styles.quickCardTitle}>Invite by ID</Text>
+                <Text style={styles.quickCardDesc}>QR or Player Code</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.quickCard}
                 onPress={() => setCurrentTab("games")}
               >
-                <View style={[styles.quickCardIcon, { backgroundColor: "rgba(212, 115, 54, 0.12)" }]}>
-                  <Ionicons name="calendar" size={18} color="#d47336" />
+                <View style={[styles.quickCardIcon, { backgroundColor: "rgba(225, 29, 72, 0.12)" }]}>
+                  <Ionicons name="calendar" size={17} color="#e11d48" />
                 </View>
                 <Text style={styles.quickCardTitle}>Fixtures</Text>
-                <Text style={styles.quickCardDesc}>Upcoming games</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.quickCard}
-                onPress={() => setCurrentTab("scores")}
-              >
-                <View style={[styles.quickCardIcon, { backgroundColor: "rgba(2, 132, 199, 0.12)" }]}>
-                  <Ionicons name="trophy" size={18} color="#0284c7" />
-                </View>
-                <Text style={styles.quickCardTitle}>Scoreboard</Text>
-                <Text style={styles.quickCardDesc}>Live records</Text>
+                <Text style={styles.quickCardDesc}>Schedule match</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Feed Section */}
-            <View style={styles.sectionTitleRow}>
+            {/* Feed Header */}
+            <View style={styles.sectionHeaderRow}>
               <View>
-                <Text style={styles.sectionEyebrow}>THE {currentSport.name.toUpperCase()} FEED</Text>
-                <Text style={styles.sectionHeading}>From the community</Text>
+                <Text style={styles.sectionEyebrow}>COMMUNITY FEED</Text>
+                <Text style={styles.sectionHeading}>From the field</Text>
               </View>
+              <TouchableOpacity onPress={() => setComposerOpen(true)}>
+                <Text style={styles.sectionLink}>+ Create post</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Fresh State: Zero Mock Data */}
-            {sportPosts.length === 0 ? (
+            {/* Zero Mock Data Feed */}
+            {posts.length === 0 ? (
               <View style={styles.emptyCard}>
                 <View style={styles.emptyIconCircle}>
                   <Ionicons name="chatbubbles-outline" size={26} color={THEME.textMuted} />
                 </View>
                 <Text style={styles.emptyTitle}>Your {currentSport.name} feed is open.</Text>
                 <Text style={styles.emptyDesc}>
-                  There are no {currentSport.name.toLowerCase()} posts yet. Be the first to share a
-                  real moment from your court or field.
+                  No posts yet. Share match highlights, training milestones, or challenge a friend.
                 </Text>
                 <TouchableOpacity
                   style={[styles.emptyActionBtn, { backgroundColor: currentSport.accent }]}
                   onPress={() => setComposerOpen(true)}
                 >
                   <Ionicons name="add" size={16} color="#FFFFFF" />
-                  <Text style={styles.emptyActionBtnText}>Create a post</Text>
+                  <Text style={styles.emptyActionBtnText}>Share a moment</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              sportPosts.map((post) => (
-                <View key={post.id} style={styles.postCard}>
+              posts.map((p) => (
+                <View key={p.id} style={styles.postCard}>
                   <View style={styles.postAuthorRow}>
                     <View style={styles.postAvatar}>
-                      <Text style={styles.postAvatarText}>{post.avatar}</Text>
+                      <Text style={styles.postAvatarText}>{p.avatar}</Text>
                     </View>
                     <View style={styles.postAuthorMeta}>
-                      <Text style={styles.postAuthorName}>{post.author}</Text>
-                      <Text style={styles.postTime}>{post.time} · {post.sport}</Text>
+                      <Text style={styles.postAuthorName}>{p.author}</Text>
+                      <Text style={styles.postTime}>{p.time} · {p.sport}</Text>
                     </View>
                   </View>
-                  <Text style={styles.postBody}>{post.body}</Text>
+                  <Text style={styles.postBody}>{p.body}</Text>
                   <View style={styles.postFooter}>
                     <TouchableOpacity style={styles.postActionBtn}>
                       <Ionicons name="heart-outline" size={16} color={THEME.textMuted} />
-                      <Text style={styles.postActionText}>{post.likes}</Text>
+                      <Text style={styles.postActionText}>{p.likes}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.postActionBtn}>
                       <Ionicons name="chatbubble-outline" size={15} color={THEME.textMuted} />
-                      <Text style={styles.postActionText}>{post.comments}</Text>
+                      <Text style={styles.postActionText}>{p.comments}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -436,112 +672,212 @@ export default function App() {
           </ScrollView>
         )}
 
-        {/* PLAYERS TAB */}
+        {/* ==================================================== */}
+        {/* TAB 2: PLAYERS & FRIENDS (Full Social Hub) */}
+        {/* ==================================================== */}
         {currentTab === "players" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / DIRECTORY</Text>
-              <Text style={styles.sectionHeading}>Athletes & Rosters</Text>
-              <Text style={styles.sectionSubtitle}>
-                Verified athletes registered in the {currentSport.name.toLowerCase()} community.
-              </Text>
-            </View>
-
-            {/* Search Bar */}
-            <View style={styles.searchBox}>
-              <Ionicons name="search" size={16} color={THEME.textMuted} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder={`Search ${currentSport.name.toLowerCase()} athletes...`}
-                placeholderTextColor={THEME.textSub}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-
-            {/* Fresh State: Zero Mock Data */}
-            {sportAthletes.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <View style={styles.emptyIconCircle}>
-                  <Ionicons name="people-outline" size={26} color={THEME.textMuted} />
-                </View>
-                <Text style={styles.emptyTitle}>No athletes registered yet.</Text>
-                <Text style={styles.emptyDesc}>
-                  Be the first athlete to register on the official {currentSport.name.toLowerCase()}{" "}
-                  roster.
-                </Text>
+            {/* Header with Add & QR Buttons */}
+            <View style={styles.playersTopHeader}>
+              <View>
+                <Text style={styles.sectionEyebrow}>ATHLETES & CONNECTIONS</Text>
+                <Text style={styles.sectionHeading}>Players Hub</Text>
+              </View>
+              <View style={styles.playersActionButtons}>
                 <TouchableOpacity
-                  style={[styles.emptyActionBtn, { backgroundColor: currentSport.accent }]}
-                  onPress={() => setAddAthleteOpen(true)}
+                  style={styles.pillActionBtn}
+                  onPress={() => setQrModalOpen(true)}
                 >
-                  <Ionicons name="person-add" size={16} color="#FFFFFF" />
-                  <Text style={styles.emptyActionBtnText}>Register Athlete</Text>
+                  <Ionicons name="qr-code" size={14} color={THEME.text} />
+                  <Text style={styles.pillActionBtnText}>My QR</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
+                  onPress={() => setAddFriendModalOpen(true)}
+                >
+                  <Ionicons name="person-add" size={14} color="#FFFFFF" />
+                  <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>Add Friend</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
-              sportAthletes.map((ath) => (
-                <View key={ath.id} style={styles.athleteCard}>
-                  <View style={styles.athleteAvatar}>
-                    <Text style={styles.athleteAvatarText}>
-                      {ath.name.substring(0, 2).toUpperCase()}
+            </View>
+
+            {/* Sub-Tabs: Friends | Invites */}
+            <View style={styles.segmentedTabs}>
+              <TouchableOpacity
+                style={[styles.segmentBtn, playerSubTab === "friends" && styles.segmentBtnActive]}
+                onPress={() => setPlayerSubTab("friends")}
+              >
+                <Text
+                  style={[
+                    styles.segmentBtnText,
+                    playerSubTab === "friends" && styles.segmentBtnTextActive,
+                  ]}
+                >
+                  Friends ({friends.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.segmentBtn, playerSubTab === "invites" && styles.segmentBtnActive]}
+                onPress={() => setPlayerSubTab("invites")}
+              >
+                <Text
+                  style={[
+                    styles.segmentBtnText,
+                    playerSubTab === "invites" && styles.segmentBtnTextActive,
+                  ]}
+                >
+                  Invites ({pendingInvites.length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* FRIENDS LIST */}
+            {playerSubTab === "friends" && (
+              <View style={styles.friendsListContainer}>
+                {friends.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <Ionicons name="people-outline" size={26} color={THEME.textMuted} />
+                    <Text style={styles.emptyTitle}>No friends added yet</Text>
+                    <Text style={styles.emptyDesc}>
+                      Add friends using their unique Player ID or scan their QR code to chat and
+                      challenge them to matches.
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.emptyActionBtn, { backgroundColor: currentSport.accent }]}
+                      onPress={() => setAddFriendModalOpen(true)}
+                    >
+                      <Ionicons name="person-add" size={15} color="#FFFFFF" />
+                      <Text style={styles.emptyActionBtnText}>Add Friend by ID</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  friends.map((f) => (
+                    <View key={f.id} style={styles.friendCard}>
+                      <View style={styles.friendAvatarBox}>
+                        <Text style={styles.friendAvatarText}>
+                          {f.name.substring(0, 2).toUpperCase()}
+                        </Text>
+                        {f.online && <View style={styles.onlineDot} />}
+                      </View>
+
+                      <View style={styles.friendInfo}>
+                        <View style={styles.friendNameRow}>
+                          <Text style={styles.friendName}>{f.name}</Text>
+                          <View style={styles.friendIdBadge}>
+                            <Text style={styles.friendIdText}>{f.playerId}</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.friendRole}>
+                          {f.role} · {f.sport}
+                        </Text>
+                      </View>
+
+                      <View style={styles.friendActions}>
+                        <TouchableOpacity
+                          style={styles.chatButton}
+                          onPress={() => setActiveChatFriend(f)}
+                        >
+                          <Ionicons name="chatbubble-ellipses" size={16} color={THEME.text} />
+                          <Text style={styles.chatButtonText}>Chat</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+
+            {/* PENDING INVITES */}
+            {playerSubTab === "invites" && (
+              <View style={styles.invitesListContainer}>
+                {pendingInvites.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <Ionicons name="mail-open-outline" size={26} color={THEME.textMuted} />
+                    <Text style={styles.emptyTitle}>No pending invites</Text>
+                    <Text style={styles.emptyDesc}>
+                      Friend requests and tournament invitations will appear here.
                     </Text>
                   </View>
-                  <View style={styles.athleteMeta}>
-                    <Text style={styles.athleteName}>{ath.name}</Text>
-                    <Text style={styles.athleteRole}>
-                      {ath.role} · {ath.jersey}
-                    </Text>
-                  </View>
-                  <View style={styles.athleteBadge}>
-                    <Text style={styles.athleteBadgeText}>VERIFIED</Text>
-                  </View>
-                </View>
-              ))
+                ) : (
+                  pendingInvites.map((inv) => (
+                    <View key={inv.id} style={styles.inviteCard}>
+                      <View style={styles.inviteMeta}>
+                        <Text style={styles.inviteName}>{inv.name}</Text>
+                        <Text style={styles.inviteSub}>
+                          {inv.playerId} · {inv.role} ({inv.sport})
+                        </Text>
+                      </View>
+                      <View style={styles.inviteActions}>
+                        <TouchableOpacity
+                          style={[styles.inviteAcceptBtn, { backgroundColor: currentSport.accent }]}
+                          onPress={() => handleAcceptInvite(inv)}
+                        >
+                          <Text style={styles.inviteAcceptText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.inviteDeclineBtn}
+                          onPress={() =>
+                            setPendingInvites(pendingInvites.filter((i) => i.id !== inv.id))
+                          }
+                        >
+                          <Ionicons name="close" size={16} color={THEME.textMuted} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
             )}
           </ScrollView>
         )}
 
-        {/* GAMES TAB */}
+        {/* ==================================================== */}
+        {/* TAB 3: GAMES & FIXTURES */}
+        {/* ==================================================== */}
         {currentTab === "games" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / FIXTURES</Text>
-              <Text style={styles.sectionHeading}>Scheduled Matches</Text>
-              <Text style={styles.sectionSubtitle}>
-                Official league matches, scrimmages, and tournament fixtures.
-              </Text>
+            <View style={styles.playersTopHeader}>
+              <View>
+                <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / FIXTURES</Text>
+                <Text style={styles.sectionHeading}>Scheduled Games</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
+                onPress={() => setAddGameOpen(true)}
+              >
+                <Ionicons name="add" size={16} color="#FFFFFF" />
+                <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>Schedule Match</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Fresh State: Zero Mock Data */}
-            {sportGames.length === 0 ? (
+            {/* Zero Mock Data: Clean Fixtures */}
+            {games.length === 0 ? (
               <View style={styles.emptyCard}>
-                <View style={styles.emptyIconCircle}>
-                  <Ionicons name="calendar-outline" size={26} color={THEME.textMuted} />
-                </View>
+                <Ionicons name="calendar-outline" size={28} color={THEME.textMuted} />
                 <Text style={styles.emptyTitle}>No scheduled fixtures yet.</Text>
                 <Text style={styles.emptyDesc}>
-                  Create your first {currentSport.name.toLowerCase()} match, practice match, or
-                  tournament fixture.
+                  Schedule your first {currentSport.name.toLowerCase()} match, friendly scrimmage,
+                  or invite a friend to play.
                 </Text>
                 <TouchableOpacity
                   style={[styles.emptyActionBtn, { backgroundColor: currentSport.accent }]}
                   onPress={() => setAddGameOpen(true)}
                 >
-                  <Ionicons name="calendar" size={16} color="#FFFFFF" />
-                  <Text style={styles.emptyActionBtnText}>Schedule Match</Text>
+                  <Ionicons name="add-circle" size={16} color="#FFFFFF" />
+                  <Text style={styles.emptyActionBtnText}>Schedule First Game</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              sportGames.map((g) => (
+              games.map((g) => (
                 <View key={g.id} style={styles.gameCard}>
                   <View style={styles.gameCardHeader}>
-                    <Text style={styles.gameCardSport}>{g.sport} Match</Text>
+                    <Text style={styles.gameCardSport}>{g.sport} Fixture</Text>
                     <Text style={styles.gameCardVenue}>{g.venue}</Text>
                   </View>
                   <View style={styles.gameMatchupRow}>
@@ -552,14 +888,22 @@ export default function App() {
                   <View style={styles.gameCardFooter}>
                     <Text style={styles.gameCardDate}>{g.date}</Text>
                     <TouchableOpacity
-                      style={[styles.gameCardBtn, { backgroundColor: currentSport.accent }]}
+                      style={[styles.gameScoreBtn, { backgroundColor: currentSport.accent }]}
                       onPress={() => {
-                        setConsoleTeamA(g.teamA);
-                        setConsoleTeamB(g.teamB);
+                        if (activeSport === "Badminton") {
+                          setBadmintonP1(g.teamA);
+                          setBadmintonP2(g.teamB);
+                        } else if (activeSport === "Football") {
+                          setFootballTeamA(g.teamA);
+                          setFootballTeamB(g.teamB);
+                        } else {
+                          setStrikerName(g.teamA);
+                          setNonStrikerName(g.teamB);
+                        }
                         setCurrentTab("scores");
                       }}
                     >
-                      <Text style={styles.gameCardBtnText}>Score Match</Text>
+                      <Text style={styles.gameScoreBtnText}>Open Easy Scoring</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -568,130 +912,361 @@ export default function App() {
           </ScrollView>
         )}
 
-        {/* SCORES TAB */}
+        {/* ==================================================== */}
+        {/* TAB 4: EASY SCORING CONSOLE (Interactive & Cool) */}
+        {/* ==================================================== */}
         {currentTab === "scores" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / OFFICIAL SCORING</Text>
-              <Text style={styles.sectionHeading}>Live Stadium Scoreboard</Text>
-              <Text style={styles.sectionSubtitle}>
-                Interactive score console for verified {currentSport.name.toLowerCase()} matches.
-              </Text>
-            </View>
-
-            {/* LIVE CONSOLE */}
-            <View style={styles.consoleCard}>
-              <View style={styles.consoleTop}>
-                <View style={styles.liveTag}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.liveTagText}>LIVE CONSOLE</Text>
-                </View>
-                <Text style={styles.consoleSport}>{currentSport.name}</Text>
+            <View style={styles.playersTopHeader}>
+              <View>
+                <Text style={styles.sectionEyebrow}>{currentSport.name.toUpperCase()} / EASY SCORING</Text>
+                <Text style={styles.sectionHeading}>Stadium Console</Text>
               </View>
-
-              {/* Team Setup */}
-              <View style={styles.consoleTeamsRow}>
-                <View style={styles.consoleTeamBox}>
-                  <TextInput
-                    style={styles.teamInput}
-                    value={consoleTeamA}
-                    onChangeText={setConsoleTeamA}
-                    placeholder="Team A"
-                    placeholderTextColor={THEME.textSub}
-                  />
-                  <Text style={styles.scoreNumber}>{scoreA}</Text>
-                  <View style={styles.scoreBtnRow}>
-                    <TouchableOpacity
-                      style={styles.scoreAdjustBtn}
-                      onPress={() => setScoreA((s) => Math.max(0, s - 1))}
-                    >
-                      <Text style={styles.scoreAdjustBtnText}>-</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.scoreAdjustBtn, { backgroundColor: currentSport.accent }]}
-                      onPress={() => setScoreA((s) => s + 1)}
-                    >
-                      <Text style={[styles.scoreAdjustBtnText, { color: "#FFFFFF" }]}>+1</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <Text style={styles.consoleDivider}>VS</Text>
-
-                <View style={styles.consoleTeamBox}>
-                  <TextInput
-                    style={styles.teamInput}
-                    value={consoleTeamB}
-                    onChangeText={setConsoleTeamB}
-                    placeholder="Team B"
-                    placeholderTextColor={THEME.textSub}
-                  />
-                  <Text style={styles.scoreNumber}>{scoreB}</Text>
-                  <View style={styles.scoreBtnRow}>
-                    <TouchableOpacity
-                      style={styles.scoreAdjustBtn}
-                      onPress={() => setScoreB((s) => Math.max(0, s - 1))}
-                    >
-                      <Text style={styles.scoreAdjustBtnText}>-</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.scoreAdjustBtn, { backgroundColor: currentSport.accent }]}
-                      onPress={() => setScoreB((s) => s + 1)}
-                    >
-                      <Text style={[styles.scoreAdjustBtnText, { color: "#FFFFFF" }]}>+1</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-
               <TouchableOpacity
-                style={[styles.saveMatchBtn, { backgroundColor: currentSport.accent }]}
-                onPress={handleSaveMatchScore}
+                style={[styles.pillActionBtn, { backgroundColor: currentSport.accent }]}
+                onPress={handleFinalizeMatch}
               >
-                <Ionicons name="checkmark-done" size={16} color="#FFFFFF" />
-                <Text style={styles.saveMatchBtnText}>Finalize & Save Result</Text>
+                <Ionicons name="checkmark-done" size={14} color="#FFFFFF" />
+                <Text style={[styles.pillActionBtnText, { color: "#FFFFFF" }]}>Finalize Match</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Historical Match Records (Fresh State) */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionEyebrow}>OFFICIAL RECORDS</Text>
-              <Text style={styles.sectionHeading}>Recent Results</Text>
+            {/* SPORT SPECIFIC EASY SCORING UI */}
+
+            {/* --- 1. CRICKET EASY SCORING --- */}
+            {activeSport === "Cricket" && (
+              <View style={styles.consoleCard}>
+                {/* Scoreboard Header */}
+                <View style={styles.cricketScoreHeader}>
+                  <View>
+                    <Text style={styles.cricketScoreBig}>
+                      {cricketRuns}/{cricketWickets}
+                    </Text>
+                    <Text style={styles.cricketOversText}>
+                      Overs: {cricketOverCount}.{cricketBallsInOver} / 20.0
+                    </Text>
+                  </View>
+                  <View style={styles.runRateBadge}>
+                    <Text style={styles.runRateLabel}>CRR</Text>
+                    <Text style={styles.runRateValue}>
+                      {cricketOverCount > 0 || cricketBallsInOver > 0
+                        ? (
+                            (cricketRuns /
+                              (cricketOverCount + cricketBallsInOver / 6)) ||
+                            0
+                          ).toFixed(2)
+                        : "0.00"}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Batsmen Table */}
+                <View style={styles.batsmenTable}>
+                  <View style={styles.tableRowHeader}>
+                    <Text style={[styles.tableCol, { flex: 2 }]}>BATSMAN</Text>
+                    <Text style={styles.tableCol}>R</Text>
+                    <Text style={styles.tableCol}>B</Text>
+                    <Text style={styles.tableCol}>SR</Text>
+                  </View>
+                  <View style={[styles.tableRow, styles.strikerHighlight]}>
+                    <Text style={[styles.tableColText, { flex: 2, fontWeight: "800" }]}>
+                      {strikerName} *
+                    </Text>
+                    <Text style={styles.tableColText}>{strikerRuns}</Text>
+                    <Text style={styles.tableColText}>{strikerBalls}</Text>
+                    <Text style={styles.tableColText}>
+                      {strikerBalls > 0
+                        ? ((strikerRuns / strikerBalls) * 100).toFixed(1)
+                        : "0.0"}
+                    </Text>
+                  </View>
+                  <View style={styles.tableRow}>
+                    <Text style={[styles.tableColText, { flex: 2 }]}>{nonStrikerName}</Text>
+                    <Text style={styles.tableColText}>{nonStrikerRuns}</Text>
+                    <Text style={styles.tableColText}>{nonStrikerBalls}</Text>
+                    <Text style={styles.tableColText}>
+                      {nonStrikerBalls > 0
+                        ? ((nonStrikerRuns / nonStrikerBalls) * 100).toFixed(1)
+                        : "0.0"}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Bowler Bar */}
+                <View style={styles.bowlerRow}>
+                  <Text style={styles.bowlerNameText}>Bowler: {bowlerName}</Text>
+                  <Text style={styles.bowlerStatsText}>
+                    {bowlerOvers} ov · {bowlerRunsGiven} r · {bowlerWickets} w
+                  </Text>
+                </View>
+
+                {/* Over Timeline */}
+                <View style={styles.overTimelineRow}>
+                  <Text style={styles.thisOverLabel}>This Over:</Text>
+                  {overTimeline.length === 0 ? (
+                    <Text style={styles.noBallsYet}>Waiting for first delivery...</Text>
+                  ) : (
+                    overTimeline.map((b, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.ballDot,
+                          b === "W" && styles.ballWicket,
+                          (b === "4" || b === "6") && { backgroundColor: currentSport.accent },
+                        ]}
+                      >
+                        <Text style={styles.ballDotText}>{b}</Text>
+                      </View>
+                    ))
+                  )}
+                </View>
+
+                {/* Easy Scoring Keypad */}
+                <View style={styles.keypadGrid}>
+                  {["0", "1", "2", "3", "4", "6"].map((val) => (
+                    <TouchableOpacity
+                      key={val}
+                      style={[
+                        styles.keypadBtn,
+                        (val === "4" || val === "6") && { borderColor: currentSport.accent },
+                      ]}
+                      onPress={() => handleCricketBall(val)}
+                    >
+                      <Text style={styles.keypadBtnText}>+{val}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={[styles.keypadBtn, styles.keypadSpecialBtn]}
+                    onPress={() => handleCricketBall("WD")}
+                  >
+                    <Text style={styles.keypadSpecialText}>WD</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.keypadBtn, styles.keypadSpecialBtn]}
+                    onPress={() => handleCricketBall("NB")}
+                  >
+                    <Text style={styles.keypadSpecialText}>NB</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.keypadBtn, styles.keypadWicketBtn]}
+                    onPress={() => handleCricketBall("W")}
+                  >
+                    <Text style={styles.keypadWicketText}>WICKET</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Action Controls */}
+                <View style={styles.scoringBottomControls}>
+                  <TouchableOpacity style={styles.controlBtn} onPress={swapCricketStrike}>
+                    <Ionicons name="swap-horizontal" size={16} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Swap Strike</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.controlBtn} onPress={undoCricketBall}>
+                    <Ionicons name="arrow-undo" size={16} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Undo Ball</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* --- 2. BADMINTON EASY SCORING (Speed & Precision, Crimson Theme #e11d48) --- */}
+            {activeSport === "Badminton" && (
+              <View style={styles.consoleCard}>
+                <View style={styles.badmintonTopBadge}>
+                  <MaterialCommunityIcons name="badminton" size={18} color="#e11d48" />
+                  <Text style={[styles.badmintonTitle, { color: "#e11d48" }]}>
+                    SET {badmintonSet} · MATCH POINT 21
+                  </Text>
+                </View>
+
+                {/* Big Score Board */}
+                <View style={styles.badmintonScoreBoard}>
+                  <View style={styles.playerScoreCol}>
+                    <TextInput
+                      style={styles.badmintonPlayerInput}
+                      value={badmintonP1}
+                      onChangeText={setBadmintonP1}
+                    />
+                    <Text style={styles.bigScoreDigit}>{badmintonScore1}</Text>
+                    {badmintonServer === 1 && (
+                      <View style={[styles.serverPill, { backgroundColor: "#e11d48" }]}>
+                        <Text style={styles.serverPillText}>SERVING</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={[styles.pointAddBtn, { backgroundColor: "#e11d48" }]}
+                      onPress={() => handleBadmintonPoint(1)}
+                    >
+                      <Text style={styles.pointAddBtnText}>+1 Point</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.badmintonDivider}>
+                    <Text style={styles.badmintonDividerText}>VS</Text>
+                  </View>
+
+                  <View style={styles.playerScoreCol}>
+                    <TextInput
+                      style={styles.badmintonPlayerInput}
+                      value={badmintonP2}
+                      onChangeText={setBadmintonP2}
+                    />
+                    <Text style={styles.bigScoreDigit}>{badmintonScore2}</Text>
+                    {badmintonServer === 2 && (
+                      <View style={[styles.serverPill, { backgroundColor: "#e11d48" }]}>
+                        <Text style={styles.serverPillText}>SERVING</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={[styles.pointAddBtn, { backgroundColor: "#e11d48" }]}
+                      onPress={() => handleBadmintonPoint(2)}
+                    >
+                      <Text style={styles.pointAddBtnText}>+1 Point</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Court & Server Info */}
+                <View style={styles.courtInfoCard}>
+                  <Text style={styles.courtInfoText}>
+                    🏸 Current Service Court: <Text style={{ fontWeight: "800" }}>{badmintonCourt}</Text>
+                  </Text>
+                </View>
+
+                {/* Badminton Controls */}
+                <View style={styles.scoringBottomControls}>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setBadmintonScore1((s) => Math.max(0, s - 1));
+                    }}
+                  >
+                    <Ionicons name="arrow-undo" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Undo P1</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setBadmintonScore2((s) => Math.max(0, s - 1));
+                    }}
+                  >
+                    <Ionicons name="arrow-undo" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Undo P2</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.controlBtn, { backgroundColor: "#ffe4e6" }]}
+                    onPress={() => {
+                      setBadmintonSet((s) => s + 1);
+                      setBadmintonScore1(0);
+                      setBadmintonScore2(0);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color="#e11d48" />
+                    <Text style={[styles.controlBtnText, { color: "#e11d48" }]}>Next Set</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* --- 3. FOOTBALL EASY SCORING --- */}
+            {activeSport === "Football" && (
+              <View style={styles.consoleCard}>
+                <View style={styles.footballMatchHeader}>
+                  <TextInput
+                    style={styles.footballTeamInput}
+                    value={footballTeamA}
+                    onChangeText={setFootballTeamA}
+                  />
+                  <View style={styles.footballScoreBox}>
+                    <Text style={styles.footballScoreBig}>
+                      {footballScoreA} - {footballScoreB}
+                    </Text>
+                    <Text style={styles.footballTimeText}>{footballMinute}'</Text>
+                  </View>
+                  <TextInput
+                    style={styles.footballTeamInput}
+                    value={footballTeamB}
+                    onChangeText={setFootballTeamB}
+                  />
+                </View>
+
+                <View style={styles.footballActionRow}>
+                  <TouchableOpacity
+                    style={styles.footballGoalBtn}
+                    onPress={() => setFootballScoreA((s) => s + 1)}
+                  >
+                    <Ionicons name="football" size={16} color="#000000" />
+                    <Text style={styles.footballGoalBtnText}>Goal Team A</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.footballGoalBtn}
+                    onPress={() => setFootballScoreB((s) => s + 1)}
+                  >
+                    <Ionicons name="football" size={16} color="#000000" />
+                    <Text style={styles.footballGoalBtnText}>Goal Team B</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.scoringBottomControls}>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => setFootballMinute((m) => m + 5)}
+                  >
+                    <Ionicons name="timer-outline" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>+5 Min</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.controlBtn}
+                    onPress={() => {
+                      setFootballScoreA(0);
+                      setFootballScoreB(0);
+                      setFootballMinute(0);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={15} color={THEME.text} />
+                    <Text style={styles.controlBtnText}>Reset</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* FINALIZED MATCH ARCHIVES */}
+            <View style={styles.sectionHeaderRow}>
+              <View>
+                <Text style={styles.sectionEyebrow}>OFFICIAL ARCHIVE</Text>
+                <Text style={styles.sectionHeading}>Finalized Matches</Text>
+              </View>
             </View>
 
-            {sportRecords.length === 0 ? (
+            {matchRecords.length === 0 ? (
               <View style={styles.emptyCard}>
-                <View style={styles.emptyIconCircle}>
-                  <Ionicons name="trophy-outline" size={26} color={THEME.textMuted} />
-                </View>
-                <Text style={styles.emptyTitle}>
-                  No recorded {currentSport.name.toLowerCase()} match results yet.
-                </Text>
+                <Ionicons name="trophy-outline" size={24} color={THEME.textMuted} />
+                <Text style={styles.emptyTitle}>No finalized matches yet.</Text>
                 <Text style={styles.emptyDesc}>
-                  Official scores and match statistics will automatically appear here as games are
-                  finalized.
+                  Once you finish easy scoring a game, tap "Finalize Match" to save official records
+                  here.
                 </Text>
               </View>
             ) : (
-              sportRecords.map((rec) => (
+              matchRecords.map((rec) => (
                 <View key={rec.id} style={styles.recordCard}>
                   <View style={styles.recordHeader}>
-                    <Text style={styles.recordSport}>{rec.sport} Match</Text>
-                    <Text style={styles.recordDate}>{rec.date}</Text>
+                    <Text style={styles.recordSport}>{rec.sport} Official Result</Text>
+                    <Text style={styles.recordDate}>{rec.date} · {rec.finalizedAt}</Text>
                   </View>
-                  <Text style={styles.recordScore}>
-                    {rec.teamA} {rec.scoreA} - {rec.scoreB} {rec.teamB}
-                  </Text>
+                  <Text style={styles.recordSummary}>{rec.summary}</Text>
                 </View>
               ))
             )}
           </ScrollView>
         )}
 
-        {/* PROFILE TAB */}
+        {/* ==================================================== */}
+        {/* TAB 5: PROFILE & IDENTITY */}
+        {/* ==================================================== */}
         {currentTab === "profile" && (
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -701,56 +1276,67 @@ export default function App() {
               <View style={styles.profileAvatar}>
                 <Text style={styles.profileAvatarText}>CT</Text>
               </View>
-              <Text style={styles.profileName}>Charan Teja</Text>
-              <Text style={styles.profileSub}>@charanteja · Athlete ID: PL-512391</Text>
+              <Text style={styles.profileName}>{currentUser.name}</Text>
+              <Text style={styles.profileSub}>
+                {currentUser.handle} · Player ID: {currentUser.playerId}
+              </Text>
               <View style={styles.verifiedBadge}>
                 <Ionicons name="shield-checkmark" size={13} color={THEME.accent} />
                 <Text style={styles.verifiedBadgeText}>VERIFIED ATHLETE</Text>
               </View>
 
-              {/* Clean Stats (Fresh App, No Fake Numbers) */}
+              <TouchableOpacity
+                style={styles.showQrBtn}
+                onPress={() => setQrModalOpen(true)}
+              >
+                <Ionicons name="qr-code" size={15} color={THEME.text} />
+                <Text style={styles.showQrBtnText}>Show My Player QR</Text>
+              </TouchableOpacity>
+
               <View style={styles.statsRow}>
                 <View style={styles.statBox}>
-                  <Text style={styles.statValue}>{sportRecords.length}</Text>
+                  <Text style={styles.statValue}>{friends.length}</Text>
+                  <Text style={styles.statLabel}>Friends</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{matchRecords.length}</Text>
                   <Text style={styles.statLabel}>Matches</Text>
                 </View>
                 <View style={styles.statBox}>
-                  <Text style={styles.statValue}>{sportAthletes.length}</Text>
-                  <Text style={styles.statLabel}>Teammates</Text>
-                </View>
-                <View style={styles.statBox}>
-                  <Text style={styles.statValue}>{sportPosts.length}</Text>
+                  <Text style={styles.statValue}>{posts.length}</Text>
                   <Text style={styles.statLabel}>Posts</Text>
                 </View>
               </View>
             </View>
 
             <View style={styles.settingsCard}>
-              <Text style={styles.settingsHeading}>PREFERENCES</Text>
+              <Text style={styles.settingsHeading}>ACCOUNT & SYNC</Text>
               <View style={styles.settingsRow}>
                 <MaterialCommunityIcons name={currentSport.icon} size={18} color={THEME.text} />
                 <Text style={styles.settingsText}>Active Sport Lens: {currentSport.name}</Text>
               </View>
               <View style={styles.settingsRow}>
-                <Ionicons name="notifications-outline" size={18} color={THEME.text} />
-                <Text style={styles.settingsText}>Match Alerts & Notifications</Text>
+                <Ionicons name="people-outline" size={18} color={THEME.text} />
+                <Text style={styles.settingsText}>Player ID: {currentUser.playerId}</Text>
               </View>
               <View style={styles.settingsRow}>
                 <Ionicons name="cloud-done-outline" size={18} color={THEME.accent} />
-                <Text style={styles.settingsText}>Cloud Database: Connected</Text>
+                <Text style={styles.settingsText}>EZKORA Cloud Database: Connected</Text>
               </View>
             </View>
           </ScrollView>
         )}
       </View>
 
-      {/* BOTTOM NAVIGATION — Deep Pine Teal (#1c2e30) matching web app */}
+      {/* ==================================================== */}
+      {/* BOTTOM NAVIGATION — Deep Pine Teal (#1c2e30) */}
+      {/* ==================================================== */}
       <View style={styles.bottomNav}>
         {[
           { key: "home", label: "Home", icon: "compass" },
           { key: "players", label: "Players", icon: "people" },
           { key: "games", label: "Games", icon: "calendar" },
-          { key: "scores", label: "Scores", icon: "trophy" },
+          { key: "scores", label: "Scores", icon: "game-controller" },
           { key: "profile", label: "Profile", icon: "person" },
         ].map((tab) => {
           const isActive = currentTab === tab.key;
@@ -781,7 +1367,241 @@ export default function App() {
         })}
       </View>
 
-      {/* MODAL: CREATE POST */}
+      {/* ==================================================== */}
+      {/* MODAL 1: DIRECT CHAT WITH FRIEND */}
+      {/* ==================================================== */}
+      <Modal visible={!!activeChatFriend} transparent animationType="slide">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.chatModalCard}>
+            {/* Chat Header */}
+            <View style={styles.chatHeader}>
+              <View style={styles.chatHeaderLeft}>
+                <View style={styles.chatAvatar}>
+                  <Text style={styles.chatAvatarText}>
+                    {activeChatFriend?.name.substring(0, 2).toUpperCase()}
+                  </Text>
+                  {activeChatFriend?.online && <View style={styles.onlineDot} />}
+                </View>
+                <View>
+                  <Text style={styles.chatName}>{activeChatFriend?.name}</Text>
+                  <Text style={styles.chatStatus}>
+                    {activeChatFriend?.online ? "Active Now" : "Offline"} · {activeChatFriend?.playerId}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setActiveChatFriend(null)}>
+                <Ionicons name="close" size={24} color={THEME.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Match Challenge Pill */}
+            <View style={styles.challengeBar}>
+              <Text style={styles.challengeBarText}>Ready to play?</Text>
+              <TouchableOpacity
+                style={[styles.challengeActionBtn, { backgroundColor: currentSport.accent }]}
+                onPress={handleSendMatchChallenge}
+              >
+                <Ionicons name="trophy" size={13} color="#FFFFFF" />
+                <Text style={styles.challengeActionBtnText}>Challenge to Match</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Message Thread */}
+            <ScrollView
+              style={styles.chatMessagesScroll}
+              contentContainerStyle={styles.chatMessagesContent}
+            >
+              {activeChatFriend?.messages.length === 0 ? (
+                <View style={styles.chatEmpty}>
+                  <Text style={styles.chatEmptyText}>
+                    No messages yet. Say hello or challenge {activeChatFriend?.name} to a game!
+                  </Text>
+                </View>
+              ) : (
+                activeChatFriend?.messages.map((m, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.chatBubble,
+                      m.sender === "me" ? styles.bubbleMe : styles.bubbleThem,
+                      m.isChallenge && styles.bubbleChallenge,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.bubbleText,
+                        m.sender === "me" ? styles.bubbleTextMe : styles.bubbleTextThem,
+                      ]}
+                    >
+                      {m.text}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.bubbleTime,
+                        m.sender === "me" ? { color: "rgba(255,255,255,0.7)" } : { color: THEME.textSub },
+                      ]}
+                    >
+                      {m.time}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            {/* Chat Input Bar */}
+            <View style={styles.chatInputBar}>
+              <TextInput
+                style={styles.chatTextInput}
+                placeholder={`Message ${activeChatFriend?.name.split(" ")[0]}...`}
+                placeholderTextColor={THEME.textSub}
+                value={chatInputText}
+                onChangeText={setChatInputText}
+              />
+              <TouchableOpacity
+                style={[styles.chatSendBtn, { backgroundColor: currentSport.accent }]}
+                onPress={handleSendMessage}
+              >
+                <Ionicons name="send" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ==================================================== */}
+      {/* MODAL 2: ADD FRIEND VIA PLAYER ID */}
+      {/* ==================================================== */}
+      <Modal visible={addFriendModalOpen} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Athlete / Friend</Text>
+              <TouchableOpacity onPress={() => setAddFriendModalOpen(false)}>
+                <Ionicons name="close" size={22} color={THEME.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubText}>
+              Enter any verified athlete's Player ID (e.g. PL-842109) to connect and start chatting.
+            </Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Player ID (e.g. PL-842109)"
+              placeholderTextColor={THEME.textSub}
+              autoCapitalize="characters"
+              value={inputFriendId}
+              onChangeText={setInputFriendId}
+            />
+
+            <View style={styles.modalActionButtons}>
+              <TouchableOpacity
+                style={styles.modalSecondaryBtn}
+                onPress={() => {
+                  setAddFriendModalOpen(false);
+                  setScanQrOpen(true);
+                }}
+              >
+                <Ionicons name="camera-outline" size={16} color={THEME.text} />
+                <Text style={styles.modalSecondaryBtnText}>Scan QR Code</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalPrimaryBtn, { backgroundColor: currentSport.accent }]}
+                onPress={handleAddFriendById}
+              >
+                <Text style={styles.modalPrimaryBtnText}>Send Connection</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ==================================================== */}
+      {/* MODAL 3: SHOW MY PLAYER QR CODE */}
+      {/* ==================================================== */}
+      <Modal visible={qrModalOpen} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.qrCard}>
+            <TouchableOpacity
+              style={styles.qrCloseBtn}
+              onPress={() => setQrModalOpen(false)}
+            >
+              <Ionicons name="close" size={22} color={THEME.textMuted} />
+            </TouchableOpacity>
+
+            <View style={styles.qrProfileHeader}>
+              <View style={styles.qrAvatar}>
+                <Text style={styles.qrAvatarText}>CT</Text>
+              </View>
+              <Text style={styles.qrName}>{currentUser.name}</Text>
+              <Text style={styles.qrIdBadge}>{currentUser.playerId}</Text>
+            </View>
+
+            {/* High Contrast Visual QR Matrix Representation */}
+            <View style={styles.qrDisplayBox}>
+              <View style={styles.qrInnerPattern}>
+                <Ionicons name="qr-code" size={160} color="#1c2e30" />
+              </View>
+            </View>
+            <Text style={styles.qrInstruction}>
+              Scan this code with another phone to add Charan Teja instantly as a friend.
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.qrShareBtn, { backgroundColor: currentSport.accent }]}
+              onPress={() => {
+                Alert.alert("Invite Copied!", `ezkora.sports/invite/${currentUser.playerId}`);
+              }}
+            >
+              <Ionicons name="share-social" size={16} color="#FFFFFF" />
+              <Text style={styles.qrShareBtnText}>Share Invite Link</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ==================================================== */}
+      {/* MODAL 4: SCAN FRIEND QR CODE */}
+      {/* ==================================================== */}
+      <Modal visible={scanQrOpen} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Scan Athlete QR</Text>
+              <TouchableOpacity onPress={() => setScanQrOpen(false)}>
+                <Ionicons name="close" size={22} color={THEME.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubText}>
+              Point camera or enter the scanned code to verify and connect.
+            </Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Scanned Code (e.g. PL-992014)"
+              placeholderTextColor={THEME.textSub}
+              autoCapitalize="characters"
+              value={scannedCode}
+              onChangeText={setScannedCode}
+            />
+            <View style={styles.modalActionButtons}>
+              <TouchableOpacity
+                style={styles.modalSecondaryBtn}
+                onPress={() => setScanQrOpen(false)}
+              >
+                <Text style={styles.modalSecondaryBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalPrimaryBtn, { backgroundColor: currentSport.accent }]}
+                onPress={handleAddScannedFriend}
+              >
+                <Text style={styles.modalPrimaryBtnText}>Verify & Connect</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ==================================================== */}
+      {/* MODAL 5: POST COMPOSER */}
+      {/* ==================================================== */}
       <Modal visible={composerOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
@@ -796,119 +1616,102 @@ export default function App() {
               placeholder={`What's happening on the ${currentSport.name.toLowerCase()} field?`}
               placeholderTextColor={THEME.textSub}
               multiline
-              value={postContent}
-              onChangeText={setPostContent}
+              value={postText}
+              onChangeText={setPostText}
             />
-            <View style={styles.modalButtons}>
+            <View style={styles.modalActionButtons}>
               <TouchableOpacity
-                style={styles.modalCancel}
+                style={styles.modalSecondaryBtn}
                 onPress={() => setComposerOpen(false)}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={styles.modalSecondaryBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalSubmit, { backgroundColor: currentSport.accent }]}
-                onPress={handleCreatePost}
+                style={[styles.modalPrimaryBtn, { backgroundColor: currentSport.accent }]}
+                onPress={() => {
+                  if (!postText.trim()) return;
+                  const newP = {
+                    id: Date.now().toString(),
+                    author: currentUser.name,
+                    avatar: currentUser.avatar,
+                    time: "Just now",
+                    sport: activeSport,
+                    body: postText.trim(),
+                    likes: 0,
+                    comments: 0,
+                  };
+                  setPosts([newP, ...posts]);
+                  setPostText("");
+                  setComposerOpen(false);
+                }}
               >
-                <Text style={styles.modalSubmitText}>Post</Text>
+                <Text style={styles.modalPrimaryBtnText}>Post to Feed</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* MODAL: ADD ATHLETE */}
-      <Modal visible={addAthleteOpen} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Register Athlete</Text>
-              <TouchableOpacity onPress={() => setAddAthleteOpen(false)}>
-                <Ionicons name="close" size={22} color={THEME.textMuted} />
-              </TouchableOpacity>
-            </View>
-            <TextInput
-              style={styles.formInput}
-              placeholder="Full Name (e.g. Charan Teja)"
-              placeholderTextColor={THEME.textSub}
-              value={newAthleteName}
-              onChangeText={setNewAthleteName}
-            />
-            <TextInput
-              style={styles.formInput}
-              placeholder="Position / Role (e.g. Striker, Singles Specialist)"
-              placeholderTextColor={THEME.textSub}
-              value={newAthleteRole}
-              onChangeText={setNewAthleteRole}
-            />
-            <TextInput
-              style={styles.formInput}
-              placeholder="Jersey Number (e.g. #10)"
-              placeholderTextColor={THEME.textSub}
-              value={newAthleteJersey}
-              onChangeText={setNewAthleteJersey}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancel}
-                onPress={() => setAddAthleteOpen(false)}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalSubmit, { backgroundColor: currentSport.accent }]}
-                onPress={handleAddAthlete}
-              >
-                <Text style={styles.modalSubmitText}>Add to Roster</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* MODAL: SCHEDULE GAME */}
+      {/* ==================================================== */}
+      {/* MODAL 6: SCHEDULE MATCH */}
+      {/* ==================================================== */}
       <Modal visible={addGameOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Schedule Match</Text>
+              <Text style={styles.modalTitle}>Schedule {currentSport.name} Match</Text>
               <TouchableOpacity onPress={() => setAddGameOpen(false)}>
                 <Ionicons name="close" size={22} color={THEME.textMuted} />
               </TouchableOpacity>
             </View>
             <TextInput
               style={styles.formInput}
-              placeholder="Home Team / Player 1"
+              placeholder="Team A / Player 1"
               placeholderTextColor={THEME.textSub}
               value={newTeamA}
               onChangeText={setNewTeamA}
             />
             <TextInput
               style={styles.formInput}
-              placeholder="Away Team / Player 2"
+              placeholder="Team B / Player 2"
               placeholderTextColor={THEME.textSub}
               value={newTeamB}
               onChangeText={setNewTeamB}
             />
             <TextInput
               style={styles.formInput}
-              placeholder="Venue (e.g. Stadium Court 1)"
+              placeholder="Venue (e.g. Indoor Stadium Court 2)"
               placeholderTextColor={THEME.textSub}
-              value={newGameVenue}
-              onChangeText={setNewGameVenue}
+              value={newVenue}
+              onChangeText={setNewVenue}
             />
-            <View style={styles.modalButtons}>
+            <View style={styles.modalActionButtons}>
               <TouchableOpacity
-                style={styles.modalCancel}
+                style={styles.modalSecondaryBtn}
                 onPress={() => setAddGameOpen(false)}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={styles.modalSecondaryBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalSubmit, { backgroundColor: currentSport.accent }]}
-                onPress={handleScheduleGame}
+                style={[styles.modalPrimaryBtn, { backgroundColor: currentSport.accent }]}
+                onPress={() => {
+                  if (!newTeamA.trim() || !newTeamB.trim()) return;
+                  const newG = {
+                    id: Date.now().toString(),
+                    sport: activeSport,
+                    teamA: newTeamA.trim(),
+                    teamB: newTeamB.trim(),
+                    venue: newVenue.trim() || "Main Court",
+                    date: "Today",
+                  };
+                  setGames([newG, ...games]);
+                  setNewTeamA("");
+                  setNewTeamB("");
+                  setNewVenue("");
+                  setAddGameOpen(false);
+                }}
               >
-                <Text style={styles.modalSubmitText}>Confirm Match</Text>
+                <Text style={styles.modalPrimaryBtnText}>Schedule Game</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -924,7 +1727,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.bg,
   },
 
-  // TOPBAR — Deep pine teal header with safe area padding
+  // TOPBAR — Deep pine teal header with safe status bar spacing
   topbar: {
     paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 16 : 52,
     paddingBottom: 14,
@@ -981,7 +1784,7 @@ const styles = StyleSheet.create({
   topbarRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   iconButton: {
     width: 36,
@@ -1061,7 +1864,6 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
   spotlightTop: {
@@ -1075,10 +1877,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
   },
   spotlightMeta: {
     flex: 1,
@@ -1091,7 +1889,7 @@ const styles = StyleSheet.create({
   },
   spotlightTitle: {
     color: THEME.text,
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "900",
     marginTop: 1,
   },
@@ -1173,11 +1971,11 @@ const styles = StyleSheet.create({
   },
 
   // SECTION HEADERS
-  sectionTitleRow: {
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
     marginTop: 4,
-  },
-  sectionHeader: {
-    gap: 2,
   },
   sectionEyebrow: {
     color: THEME.accent,
@@ -1191,13 +1989,920 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: 1,
   },
-  sectionSubtitle: {
+  sectionLink: {
+    color: THEME.accent,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  // PLAYERS HUB HEADER
+  playersTopHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  playersActionButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  pillActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    backgroundColor: THEME.card,
+  },
+  pillActionBtnText: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  segmentedTabs: {
+    flexDirection: "row",
+    backgroundColor: "#EFEBE3",
+    borderRadius: 10,
+    padding: 3,
+    gap: 4,
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  segmentBtnActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  segmentBtnText: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  segmentBtnTextActive: {
+    color: THEME.text,
+    fontWeight: "800",
+  },
+
+  // FRIENDS LIST
+  friendsListContainer: {
+    gap: 10,
+  },
+  friendCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    padding: 14,
+    gap: 12,
+  },
+  friendAvatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: THEME.accentLight,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  friendAvatarText: {
+    color: THEME.accent,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  onlineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#10b981",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    position: "absolute",
+    bottom: -1,
+    right: -1,
+  },
+  friendInfo: {
+    flex: 1,
+  },
+  friendNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  friendName: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  friendIdBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    backgroundColor: THEME.cardInner,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  friendIdText: {
+    color: THEME.textMuted,
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  friendRole: {
     color: THEME.textMuted,
     fontSize: 12,
     marginTop: 2,
   },
+  friendActions: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  chatButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  chatButtonText: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
 
-  // EMPTY CARD (ZERO MOCK DATA)
+  // INVITES LIST
+  invitesListContainer: {
+    gap: 10,
+  },
+  inviteCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    padding: 14,
+  },
+  inviteMeta: {
+    flex: 1,
+  },
+  inviteName: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  inviteSub: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  inviteActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inviteAcceptBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  inviteAcceptText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  inviteDeclineBtn: {
+    padding: 6,
+  },
+
+  // CHAT MODAL
+  chatModalCard: {
+    flex: 1,
+    backgroundColor: THEME.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: 60,
+  },
+  chatHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+  },
+  chatHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  chatAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: THEME.accentLight,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  chatAvatarText: {
+    color: THEME.accent,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  chatName: {
+    color: THEME.text,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  chatStatus: {
+    color: THEME.textMuted,
+    fontSize: 11,
+  },
+  challengeBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: THEME.cardInner,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+  },
+  challengeBarText: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  challengeActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  challengeActionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  chatMessagesScroll: {
+    flex: 1,
+    backgroundColor: THEME.bg,
+  },
+  chatMessagesContent: {
+    padding: 16,
+    gap: 10,
+  },
+  chatEmpty: {
+    alignItems: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  chatEmptyText: {
+    color: THEME.textMuted,
+    fontSize: 13,
+    textAlign: "center",
+  },
+  chatBubble: {
+    maxWidth: "80%",
+    padding: 12,
+    borderRadius: 14,
+  },
+  bubbleMe: {
+    alignSelf: "flex-end",
+    backgroundColor: THEME.headerBg,
+    borderBottomRightRadius: 2,
+  },
+  bubbleThem: {
+    alignSelf: "flex-start",
+    backgroundColor: THEME.card,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    borderBottomLeftRadius: 2,
+  },
+  bubbleChallenge: {
+    borderWidth: 1.5,
+    borderColor: "#d47336",
+  },
+  bubbleText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  bubbleTextMe: {
+    color: "#FFFFFF",
+  },
+  bubbleTextThem: {
+    color: THEME.text,
+  },
+  bubbleTime: {
+    fontSize: 9,
+    marginTop: 4,
+    alignSelf: "flex-end",
+  },
+  chatInputBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: THEME.cardBorder,
+    backgroundColor: THEME.card,
+    gap: 10,
+  },
+  chatTextInput: {
+    flex: 1,
+    backgroundColor: THEME.cardInner,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    color: THEME.text,
+    fontSize: 13,
+  },
+  chatSendBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // EASY SCORING CONSOLE CARD
+  consoleCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    padding: 18,
+    gap: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+
+  // CRICKET STYLES
+  cricketScoreHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+  },
+  cricketScoreBig: {
+    color: THEME.text,
+    fontSize: 34,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  cricketOversText: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  runRateBadge: {
+    backgroundColor: THEME.cardInner,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  runRateLabel: {
+    color: THEME.textMuted,
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  runRateValue: {
+    color: THEME.text,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  batsmenTable: {
+    backgroundColor: THEME.cardInner,
+    borderRadius: 12,
+    padding: 10,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  tableRowHeader: {
+    flexDirection: "row",
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 4,
+  },
+  strikerHighlight: {
+    backgroundColor: "rgba(39, 120, 99, 0.06)",
+    borderRadius: 6,
+    paddingHorizontal: 4,
+  },
+  tableCol: {
+    flex: 1,
+    color: THEME.textMuted,
+    fontSize: 10,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  tableColText: {
+    flex: 1,
+    color: THEME.text,
+    fontSize: 12,
+    textAlign: "center",
+  },
+  bowlerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 4,
+  },
+  bowlerNameText: {
+    color: THEME.text,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  bowlerStatsText: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  overTimelineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  thisOverLabel: {
+    color: THEME.textMuted,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  noBallsYet: {
+    color: THEME.textSub,
+    fontSize: 11,
+    fontStyle: "italic",
+  },
+  ballDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ballWicket: {
+    backgroundColor: THEME.danger,
+    borderColor: THEME.danger,
+  },
+  ballDotText: {
+    color: THEME.text,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  keypadGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    justifyContent: "space-between",
+  },
+  keypadBtn: {
+    width: "30%",
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  keypadBtnText: {
+    color: THEME.text,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  keypadSpecialBtn: {
+    backgroundColor: "rgba(212, 115, 54, 0.1)",
+    borderColor: "rgba(212, 115, 54, 0.3)",
+  },
+  keypadSpecialText: {
+    color: "#d47336",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  keypadWicketBtn: {
+    backgroundColor: THEME.dangerLight,
+    borderColor: THEME.danger,
+  },
+  keypadWicketText: {
+    color: THEME.danger,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  scoringBottomControls: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  controlBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+  },
+  controlBtnText: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  // BADMINTON EASY SCORING (Crimson Theme #e11d48)
+  badmintonTopBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#ffe4e6",
+    borderRadius: 8,
+    paddingVertical: 6,
+  },
+  badmintonTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+  badmintonScoreBoard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 10,
+  },
+  playerScoreCol: {
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  badmintonPlayerInput: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+    paddingBottom: 2,
+    minWidth: 90,
+  },
+  bigScoreDigit: {
+    color: THEME.text,
+    fontSize: 44,
+    fontWeight: "900",
+  },
+  serverPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  serverPillText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  pointAddBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  pointAddBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  badmintonDivider: {
+    paddingHorizontal: 10,
+  },
+  badmintonDividerText: {
+    color: THEME.textMuted,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  courtInfoCard: {
+    backgroundColor: THEME.cardInner,
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    alignItems: "center",
+  },
+  courtInfoText: {
+    color: THEME.textMuted,
+    fontSize: 12,
+  },
+
+  // FOOTBALL EASY SCORING
+  footballMatchHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+  footballTeamInput: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "700",
+    flex: 1,
+    textAlign: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.cardBorder,
+    paddingBottom: 2,
+  },
+  footballScoreBox: {
+    alignItems: "center",
+    marginHorizontal: 12,
+  },
+  footballScoreBig: {
+    color: THEME.text,
+    fontSize: 34,
+    fontWeight: "900",
+  },
+  footballTimeText: {
+    color: THEME.danger,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  footballActionRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  footballGoalBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: THEME.cardInner,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    paddingVertical: 12,
+  },
+  footballGoalBtnText: {
+    color: THEME.text,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  // RECORD CARDS
+  recordCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    padding: 14,
+    gap: 4,
+  },
+  recordHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  recordSport: {
+    color: THEME.textMuted,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  recordDate: {
+    color: THEME.textMuted,
+    fontSize: 11,
+  },
+  recordSummary: {
+    color: THEME.text,
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+
+  // PROFILE STYLES
+  profileCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    padding: 20,
+    alignItems: "center",
+    gap: 4,
+  },
+  profileAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: "#ce7045",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  profileAvatarText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  profileName: {
+    color: THEME.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  profileSub: {
+    color: THEME.textMuted,
+    fontSize: 12,
+  },
+  verifiedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: THEME.accentLight,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  verifiedBadgeText: {
+    color: THEME.accent,
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  showQrBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: THEME.cardInner,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  showQrBtnText: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  statsRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-around",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME.cardBorder,
+  },
+  statBox: {
+    alignItems: "center",
+  },
+  statValue: {
+    color: THEME.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  statLabel: {
+    color: THEME.textMuted,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  settingsCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    padding: 16,
+    gap: 12,
+  },
+  settingsHeading: {
+    color: THEME.textMuted,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+  },
+  settingsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 6,
+  },
+  settingsText: {
+    color: THEME.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // QR CARD MODAL
+  qrCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    width: width * 0.88,
+    gap: 14,
+  },
+  qrCloseBtn: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+  },
+  qrProfileHeader: {
+    alignItems: "center",
+    gap: 4,
+    marginTop: 8,
+  },
+  qrAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    backgroundColor: "#ce7045",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qrAvatarText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  qrName: {
+    color: THEME.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  qrIdBadge: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  qrDisplayBox: {
+    width: 190,
+    height: 190,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: THEME.cardBorder,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+  },
+  qrInnerPattern: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qrInstruction: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    textAlign: "center",
+    paddingHorizontal: 10,
+  },
+  qrShareBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    width: "100%",
+    justifyContent: "center",
+  },
+  qrShareBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  // COMMON EMPTY CARD
   emptyCard: {
     backgroundColor: THEME.card,
     borderRadius: 16,
@@ -1206,13 +2911,12 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     padding: 24,
     alignItems: "center",
-    textAlign: "center",
     gap: 8,
   },
   emptyIconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: THEME.cardInner,
     alignItems: "center",
     justifyContent: "center",
@@ -1229,20 +2933,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     lineHeight: 18,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   emptyActionBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
     marginTop: 6,
   },
   emptyActionBtnText: {
     color: "#FFFFFF",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
   },
 
@@ -1263,7 +2967,7 @@ const styles = StyleSheet.create({
   postAvatar: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 12,
     backgroundColor: THEME.accentLight,
     alignItems: "center",
     justifyContent: "center",
@@ -1305,76 +3009,6 @@ const styles = StyleSheet.create({
   postActionText: {
     color: THEME.textMuted,
     fontSize: 12,
-  },
-
-  // SEARCH BOX
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: THEME.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: THEME.text,
-    fontSize: 13,
-    padding: 0,
-  },
-
-  // ATHLETE CARD
-  athleteCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: THEME.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    padding: 14,
-    gap: 12,
-  },
-  athleteAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: THEME.accentLight,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  athleteAvatarText: {
-    color: THEME.accent,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  athleteMeta: {
-    flex: 1,
-  },
-  athleteName: {
-    color: THEME.text,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  athleteRole: {
-    color: THEME.textMuted,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  athleteBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: THEME.cardInner,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-  },
-  athleteBadgeText: {
-    color: THEME.accent,
-    fontSize: 9,
-    fontWeight: "800",
   },
 
   // GAME CARD
@@ -1430,243 +3064,15 @@ const styles = StyleSheet.create({
     color: THEME.textMuted,
     fontSize: 11,
   },
-  gameCardBtn: {
+  gameScoreBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
   },
-  gameCardBtnText: {
+  gameScoreBtnText: {
     color: "#FFFFFF",
     fontSize: 11,
     fontWeight: "700",
-  },
-
-  // LIVE SCORE CONSOLE
-  consoleCard: {
-    backgroundColor: THEME.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    padding: 18,
-    gap: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  consoleTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  liveTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: THEME.danger,
-  },
-  liveTagText: {
-    color: THEME.danger,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  consoleSport: {
-    color: THEME.textMuted,
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  consoleTeamsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingVertical: 6,
-  },
-  consoleTeamBox: {
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  teamInput: {
-    color: THEME.text,
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.cardBorder,
-    paddingBottom: 2,
-    minWidth: 90,
-  },
-  scoreNumber: {
-    color: THEME.text,
-    fontSize: 40,
-    fontWeight: "900",
-  },
-  scoreBtnRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  scoreAdjustBtn: {
-    width: 38,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: THEME.cardInner,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scoreAdjustBtnText: {
-    color: THEME.text,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  consoleDivider: {
-    color: THEME.textMuted,
-    fontSize: 14,
-    fontWeight: "800",
-    marginHorizontal: 12,
-  },
-  saveMatchBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  saveMatchBtnText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  recordCard: {
-    backgroundColor: THEME.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    padding: 14,
-    gap: 4,
-  },
-  recordHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  recordSport: {
-    color: THEME.textMuted,
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  recordDate: {
-    color: THEME.textMuted,
-    fontSize: 11,
-  },
-  recordScore: {
-    color: THEME.text,
-    fontSize: 14,
-    fontWeight: "800",
-    marginTop: 2,
-  },
-
-  // PROFILE CARD
-  profileCard: {
-    backgroundColor: THEME.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    padding: 20,
-    alignItems: "center",
-    gap: 4,
-  },
-  profileAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: "#ce7045",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 6,
-  },
-  profileAvatarText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  profileName: {
-    color: THEME.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  profileSub: {
-    color: THEME.textMuted,
-    fontSize: 12,
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: THEME.accentLight,
-    borderRadius: 8,
-    marginTop: 6,
-  },
-  verifiedBadgeText: {
-    color: THEME.accent,
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  statsRow: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-around",
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: THEME.cardBorder,
-  },
-  statBox: {
-    alignItems: "center",
-  },
-  statValue: {
-    color: THEME.text,
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  statLabel: {
-    color: THEME.textMuted,
-    fontSize: 10,
-    marginTop: 2,
-  },
-  settingsCard: {
-    backgroundColor: THEME.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    padding: 16,
-    gap: 12,
-  },
-  settingsHeading: {
-    color: THEME.textMuted,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-  },
-  settingsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 6,
-  },
-  settingsText: {
-    color: THEME.text,
-    fontSize: 13,
-    fontWeight: "600",
   },
 
   // BOTTOM NAVIGATION
@@ -1692,8 +3098,9 @@ const styles = StyleSheet.create({
   // MODAL STYLES
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "flex-end",
+    alignItems: "center",
   },
   modalCard: {
     backgroundColor: THEME.card,
@@ -1701,17 +3108,33 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
     gap: 12,
+    width: "100%",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   modalTitle: {
     color: THEME.text,
     fontSize: 17,
     fontWeight: "800",
+  },
+  modalSubText: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  formInput: {
+    backgroundColor: THEME.cardInner,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
+    color: THEME.text,
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   modalInput: {
     backgroundColor: THEME.cardInner,
@@ -1724,41 +3147,36 @@ const styles = StyleSheet.create({
     minHeight: 90,
     textAlignVertical: "top",
   },
-  formInput: {
-    backgroundColor: THEME.cardInner,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: THEME.cardBorder,
-    color: THEME.text,
-    fontSize: 13,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  modalButtons: {
+  modalActionButtons: {
     flexDirection: "row",
     justifyContent: "flex-end",
     gap: 10,
     marginTop: 6,
   },
-  modalCancel: {
+  modalSecondaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: THEME.cardBorder,
   },
-  modalCancelText: {
-    color: THEME.textMuted,
-    fontSize: 13,
-    fontWeight: "600",
+  modalSecondaryBtnText: {
+    color: THEME.text,
+    fontSize: 12,
+    fontWeight: "700",
   },
-  modalSubmit: {
+  modalPrimaryBtn: {
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  modalSubmitText: {
+  modalPrimaryBtnText: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "800",
   },
 });
 

@@ -22,9 +22,9 @@ export const SPORTS = [
   {
     name: "Badminton",
     descriptor: "Speed and precision",
-    accent: "#0284c7",
-    wash: "#e0f2fe",
-    deep: "#0369a1",
+    accent: "#e11d48",
+    wash: "#ffe4e6",
+    deep: "#9f1239",
     phrase: "the next smash",
     iconKey: "badminton",
   },
