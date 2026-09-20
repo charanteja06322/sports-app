@@ -28,19 +28,19 @@ export function ScoreboardDemo() {
   const [badmintonP2, setBadmintonP2] = useState(0);
   const [badmintonSet, setBadmintonSet] = useState(1);
 
-  // Running telemetry state
-  const [runDistance, setRunDistance] = useState(6.4);
-  const [runSteps, setRunSteps] = useState(8420);
+  // Running telemetry state (Clean slate, zero mock data)
+  const [runDistance, setRunDistance] = useState(0.0);
+  const [runSteps, setRunSteps] = useState(0);
   const [runTarget, setRunTarget] = useState(10.0);
-  const [runPace, setRunPace] = useState("5'18\"");
-  const [runCalories, setRunCalories] = useState(485);
+  const [runPace, setRunPace] = useState("0'00\"");
+  const [runCalories, setRunCalories] = useState(0);
 
-  // Cycling telemetry state
-  const [cycleDistance, setCycleDistance] = useState(24.8);
+  // Cycling telemetry state (Clean slate, zero mock data)
+  const [cycleDistance, setCycleDistance] = useState(0.0);
   const [cycleTarget, setCycleTarget] = useState(35.0);
-  const [cycleSpeed, setCycleSpeed] = useState(26.4);
-  const [cycleElevation, setCycleElevation] = useState(240);
-  const [cycleCalories, setCycleCalories] = useState(620);
+  const [cycleSpeed, setCycleSpeed] = useState(0.0);
+  const [cycleElevation, setCycleElevation] = useState(0);
+  const [cycleCalories, setCycleCalories] = useState(0);
 
   // Volleyball state
   const [rallyScoreA, setRallyScoreA] = useState(0);
@@ -391,7 +391,9 @@ export function ScoreboardDemo() {
               <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#DDD6C8] pt-4 sm:grid-cols-4">
                 <div>
                   <p className="mono-font text-[10px] text-[#71807d]">AVG PACE</p>
-                  <p className="text-lg font-bold text-[#253638]">{runPace} /km</p>
+                  <p className="text-lg font-bold text-[#253638]">
+                    {runDistance > 0 ? `${runPace} /km` : "0'00\" /km"}
+                  </p>
                 </div>
                 <div>
                   <p className="mono-font text-[10px] text-[#71807d]">ACTIVE CAL</p>
@@ -399,16 +401,20 @@ export function ScoreboardDemo() {
                 </div>
                 <div>
                   <p className="mono-font text-[10px] text-[#71807d]">ELAPSED TIME</p>
-                  <p className="text-lg font-bold text-[#253638]">34m 12s</p>
+                  <p className="text-lg font-bold text-[#253638]">
+                    {runDistance > 0 ? "34m 12s" : "00m 00s"}
+                  </p>
                 </div>
                 <div>
                   <p className="mono-font text-[10px] text-[#71807d]">AVG CADENCE</p>
-                  <p className="text-lg font-bold text-[#253638]">168 spm</p>
+                  <p className="text-lg font-bold text-[#253638]">
+                    {runDistance > 0 ? "168 spm" : "0 spm"}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Weekly Activity Trend Chart */}
+            {/* Weekly Activity Trend Chart (Zero mock data, tracks real live logs) */}
             <div className="rounded-2xl border border-[#DDD6C8] bg-white p-5 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-[#DDD6C8]">
                 <div>
@@ -418,32 +424,32 @@ export function ScoreboardDemo() {
                   <p className="text-sm font-bold text-[#253638]">Last 7 Days Mileage</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-base font-black text-[#253638]">43.4 km</span>
-                  <span className="ml-1.5 text-[11px] font-bold text-[#4c9b81]">+12% vs LW</span>
+                  <span className="text-base font-black text-[#253638]">{runDistance.toFixed(1)} km</span>
+                  <span className="ml-1.5 text-[11px] font-bold text-[#4c9b81]">Live Session</span>
                 </div>
               </div>
 
               {/* Trend Bars */}
               <div className="mt-4 flex items-end justify-between gap-2 pt-2">
                 {[
-                  { day: "Mon", km: 5.2, active: false },
-                  { day: "Tue", km: 7.0, active: false },
-                  { day: "Wed", km: 0.0, active: false, rest: true },
-                  { day: "Thu", km: 6.5, active: false },
-                  { day: "Fri", km: 8.1, active: false },
-                  { day: "Sat", km: 10.2, active: false },
-                  { day: "Sun", km: runDistance, active: true },
+                  { day: "Mon", km: 0.0, active: false },
+                  { day: "Tue", km: 0.0, active: false },
+                  { day: "Wed", km: 0.0, active: false },
+                  { day: "Thu", km: 0.0, active: false },
+                  { day: "Fri", km: 0.0, active: false },
+                  { day: "Sat", km: 0.0, active: false },
+                  { day: "Today", km: runDistance, active: true },
                 ].map((item) => (
                   <div key={item.day} className="flex flex-1 flex-col items-center gap-1.5">
                     <span className="text-[10px] font-bold text-[#71807d]">
-                      {item.rest ? "Rest" : `${item.km.toFixed(1)}k`}
+                      {item.km === 0 ? "-" : `${item.km.toFixed(1)}k`}
                     </span>
                     <div className="h-24 w-full max-w-[28px] rounded-lg bg-[#FAF7F2] p-1 flex items-end">
                       <div
                         className={`w-full rounded-md transition-all duration-300 ${
                           item.active ? "bg-[#4c9b81]" : "bg-[#4c9b81]/40"
                         }`}
-                        style={{ height: item.km === 0 ? "4px" : `${Math.min(100, (item.km / 12) * 100)}%` }}
+                        style={{ height: item.km === 0 ? "4px" : `${Math.min(100, (item.km / Math.max(runTarget, 10)) * 100)}%` }}
                       />
                     </div>
                     <span
@@ -463,9 +469,10 @@ export function ScoreboardDemo() {
               <Button
                 style={{ backgroundColor: "#4c9b81", borderColor: "#4c9b81" }}
                 onClick={() => {
-                  setRunDistance((d) => d + 0.5);
+                  setRunDistance((d) => Number((d + 0.5).toFixed(2)));
                   setRunSteps((s) => s + 650);
                   setRunCalories((c) => c + 35);
+                  setRunPace("5'18\"");
                 }}
               >
                 +0.5 KM Logged
@@ -474,7 +481,9 @@ export function ScoreboardDemo() {
                 variant="quiet"
                 onClick={() => {
                   setRunSteps((s) => s + 500);
-                  setRunDistance((d) => d + 0.38);
+                  setRunDistance((d) => Number((d + 0.38).toFixed(2)));
+                  setRunCalories((c) => c + 25);
+                  setRunPace("5'18\"");
                 }}
               >
                 +500 Steps
@@ -491,6 +500,7 @@ export function ScoreboardDemo() {
                   setRunDistance(0);
                   setRunSteps(0);
                   setRunCalories(0);
+                  setRunPace("0'00\"");
                 }}
               >
                 Reset Run
@@ -554,50 +564,54 @@ export function ScoreboardDemo() {
                 </div>
                 <div>
                   <p className="mono-font text-[10px] text-[#71807d]">RIDE TIME</p>
-                  <p className="text-lg font-bold text-[#253638]">56m 20s</p>
+                  <p className="text-lg font-bold text-[#253638]">
+                    {cycleDistance > 0 ? "56m 20s" : "00m 00s"}
+                  </p>
                 </div>
                 <div>
                   <p className="mono-font text-[10px] text-[#71807d]">AVG POWER</p>
-                  <p className="text-lg font-bold text-[#253638]">185 W</p>
+                  <p className="text-lg font-bold text-[#253638]">
+                    {cycleDistance > 0 ? "185 W" : "0 W"}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Weekly Cycling Trend Chart */}
+            {/* Weekly Cycling Trend Chart (Zero mock data, tracks real live logs) */}
             <div className="rounded-2xl border border-[#DDD6C8] bg-white p-5 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-[#DDD6C8]">
                 <div>
                   <p className="mono-font text-[10px] font-bold uppercase tracking-wider text-[#557fa9]">
                     WEEKLY CYCLING TREND
                   </p>
-                  <p className="text-sm font-bold text-[#253638]">7 Days Riding Distance</p>
+                  <p className="text-sm font-bold text-[#253638]">Last 7 Days Mileage</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-base font-black text-[#253638]">164.8 km</span>
-                  <span className="ml-1.5 text-[11px] font-bold text-[#557fa9]">+18% vs LW</span>
+                  <span className="text-base font-black text-[#253638]">{cycleDistance.toFixed(1)} km</span>
+                  <span className="ml-1.5 text-[11px] font-bold text-[#557fa9]">Live Session</span>
                 </div>
               </div>
 
               <div className="mt-4 flex items-end justify-between gap-2 pt-2">
                 {[
-                  { day: "Mon", km: 20 },
-                  { day: "Tue", km: 0, rest: true },
-                  { day: "Wed", km: 32 },
-                  { day: "Thu", km: 15 },
-                  { day: "Fri", km: 28 },
-                  { day: "Sat", km: 45 },
-                  { day: "Sun", km: cycleDistance, active: true },
+                  { day: "Mon", km: 0.0, active: false },
+                  { day: "Tue", km: 0.0, active: false },
+                  { day: "Wed", km: 0.0, active: false },
+                  { day: "Thu", km: 0.0, active: false },
+                  { day: "Fri", km: 0.0, active: false },
+                  { day: "Sat", km: 0.0, active: false },
+                  { day: "Today", km: cycleDistance, active: true },
                 ].map((item) => (
                   <div key={item.day} className="flex flex-1 flex-col items-center gap-1.5">
                     <span className="text-[10px] font-bold text-[#71807d]">
-                      {item.rest ? "Rest" : `${item.km.toFixed(0)}k`}
+                      {item.km === 0 ? "-" : `${item.km.toFixed(0)}k`}
                     </span>
                     <div className="h-24 w-full max-w-[28px] rounded-lg bg-[#FAF7F2] p-1 flex items-end">
                       <div
                         className={`w-full rounded-md transition-all duration-300 ${
                           item.active ? "bg-[#557fa9]" : "bg-[#557fa9]/40"
                         }`}
-                        style={{ height: item.km === 0 ? "4px" : `${Math.min(100, (item.km / 50) * 100)}%` }}
+                        style={{ height: item.km === 0 ? "4px" : `${Math.min(100, (item.km / Math.max(cycleTarget, 35)) * 100)}%` }}
                       />
                     </div>
                     <span
@@ -617,16 +631,20 @@ export function ScoreboardDemo() {
               <Button
                 style={{ backgroundColor: "#557fa9", borderColor: "#557fa9" }}
                 onClick={() => {
-                  setCycleDistance((d) => d + 2.0);
+                  setCycleDistance((d) => Number((d + 2.0).toFixed(1)));
                   setCycleCalories((c) => c + 50);
                   setCycleElevation((e) => e + 20);
+                  setCycleSpeed(26.4);
                 }}
               >
                 +2.0 KM Logged
               </Button>
               <Button
                 variant="quiet"
-                onClick={() => setCycleElevation((e) => e + 50)}
+                onClick={() => {
+                  setCycleElevation((e) => e + 50);
+                  setCycleSpeed(26.4);
+                }}
               >
                 +50m Climbing
               </Button>
@@ -636,6 +654,7 @@ export function ScoreboardDemo() {
                   setCycleDistance(0);
                   setCycleElevation(0);
                   setCycleCalories(0);
+                  setCycleSpeed(0);
                 }}
               >
                 Reset Ride

@@ -86,18 +86,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoAccess = async () => {
-    setLoading(true);
-    setError("");
-    await loginWithGoogle({
-      email: "demo.athlete@ezkora.com",
-      displayName: "Demo Athlete",
-      avatarUrl: "https://api.dicebear.com/7.x/initials/svg?seed=DA&backgroundColor=18181b",
-      googleId: "demo_123",
-    });
-    setLoading(false);
-  };
-
   return (
     <div className="relative min-h-screen bg-[#FAF7F2] text-[#253638] flex flex-col justify-between selection:bg-[#18181b] selection:text-white">
       {/* Background Subtle Gradient Glow */}
@@ -109,14 +97,6 @@ export default function LoginPage() {
       {/* Top Navbar */}
       <header className="relative z-10 mx-auto w-full max-w-5xl px-6 py-6 flex items-center justify-between border-b border-[#DDD6C8]/60">
         <LogoMark />
-        <button
-          type="button"
-          onClick={handleDemoAccess}
-          disabled={loading}
-          className="rounded-xl border border-[#DDD6C8] bg-white px-3.5 py-1.5 text-[12px] font-bold text-[#253638] shadow-xs hover:bg-[#F3EFE6] transition-colors"
-        >
-          Demo Access ⚡
-        </button>
       </header>
 
       {/* Main Form Center */}

@@ -125,47 +125,10 @@ export default function App() {
     avatar: "CT",
   };
 
-  // --- PLAYERS & FRIENDS STATE ---
-  const [playerSubTab, setPlayerSubTab] = useState("friends"); // "friends" | "directory" | "invites"
-  const [friends, setFriends] = useState([
-    {
-      id: "f1",
-      name: "Aman Varma",
-      playerId: "PL-842109",
-      role: "Badminton Singles · #4",
-      sport: "Badminton",
-      online: true,
-      messages: [
-        { sender: "them", text: "Hey Charan, up for a match tomorrow morning?", time: "10:15 AM" },
-        { sender: "me", text: "Definitely! Let's book the indoor court at 7 AM.", time: "10:18 AM" },
-      ],
-    },
-    {
-      id: "f2",
-      name: "Vikram Reddy",
-      playerId: "PL-720341",
-      role: "Cricket All-Rounder · #18",
-      sport: "Cricket",
-      online: true,
-      messages: [
-        { sender: "them", text: "Match is scheduled for Sunday. Don't forget your gear.", time: "Yesterday" },
-      ],
-    },
-    {
-      id: "f3",
-      name: "Siddharth Rao",
-      playerId: "PL-391482",
-      role: "Football Striker · #9",
-      sport: "Football",
-      online: false,
-      messages: [],
-    },
-  ]);
-
-  const [pendingInvites, setPendingInvites] = useState([
-    { id: "inv1", name: "Rohan Kapoor", playerId: "PL-619420", sport: "Badminton", role: "Smash Specialist" },
-    { id: "inv2", name: "Karthik Nair", playerId: "PL-902381", sport: "Cricket", role: "Opening Batsman" },
-  ]);
+  // --- PLAYERS & FRIENDS STATE (Clean slate, zero mock data) ---
+  const [playerSubTab, setPlayerSubTab] = useState("friends"); // "friends" | "invites"
+  const [friends, setFriends] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
 
   // Modals for Friends
   const [addFriendModalOpen, setAddFriendModalOpen] = useState(false);
@@ -226,19 +189,19 @@ export default function App() {
   const [footballMinute, setFootballMinute] = useState(0);
   const [footballEvents, setFootballEvents] = useState([]);
 
-  // Running Telemetry State (Steps, Distance, Target, Trend)
-  const [runDistance, setRunDistance] = useState(6.4);
-  const [runSteps, setRunSteps] = useState(8420);
+  // Running Telemetry State (Steps, Distance, Target, Trend - Clean slate)
+  const [runDistance, setRunDistance] = useState(0.0);
+  const [runSteps, setRunSteps] = useState(0);
   const [runTarget, setRunTarget] = useState(10.0);
-  const [runPace, setRunPace] = useState("5'18\"");
-  const [runCalories, setRunCalories] = useState(485);
+  const [runPace, setRunPace] = useState("0'00\"");
+  const [runCalories, setRunCalories] = useState(0);
 
-  // Cycling Telemetry State (Distance, Target, Elevation, Speed)
-  const [cycleDistance, setCycleDistance] = useState(24.8);
+  // Cycling Telemetry State (Distance, Target, Elevation, Speed - Clean slate)
+  const [cycleDistance, setCycleDistance] = useState(0.0);
   const [cycleTarget, setCycleTarget] = useState(35.0);
-  const [cycleSpeed, setCycleSpeed] = useState(26.4);
-  const [cycleElevation, setCycleElevation] = useState(240);
-  const [cycleCalories, setCycleCalories] = useState(620);
+  const [cycleSpeed, setCycleSpeed] = useState(0.0);
+  const [cycleElevation, setCycleElevation] = useState(0);
+  const [cycleCalories, setCycleCalories] = useState(0);
 
   // Basketball Scoring
   const [bballTeamA, setBballTeamA] = useState("Warriors");
@@ -1370,7 +1333,9 @@ export default function App() {
                 <View style={styles.telemetryGrid}>
                   <View style={styles.telemetryMetricItem}>
                     <Text style={styles.telemetryMetricLabel}>AVG PACE</Text>
-                    <Text style={styles.telemetryMetricVal}>{runPace} /km</Text>
+                    <Text style={styles.telemetryMetricVal}>
+                      {runDistance > 0 ? `${runPace} /km` : "0'00\" /km"}
+                    </Text>
                   </View>
                   <View style={styles.telemetryMetricItem}>
                     <Text style={styles.telemetryMetricLabel}>ACTIVE CAL</Text>
@@ -1378,15 +1343,19 @@ export default function App() {
                   </View>
                   <View style={styles.telemetryMetricItem}>
                     <Text style={styles.telemetryMetricLabel}>ELAPSED TIME</Text>
-                    <Text style={styles.telemetryMetricVal}>34m 12s</Text>
+                    <Text style={styles.telemetryMetricVal}>
+                      {runDistance > 0 ? "34m 12s" : "00m 00s"}
+                    </Text>
                   </View>
                   <View style={styles.telemetryMetricItem}>
                     <Text style={styles.telemetryMetricLabel}>AVG CADENCE</Text>
-                    <Text style={styles.telemetryMetricVal}>168 spm</Text>
+                    <Text style={styles.telemetryMetricVal}>
+                      {runDistance > 0 ? "168 spm" : "0 spm"}
+                    </Text>
                   </View>
                 </View>
 
-                {/* 7-Day Running Trend Chart */}
+                {/* 7-Day Running Trend Chart (Zero mock data, tracks real live logs) */}
                 <View style={styles.trendContainer}>
                   <View style={styles.trendHeader}>
                     <View>
@@ -1394,27 +1363,27 @@ export default function App() {
                       <Text style={styles.trendTitle}>Last 7 Days Mileage</Text>
                     </View>
                     <View style={styles.trendTotalBox}>
-                      <Text style={styles.trendTotalKm}>43.4 km</Text>
-                      <Text style={[styles.trendGrowth, { color: "#4c9b81" }]}>+12% vs LW</Text>
+                      <Text style={styles.trendTotalKm}>{runDistance.toFixed(1)} km</Text>
+                      <Text style={[styles.trendGrowth, { color: "#4c9b81" }]}>Live Session</Text>
                     </View>
                   </View>
 
                   {/* Visual Bar Chart */}
                   <View style={styles.trendBarsRow}>
                     {[
-                      { day: "Mon", km: 5.2, active: false },
-                      { day: "Tue", km: 7.0, active: false },
-                      { day: "Wed", km: 0.0, active: false, rest: true },
-                      { day: "Thu", km: 6.5, active: false },
-                      { day: "Fri", km: 8.1, active: false },
-                      { day: "Sat", km: 10.2, active: false },
-                      { day: "Sun", km: runDistance, active: true },
+                      { day: "Mon", km: 0.0, active: false },
+                      { day: "Tue", km: 0.0, active: false },
+                      { day: "Wed", km: 0.0, active: false },
+                      { day: "Thu", km: 0.0, active: false },
+                      { day: "Fri", km: 0.0, active: false },
+                      { day: "Sat", km: 0.0, active: false },
+                      { day: "Today", km: runDistance, active: true },
                     ].map((bar) => {
-                      const pct = bar.km === 0 ? 4 : Math.min(100, (bar.km / 12) * 100);
+                      const pct = bar.km === 0 ? 4 : Math.min(100, (bar.km / Math.max(runTarget, 10)) * 100);
                       return (
                         <View key={bar.day} style={styles.trendBarCol}>
                           <Text style={styles.trendBarKmLabel}>
-                            {bar.rest ? "Rest" : `${bar.km.toFixed(1)}k`}
+                            {bar.km === 0 ? "-" : `${bar.km.toFixed(1)}k`}
                           </Text>
                           <View style={styles.trendBarSlot}>
                             <View
@@ -1449,6 +1418,7 @@ export default function App() {
                       setRunDistance((d) => Number((d + 0.5).toFixed(2)));
                       setRunSteps((s) => s + 650);
                       setRunCalories((c) => c + 35);
+                      setRunPace("5'18\"");
                     }}
                   >
                     <Ionicons name="add" size={16} color="#FFFFFF" />
@@ -1461,6 +1431,7 @@ export default function App() {
                       setRunSteps((s) => s + 500);
                       setRunDistance((d) => Number((d + 0.38).toFixed(2)));
                       setRunCalories((c) => c + 25);
+                      setRunPace("5'18\"");
                     }}
                   >
                     <MaterialCommunityIcons name="shoe-print" size={15} color={THEME.text} />
@@ -1487,6 +1458,7 @@ export default function App() {
                       setRunDistance(0);
                       setRunSteps(0);
                       setRunCalories(0);
+                      setRunPace("0'00\"");
                     }}
                   >
                     <Ionicons name="refresh" size={15} color={THEME.textMuted} />
@@ -1549,15 +1521,19 @@ export default function App() {
                   </View>
                   <View style={styles.telemetryMetricItem}>
                     <Text style={styles.telemetryMetricLabel}>ELAPSED TIME</Text>
-                    <Text style={styles.telemetryMetricVal}>56m 20s</Text>
+                    <Text style={styles.telemetryMetricVal}>
+                      {cycleDistance > 0 ? "56m 20s" : "00m 00s"}
+                    </Text>
                   </View>
                   <View style={styles.telemetryMetricItem}>
                     <Text style={styles.telemetryMetricLabel}>AVG POWER</Text>
-                    <Text style={styles.telemetryMetricVal}>185 W</Text>
+                    <Text style={styles.telemetryMetricVal}>
+                      {cycleDistance > 0 ? "185 W" : "0 W"}
+                    </Text>
                   </View>
                 </View>
 
-                {/* 7-Day Cycling Trend Chart */}
+                {/* 7-Day Cycling Trend Chart (Zero mock data, tracks real live logs) */}
                 <View style={styles.trendContainer}>
                   <View style={styles.trendHeader}>
                     <View>
@@ -1565,27 +1541,27 @@ export default function App() {
                       <Text style={styles.trendTitle}>Last 7 Days Mileage</Text>
                     </View>
                     <View style={styles.trendTotalBox}>
-                      <Text style={styles.trendTotalKm}>142.6 km</Text>
-                      <Text style={[styles.trendGrowth, { color: "#557fa9" }]}>+8% vs LW</Text>
+                      <Text style={styles.trendTotalKm}>{cycleDistance.toFixed(1)} km</Text>
+                      <Text style={[styles.trendGrowth, { color: "#557fa9" }]}>Live Session</Text>
                     </View>
                   </View>
 
                   {/* Visual Bar Chart */}
                   <View style={styles.trendBarsRow}>
                     {[
-                      { day: "Mon", km: 18.5, active: false },
-                      { day: "Tue", km: 22.0, active: false },
-                      { day: "Wed", km: 0.0, active: false, rest: true },
-                      { day: "Thu", km: 28.4, active: false },
-                      { day: "Fri", km: 15.0, active: false },
-                      { day: "Sat", km: 34.0, active: false },
-                      { day: "Sun", km: cycleDistance, active: true },
+                      { day: "Mon", km: 0.0, active: false },
+                      { day: "Tue", km: 0.0, active: false },
+                      { day: "Wed", km: 0.0, active: false },
+                      { day: "Thu", km: 0.0, active: false },
+                      { day: "Fri", km: 0.0, active: false },
+                      { day: "Sat", km: 0.0, active: false },
+                      { day: "Today", km: cycleDistance, active: true },
                     ].map((bar) => {
-                      const pct = bar.km === 0 ? 4 : Math.min(100, (bar.km / 40) * 100);
+                      const pct = bar.km === 0 ? 4 : Math.min(100, (bar.km / Math.max(cycleTarget, 35)) * 100);
                       return (
                         <View key={bar.day} style={styles.trendBarCol}>
                           <Text style={styles.trendBarKmLabel}>
-                            {bar.rest ? "Rest" : `${bar.km.toFixed(0)}k`}
+                            {bar.km === 0 ? "-" : `${bar.km.toFixed(0)}k`}
                           </Text>
                           <View style={styles.trendBarSlot}>
                             <View
@@ -1620,6 +1596,7 @@ export default function App() {
                       setCycleDistance((d) => Number((d + 2.0).toFixed(1)));
                       setCycleElevation((e) => e + 25);
                       setCycleCalories((c) => c + 55);
+                      setCycleSpeed(26.4);
                     }}
                   >
                     <Ionicons name="add" size={16} color="#FFFFFF" />
@@ -1631,6 +1608,7 @@ export default function App() {
                     onPress={() => {
                       setCycleElevation((e) => e + 50);
                       setCycleCalories((c) => c + 40);
+                      setCycleSpeed(26.4);
                     }}
                   >
                     <MaterialCommunityIcons name="elevation-rise" size={15} color={THEME.text} />
@@ -1657,6 +1635,7 @@ export default function App() {
                       setCycleDistance(0);
                       setCycleElevation(0);
                       setCycleCalories(0);
+                      setCycleSpeed(0);
                     }}
                   >
                     <Ionicons name="refresh" size={15} color={THEME.textMuted} />
