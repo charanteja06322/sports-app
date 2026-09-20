@@ -9,1980 +9,1271 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  SafeAreaView,
   StatusBar,
   Dimensions,
+  Platform,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
-// Primary Theme Colors matching user designs
-const COLORS = {
-  bg: "#091117",
-  card: "#121D26",
-  cardBorder: "#1B2B38",
-  cardActive: "#162532",
-  primary: "#00E676", // Vibrant neon sports green
-  primaryLight: "rgba(0, 230, 118, 0.12)",
+// Web-aligned Refined Dark Palette (No Green Fonts)
+const THEME = {
+  bg: "#0B1115",
+  headerBg: "#0E151A",
+  card: "#121A20",
+  cardHover: "#16222A",
+  border: "#1E2B35",
+  borderLight: "#283946",
   text: "#FFFFFF",
-  textMuted: "#8599A6",
-  textSub: "#A0B2C0",
+  textMuted: "#94A3B8",
+  textSub: "#64748B",
+  white: "#FFFFFF",
+  liveDot: "#EF4444",
+  badgeBg: "rgba(255, 255, 255, 0.08)",
   danger: "#EF4444",
-  orange: "#FF9800",
-  blue: "#2196F3",
-  teal: "#00B4D8",
 };
 
+// Sports Lenses (Matching Web App ezkoraStore.js)
+const SPORTS = [
+  { id: "Football", name: "Football", icon: "soccer", descriptor: "The beautiful game" },
+  { id: "Cricket", name: "Cricket", icon: "cricket", descriptor: "The long game" },
+  { id: "Basketball", name: "Basketball", icon: "basketball", descriptor: "The next possession" },
+  { id: "Tennis", name: "Tennis", icon: "tennis", descriptor: "Find your rhythm" },
+  { id: "Running", name: "Running", icon: "run", descriptor: "One more kilometre" },
+  { id: "Cycling", name: "Cycling", icon: "bike", descriptor: "Keep the wheels turning" },
+];
+
 export default function App() {
-  // Navigation: "home" | "matches" | "discover" | "profile"
+  // Navigation: "home" | "players" | "games" | "scores" | "profile"
   const [currentTab, setCurrentTab] = useState("home");
 
-  // Create Modal ("Build, organize, and play.")
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-
-  // Home Screen Sub-tab: "feed" | "for_you"
-  const [homeSubTab, setHomeSubTab] = useState("feed");
-
-  // Matches Screen Sub-tab: "live" | "upcoming" | "following" | "completed" | "my_matches"
-  const [matchesSubTab, setMatchesSubTab] = useState("live");
-
-  // Profile Screen Sub-tab: "overview" | "stats" | "matches" | "posts"
-  const [profileSubTab, setProfileSubTab] = useState("overview");
-  const [profileMatchesFilter, setProfileMatchesFilter] = useState("all");
-  const [profilePostsFilter, setProfilePostsFilter] = useState("all");
-
-  // Search in Discover
-  const [searchQuery, setSearchQuery] = useState("");
-  const [followingMatches, setFollowingMatches] = useState(["m1", "m3"]);
-
-  const toggleFollowMatch = (id) => {
-    setFollowingMatches((prev) =>
-      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
-    );
-  };
-
-  // --- RENDER HEADER ---
-  const renderTopHeader = (title = "EZKORA", showLocation = true) => (
-    <View style={styles.header}>
-      <View style={styles.headerLeft}>
-        <View style={styles.logoBadge}>
-          <Text style={styles.logoBadgeText}>E</Text>
-        </View>
-        <Text style={styles.headerTitle}>{title}</Text>
-      </View>
-
-      {showLocation && (
-        <TouchableOpacity style={styles.locationPill}>
-          <Ionicons name="location-sharp" size={13} color={COLORS.primary} />
-          <Text style={styles.locationText}>Hyderabad</Text>
-          <Ionicons name="chevron-down" size={13} color={COLORS.textMuted} />
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.headerRight}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
-          <View style={styles.notificationBadge}>
-            <Text style={styles.badgeCountText}>3</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="chatbubble-ellipses-outline" size={20} color={COLORS.text} />
-          <View style={[styles.notificationBadge, { backgroundColor: "#00E676" }]}>
-            <Text style={styles.badgeCountText}>2</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => setCurrentTab("profile")}
-          style={styles.avatarMini}
-        >
-          <Text style={styles.avatarMiniText}>RK</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  // --- 1. HOME SCREEN ---
-  const renderHomeScreen = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-      {/* Live Now Card Banner */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>Live Now</Text>
-        <TouchableOpacity onPress={() => { setCurrentTab("matches"); setMatchesSubTab("live"); }}>
-          <Text style={styles.seeAllText}>See All</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        onPress={() => { setCurrentTab("matches"); setMatchesSubTab("live"); }}
-        style={styles.liveBannerCard}
-      >
-        <View style={styles.liveCardTop}>
-          <View style={styles.liveTag}>
-            <Text style={styles.liveTagText}>LIVE</Text>
-          </View>
-          <Text style={styles.overCountText}>32.3 Ov</Text>
-        </View>
-
-        <View style={styles.teamsScoreRow}>
-          <View style={styles.teamScoreCol}>
-            <View style={styles.teamBadgeCircle}>
-              <Text style={styles.teamBadgeText}>FC</Text>
-            </View>
-            <Text style={styles.teamNameText}>Falcons CC</Text>
-            <Text style={styles.scoreText}>186/7</Text>
-          </View>
-
-          <Text style={styles.vsText}>VS</Text>
-
-          <View style={styles.teamScoreCol}>
-            <View style={[styles.teamBadgeCircle, { backgroundColor: "#182C38" }]}>
-              <Text style={[styles.teamBadgeText, { color: COLORS.primary }]}>WX</Text>
-            </View>
-            <Text style={styles.teamNameText}>Warriors XI</Text>
-            <Text style={styles.scoreText}>152/4</Text>
-          </View>
-        </View>
-
-        <Text style={styles.tossInfoText}>Falcons CC elected to bat</Text>
-      </TouchableOpacity>
-
-      {/* FEED / FOR YOU TABS */}
-      <View style={styles.subTabBar}>
-        <TouchableOpacity
-          onPress={() => setHomeSubTab("feed")}
-          style={[styles.subTabItem, homeSubTab === "feed" && styles.subTabItemActive]}
-        >
-          <Text style={[styles.subTabText, homeSubTab === "feed" && styles.subTabTextActive]}>
-            FEED
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setHomeSubTab("for_you")}
-          style={[styles.subTabItem, homeSubTab === "for_you" && styles.subTabItemActive]}
-        >
-          <Text style={[styles.subTabText, homeSubTab === "for_you" && styles.subTabTextActive]}>
-            FOR YOU
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* POST CARD 1 */}
-      <View style={styles.postCard}>
-        <View style={styles.postAuthorRow}>
-          <View style={styles.postAvatarCircle}>
-            <Text style={styles.postAvatarText}>AR</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <Text style={styles.postAuthorName}>Arjun Reddy</Text>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.primary} />
-            </View>
-            <Text style={styles.postAuthorMeta}>@arjunreddy07 • Cricket</Text>
-            <Text style={styles.postVenueMeta}>📍 Falcons CC • 2h</Text>
-          </View>
-          <TouchableOpacity>
-            <Ionicons name="ellipsis-vertical" size={16} color={COLORS.textMuted} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Media Graphic */}
-        <View style={styles.postMediaBox}>
-          <MaterialCommunityIcons name="cricket" size={48} color={COLORS.primary} />
-        </View>
-
-        <Text style={styles.postCaptionText}>
-          Match day! Nothing feels better than doing what you love.
-        </Text>
-
-        {/* Action Counters */}
-        <View style={styles.postActionsRow}>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="heart" size={16} color="#FF5252" />
-            <Text style={styles.postActionCount}>128</Text>
-          </View>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="chatbubble-outline" size={16} color={COLORS.textMuted} />
-            <Text style={styles.postActionCount}>24</Text>
-          </View>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="repeat" size={16} color={COLORS.orange} />
-            <Text style={styles.postActionCount}>12</Text>
-          </View>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="pin" size={16} color="#FF5252" />
-          </View>
-        </View>
-      </View>
-
-      {/* POST CARD 2 */}
-      <View style={styles.postCard}>
-        <View style={styles.postAuthorRow}>
-          <View style={styles.postAvatarCircle}>
-            <Text style={styles.postAvatarText}>RK</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <Text style={styles.postAuthorName}>Rahul Kumar</Text>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.primary} />
-            </View>
-            <Text style={styles.postAuthorMeta}>@rahulkumar • Cricket</Text>
-            <Text style={styles.postVenueMeta}>📍 Rajiv Cricket Ground • 1d</Text>
-          </View>
-          <TouchableOpacity>
-            <Ionicons name="ellipsis-vertical" size={16} color={COLORS.textMuted} />
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.postCaptionText}>
-          Happy to contribute to the team's win today. 👏 Good team effort all around! 🌟
-        </Text>
-
-        {/* Highlight badge box */}
-        <View style={styles.highlightBadgeBox}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <Ionicons name="star" size={14} color={COLORS.orange} />
-            <Text style={styles.highlightTitle}>Player of the Match</Text>
-          </View>
-          <Text style={styles.highlightScore}>86* (52) — 7 Fours • 3 Sixes</Text>
-          <Text style={styles.highlightDetails}>vs Royal Strikers • Won by 6 wickets • T20 League</Text>
-        </View>
-
-        <View style={styles.postActionsRow}>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="heart" size={16} color="#FF5252" />
-            <Text style={styles.postActionCount}>96</Text>
-          </View>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="chatbubble-outline" size={16} color={COLORS.textMuted} />
-            <Text style={styles.postActionCount}>18</Text>
-          </View>
-          <View style={styles.postActionGroup}>
-            <Ionicons name="repeat" size={16} color={COLORS.orange} />
-            <Text style={styles.postActionCount}>8</Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  // --- 2. MATCHES SCREEN ---
-  const renderMatchesScreen = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-      {/* Sub Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScrollContainer}>
-        {["live", "upcoming", "following", "completed", "my_matches"].map((tabKey) => {
-          const label = tabKey === "my_matches" ? "MY MATCHES" : tabKey.toUpperCase();
-          const isActive = matchesSubTab === tabKey;
-          return (
-            <TouchableOpacity
-              key={tabKey}
-              onPress={() => setMatchesSubTab(tabKey)}
-              style={[styles.matchesSubTabItem, isActive && styles.matchesSubTabItemActive]}
-            >
-              <Text style={[styles.matchesSubTabText, isActive && styles.matchesSubTabTextActive]}>
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* LIVE SUB-TAB */}
-      {matchesSubTab === "live" && (
-        <View style={{ marginTop: 12 }}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <View style={styles.greenDot} />
-              <Text style={styles.sectionTitle}>LIVE MATCHES</Text>
-            </View>
-            <TouchableOpacity><Text style={styles.seeAllText}>View all</Text></TouchableOpacity>
-          </View>
-
-          {/* Match 1 */}
-          <View style={styles.matchCard}>
-            <View style={styles.matchCardHeader}>
-              <View style={styles.liveTag}><Text style={styles.liveTagText}>LIVE</Text></View>
-              <Text style={styles.leagueNameText}>KURUKSHETRA LEAGUE • T20</Text>
-            </View>
-
-            <View style={styles.matchScoreRow}>
-              <View style={styles.teamCol}>
-                <View style={styles.teamCircle}><Text style={styles.teamCircleText}>FC</Text></View>
-                <Text style={styles.matchTeamTitle}>Falcons CC</Text>
-                <Text style={styles.matchScoreBig}>186/7</Text>
-                <Text style={styles.matchOverText}>32.3 Ov</Text>
-              </View>
-
-              <View style={styles.matchMiddleCol}>
-                <Text style={styles.vsSmall}>VS</Text>
-                <Text style={styles.tossDecisionText}>Falcons CC{"\n"}elected to bat</Text>
-              </View>
-
-              <View style={styles.teamCol}>
-                <View style={[styles.teamCircle, { backgroundColor: "#152E2B" }]}>
-                  <Text style={[styles.teamCircleText, { color: COLORS.primary }]}>WX</Text>
-                </View>
-                <Text style={styles.matchTeamTitle}>Warriors XI</Text>
-                <Text style={styles.matchScoreBig}>152/4</Text>
-                <Text style={styles.matchOverText}>30.1 Ov</Text>
-              </View>
-            </View>
-
-            <View style={styles.matchFooter}>
-              <Text style={styles.venueLocationText}>📍 Rajiv Cricket Ground, Hyderabad</Text>
-              <TouchableOpacity
-                onPress={() => toggleFollowMatch("m1")}
-                style={[
-                  styles.followBtn,
-                  followingMatches.includes("m1") && styles.followingBtnActive,
-                ]}
-              >
-                <Text style={[styles.followBtnText, followingMatches.includes("m1") && styles.followingBtnTextActive]}>
-                  {followingMatches.includes("m1") ? "Following" : "+ Follow"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Match 2 */}
-          <View style={styles.matchCard}>
-            <View style={styles.matchCardHeader}>
-              <View style={styles.liveTag}><Text style={styles.liveTagText}>LIVE</Text></View>
-              <Text style={styles.leagueNameText}>CITY PREMIER LEAGUE • T20</Text>
-            </View>
-
-            <View style={styles.matchScoreRow}>
-              <View style={styles.teamCol}>
-                <View style={styles.teamCircle}><Text style={styles.teamCircleText}>TX</Text></View>
-                <Text style={styles.matchTeamTitle}>Tigers XI</Text>
-                <Text style={styles.matchScoreBig}>98/2</Text>
-                <Text style={styles.matchOverText}>11.4 Ov</Text>
-              </View>
-
-              <View style={styles.matchMiddleCol}>
-                <Text style={styles.vsSmall}>VS</Text>
-                <Text style={styles.tossDecisionText}>Tigers XI{"\n"}elected to bat</Text>
-              </View>
-
-              <View style={styles.teamCol}>
-                <View style={[styles.teamCircle, { backgroundColor: "#1C2433" }]}>
-                  <Text style={[styles.teamCircleText, { color: COLORS.teal }]}>KC</Text>
-                </View>
-                <Text style={styles.matchTeamTitle}>Kings CC</Text>
-                <Text style={styles.matchScoreBig}>-/-</Text>
-                <Text style={styles.matchOverText}>Yet to bat</Text>
-              </View>
-            </View>
-
-            <View style={styles.matchFooter}>
-              <Text style={styles.venueLocationText}>📍 Greenfield Stadium, Bengaluru</Text>
-              <TouchableOpacity
-                onPress={() => toggleFollowMatch("m2")}
-                style={[
-                  styles.followBtn,
-                  followingMatches.includes("m2") && styles.followingBtnActive,
-                ]}
-              >
-                <Text style={[styles.followBtnText, followingMatches.includes("m2") && styles.followingBtnTextActive]}>
-                  {followingMatches.includes("m2") ? "Following" : "+ Follow"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* UPCOMING SUB-TAB */}
-      {matchesSubTab === "upcoming" && (
-        <View style={{ marginTop: 12 }}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Ionicons name="calendar-outline" size={16} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>UPCOMING MATCHES</Text>
-            </View>
-            <TouchableOpacity><Text style={styles.seeAllText}>View all</Text></TouchableOpacity>
-          </View>
-
-          {/* Upcoming 1 */}
-          <View style={styles.matchCard}>
-            <View style={styles.fixtureHeaderRow}>
-              <View>
-                <Text style={styles.fixtureDateHighlight}>Tomorrow</Text>
-                <Text style={styles.fixtureTimeBig}>4:00 PM</Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                <View style={{ alignItems: "center" }}>
-                  <View style={styles.teamCircle}><Text style={styles.teamCircleText}>FC</Text></View>
-                  <Text style={styles.fixtureTeamName}>Falcons CC</Text>
-                </View>
-                <Text style={styles.vsText}>VS</Text>
-                <View style={{ alignItems: "center" }}>
-                  <View style={styles.teamCircle}><Text style={styles.teamCircleText}>TX</Text></View>
-                  <Text style={styles.fixtureTeamName}>Titans XI</Text>
-                </View>
-              </View>
-            </View>
-            <Text style={styles.fixtureVenueText}>📍 Rajiv Cricket Ground, Hyderabad</Text>
-            <Text style={styles.fixtureLeagueText}>🏆 Kurukshetra League • T20</Text>
-            <TouchableOpacity style={styles.fullWidthFollowBtn}>
-              <Text style={styles.fullWidthFollowText}>+ Follow</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Upcoming 2 */}
-          <View style={styles.matchCard}>
-            <View style={styles.fixtureHeaderRow}>
-              <View>
-                <Text style={styles.fixtureDateHighlight}>May 18, 2025</Text>
-                <Text style={styles.fixtureTimeBig}>6:00 PM</Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-                <View style={{ alignItems: "center" }}>
-                  <View style={styles.teamCircle}><Text style={styles.teamCircleText}>TX</Text></View>
-                  <Text style={styles.fixtureTeamName}>Tigers XI</Text>
-                </View>
-                <Text style={styles.vsText}>VS</Text>
-                <View style={{ alignItems: "center" }}>
-                  <View style={styles.teamCircle}><Text style={styles.teamCircleText}>KC</Text></View>
-                  <Text style={styles.fixtureTeamName}>Kings CC</Text>
-                </View>
-              </View>
-            </View>
-            <Text style={styles.fixtureVenueText}>📍 Greenfield Stadium, Bengaluru</Text>
-            <Text style={styles.fixtureLeagueText}>🏆 City Premier League • T20</Text>
-            <TouchableOpacity style={styles.fullWidthFollowBtn}>
-              <Text style={styles.fullWidthFollowText}>+ Follow</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* COMPLETED SUB-TAB */}
-      {matchesSubTab === "completed" && (
-        <View style={{ marginTop: 12 }}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Ionicons name="trophy-outline" size={16} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>COMPLETED MATCHES</Text>
-            </View>
-            <TouchableOpacity><Text style={styles.seeAllText}>View all</Text></TouchableOpacity>
-          </View>
-
-          {/* Completed Match 1 */}
-          <View style={styles.matchCard}>
-            <View style={styles.matchCardHeader}>
-              <Text style={styles.leagueNameText}>KURUKSHETRA LEAGUE • T20</Text>
-              <Text style={styles.completedDateText}>Yesterday</Text>
-            </View>
-
-            <View style={styles.matchScoreRow}>
-              <View style={styles.teamCol}>
-                <View style={styles.teamCircle}><Text style={styles.teamCircleText}>FC</Text></View>
-                <Text style={styles.matchTeamTitle}>Falcons CC</Text>
-                <Text style={styles.matchScoreBig}>186/7</Text>
-                <Text style={styles.matchOverText}>20.0 Ov</Text>
-              </View>
-
-              <View style={styles.matchMiddleCol}>
-                <Text style={[styles.winnerSummaryText, { color: COLORS.primary }]}>
-                  Falcons CC won{"\n"}by 34 runs
-                </Text>
-              </View>
-
-              <View style={styles.teamCol}>
-                <View style={[styles.teamCircle, { backgroundColor: "#1C2433" }]}>
-                  <Text style={[styles.teamCircleText, { color: COLORS.teal }]}>WX</Text>
-                </View>
-                <Text style={styles.matchTeamTitle}>Warriors XI</Text>
-                <Text style={styles.matchScoreBig}>152/9</Text>
-                <Text style={styles.matchOverText}>20.0 Ov</Text>
-              </View>
-            </View>
-
-            <View style={styles.matchFooter}>
-              <Text style={styles.venueLocationText}>📍 Rajiv Cricket Ground, Hyderabad</Text>
-              <TouchableOpacity style={styles.scorecardBtn}>
-                <Text style={styles.scorecardBtnText}>Scorecard</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* MY MATCHES SUB-TAB */}
-      {matchesSubTab === "my_matches" && (
-        <View style={{ marginTop: 12 }}>
-          <View style={styles.sectionHeaderRow}>
-            <View>
-              <Text style={styles.sectionTitle}>👤 MY MATCHES</Text>
-              <Text style={styles.sectionSubText}>Matches you are part of or managing</Text>
-            </View>
-            <TouchableOpacity><Text style={styles.seeAllText}>Filter</Text></TouchableOpacity>
-          </View>
-
-          <View style={styles.matchCard}>
-            <View style={styles.matchCardHeader}>
-              <View style={styles.liveTag}><Text style={styles.liveTagText}>LIVE NOW</Text></View>
-              <Text style={styles.leagueNameText}>KURUKSHETRA LEAGUE • T20</Text>
-            </View>
-
-            <View style={styles.matchScoreRow}>
-              <View style={styles.teamCol}>
-                <Text style={styles.matchTeamTitle}>Falcons CC</Text>
-                <Text style={styles.matchScoreBig}>186/7</Text>
-              </View>
-              <Text style={styles.vsSmall}>VS</Text>
-              <View style={styles.teamCol}>
-                <Text style={styles.matchTeamTitle}>Warriors XI</Text>
-                <Text style={styles.matchScoreBig}>152/4</Text>
-              </View>
-            </View>
-
-            <View style={styles.myRoleRow}>
-              <View>
-                <Text style={styles.venueLocationText}>📍 Rajiv Cricket Ground, Hyderabad</Text>
-                <Text style={styles.myRoleBadge}>Top Order Batsman • #17</Text>
-              </View>
-              <TouchableOpacity style={styles.viewRoleBtn}>
-                <Text style={styles.viewRoleBtnText}>View</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-    </ScrollView>
-  );
-
-  // --- 3. DISCOVER SCREEN ---
-  const renderDiscoverScreen = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-      {/* Search Input */}
-      <View style={styles.searchBarContainer}>
-        <Ionicons name="search" size={18} color={COLORS.textMuted} />
-        <TextInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search players, teams, matches..."
-          placeholderTextColor={COLORS.textMuted}
-          style={styles.searchInput}
-        />
-        <TouchableOpacity>
-          <Ionicons name="options-outline" size={18} color={COLORS.textMuted} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Browse by Category 6 Grid */}
-      <Text style={[styles.sectionTitle, { marginTop: 16, marginBottom: 12 }]}>
-        Browse by Category
-      </Text>
-      <View style={styles.categoryGrid}>
-        {[
-          { name: "Teams", icon: "people", color: "#00E676" },
-          { name: "Players", icon: "pulse", color: "#00B4D8" },
-          { name: "Tournaments", icon: "ribbon", color: "#4361EE" },
-          { name: "Matches", icon: "flash", color: "#FFB703" },
-          { name: "Grounds", icon: "map", color: "#FB8500" },
-          { name: "News", icon: "newspaper", color: "#9D4EDD" },
-        ].map((cat) => (
-          <TouchableOpacity key={cat.name} style={styles.categoryTile}>
-            <View style={[styles.categoryIconCircle, { borderColor: cat.color }]}>
-              <Ionicons name={cat.icon} size={22} color={cat.color} />
-            </View>
-            <Text style={styles.categoryTileText}>{cat.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Trending in Cricket */}
-      <View style={[styles.sectionHeaderRow, { marginTop: 24 }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Ionicons name="trending-up" size={18} color={COLORS.primary} />
-          <Text style={styles.sectionTitle}>Trending in Cricket</Text>
-        </View>
-        <TouchableOpacity><Text style={styles.seeAllText}>View all</Text></TouchableOpacity>
-      </View>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16, paddingHorizontal: 16 }}>
-        <View style={styles.trendingCard}>
-          <View style={styles.trendingVideoThumb}>
-            <Ionicons name="play" size={28} color="#FFFFFF" />
-          </View>
-          <Text style={styles.trendingTitleText}>Kohli's century powers India to victory</Text>
-          <Text style={styles.trendingMetaText}>2h ago • 12K views</Text>
-        </View>
-
-        <View style={styles.trendingCard}>
-          <View style={styles.trendingVideoThumb}>
-            <Ionicons name="play" size={28} color="#FFFFFF" />
-          </View>
-          <Text style={styles.trendingTitleText}>Mumbai win the T20 Championship 2025</Text>
-          <Text style={styles.trendingMetaText}>5h ago • 18K views</Text>
-        </View>
-      </ScrollView>
-
-      {/* Recommended Teams */}
-      <View style={[styles.sectionHeaderRow, { marginTop: 24 }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Ionicons name="star" size={16} color={COLORS.primary} />
-          <Text style={styles.sectionTitle}>Recommended Teams</Text>
-        </View>
-        <TouchableOpacity><Text style={styles.seeAllText}>View all</Text></TouchableOpacity>
-      </View>
-
-      <View style={styles.recommendedTeamCard}>
-        <View style={styles.recTeamBadge}><Text style={styles.recTeamText}>SH</Text></View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.recTeamName}>Sunrisers Hyderabad</Text>
-          <Text style={styles.recTeamRole}>T20 Franchise • 28K Followers</Text>
-        </View>
-        <TouchableOpacity style={styles.followPillBtn}>
-          <Text style={styles.followPillText}>Follow</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
-
-  // --- 4. PROFILE SCREEN ---
-  const renderProfileScreen = () => (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-      {/* Profile Header Card */}
-      <View style={styles.profileHeaderCard}>
-        <View style={styles.profileAvatarOuterRing}>
-          <Text style={styles.profileAvatarLargeText}>F</Text>
-          <View style={styles.verifiedCheckBadge}>
-            <Ionicons name="checkmark" size={12} color="#000000" />
-          </View>
-        </View>
-
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 }}>
-          <Text style={styles.profileNameText}>Rahul Kumar</Text>
-          <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
-        </View>
-        <Text style={styles.profileHandleText}>@rahulkumar</Text>
-        <Text style={styles.profileLocationText}>📍 Hyderabad, India</Text>
-
-        {/* Roles Tags */}
-        <View style={styles.roleTagPill}>
-          <Text style={styles.roleTagText}>All-Rounder</Text>
-        </View>
-
-        <View style={styles.skillsRow}>
-          <Text style={styles.skillItem}>🏏 Right-Handed Batter</Text>
-          <Text style={styles.skillItem}>⚾ Right-Arm Medium</Text>
-        </View>
-
-        {/* Buttons Row */}
-        <View style={styles.profileButtonsRow}>
-          <TouchableOpacity style={styles.messageBtn}>
-            <Ionicons name="chatbubble" size={16} color="#000000" />
-            <Text style={styles.messageBtnText}>Message</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.shareProfileBtn}>
-            <Ionicons name="share-outline" size={16} color={COLORS.text} />
-            <Text style={styles.shareProfileBtnText}>Share Profile</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Counters Box */}
-        <View style={styles.countersBox}>
-          <View style={styles.counterItem}>
-            <Ionicons name="people" size={16} color={COLORS.teal} />
-            <Text style={styles.counterBig}>2.4K</Text>
-            <Text style={styles.counterLabel}>Followers</Text>
-          </View>
-          <View style={styles.counterDivider} />
-          <View style={styles.counterItem}>
-            <Ionicons name="person" size={16} color={COLORS.teal} />
-            <Text style={styles.counterBig}>386</Text>
-            <Text style={styles.counterLabel}>Following</Text>
-          </View>
-          <View style={styles.counterDivider} />
-          <View style={styles.counterItem}>
-            <Ionicons name="document-text" size={16} color={COLORS.orange} />
-            <Text style={styles.counterBig}>42</Text>
-            <Text style={styles.counterLabel}>Posts</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Profile Sub Tabs */}
-      <View style={styles.profileSubTabsBar}>
-        {["overview", "stats", "matches", "posts"].map((tab) => {
-          const isActive = profileSubTab === tab;
-          return (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setProfileSubTab(tab)}
-              style={[styles.profileSubTabItem, isActive && styles.profileSubTabItemActive]}
-            >
-              <Text style={[styles.profileSubTabText, isActive && styles.profileSubTabTextActive]}>
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* OVERVIEW TAB */}
-      {profileSubTab === "overview" && (
-        <View style={{ marginTop: 14 }}>
-          <Text style={styles.sectionTitle}>Recent Performance</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16, paddingHorizontal: 16, marginTop: 10 }}>
-            <View style={styles.perfStatCard}>
-              <Text style={styles.perfScoreHighlight}>86* <Text style={{ fontSize: 13, color: COLORS.textMuted }}>(52) 🏏</Text></Text>
-              <Text style={styles.perfDetailText}>7 Fours • 3 Sixes</Text>
-              <Text style={styles.perfOpponentText}>vs Royal Strikers</Text>
-              <Text style={styles.perfDateText}>Yesterday</Text>
-            </View>
-
-            <View style={styles.perfStatCard}>
-              <Text style={styles.perfScoreHighlight}>42 <Text style={{ fontSize: 13, color: COLORS.textMuted }}>(31) 🏏</Text></Text>
-              <Text style={styles.perfDetailText}>5 Fours • 1 Six</Text>
-              <Text style={styles.perfOpponentText}>vs Warriors XI</Text>
-              <Text style={styles.perfDateText}>3 days ago</Text>
-            </View>
-
-            <View style={styles.perfStatCard}>
-              <Text style={styles.perfScoreHighlight}>3/24 <Text style={{ fontSize: 13, color: COLORS.textMuted }}>(4) ⚾</Text></Text>
-              <Text style={styles.perfDetailText}>4 Overs • 2 Maidens</Text>
-              <Text style={styles.perfOpponentText}>vs Titans CC</Text>
-              <Text style={styles.perfDateText}>5 days ago</Text>
-            </View>
-          </ScrollView>
-
-          {/* Form Last 5 Matches */}
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Form (Last 5 Matches)</Text>
-          <View style={styles.formRow}>
-            {[
-              { score: "84", res: "W" },
-              { score: "42", res: "W" },
-              { score: "31", res: "L" },
-              { score: "18", res: "W" },
-              { score: "74", res: "L" },
-            ].map((f, i) => (
-              <View key={i} style={styles.formCol}>
-                <View style={[styles.formBar, { height: Number(f.score) * 0.8 }]}>
-                  <Text style={styles.formBarScoreText}>{f.score}</Text>
-                </View>
-                <View style={[styles.formBadge, { backgroundColor: f.res === "W" ? "rgba(0,230,118,0.2)" : "rgba(239,68,68,0.2)" }]}>
-                  <Text style={[styles.formBadgeText, { color: f.res === "W" ? COLORS.primary : COLORS.danger }]}>{f.res}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* STATS TAB */}
-      {profileSubTab === "stats" && (
-        <View style={{ marginTop: 14 }}>
-          {/* Batting Card */}
-          <View style={styles.statsCategoryCard}>
-            <View style={styles.statsCardHeader}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Text style={{ fontSize: 18 }}>🏏</Text>
-                <Text style={styles.statsCardTitle}>Batting</Text>
-              </View>
-              <Text style={styles.formatPillText}>All Formats ⌵</Text>
-            </View>
-
-            <View style={styles.statsGridRow}>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Matches</Text>
-                <Text style={styles.statCellVal}>42</Text>
-              </View>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Runs</Text>
-                <Text style={styles.statCellVal}>1,286</Text>
-              </View>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Average</Text>
-                <Text style={[styles.statCellVal, { color: COLORS.primary }]}>38.7</Text>
-              </View>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Strike Rate</Text>
-                <Text style={[styles.statCellVal, { color: COLORS.primary }]}>142.4</Text>
-              </View>
-            </View>
-
-            <View style={[styles.statsGridRow, { borderTopWidth: 1, borderColor: COLORS.cardBorder, paddingTop: 10 }]}>
-              <View style={styles.statCellMini}><Text style={styles.statMiniLabel}>HS</Text><Text style={styles.statMiniVal}>86*</Text></View>
-              <View style={styles.statCellMini}><Text style={styles.statMiniLabel}>50s</Text><Text style={styles.statMiniVal}>12</Text></View>
-              <View style={styles.statCellMini}><Text style={styles.statMiniLabel}>100s</Text><Text style={styles.statMiniVal}>2</Text></View>
-              <View style={styles.statCellMini}><Text style={styles.statMiniLabel}>4s</Text><Text style={styles.statMiniVal}>134</Text></View>
-              <View style={styles.statCellMini}><Text style={styles.statMiniLabel}>6s</Text><Text style={styles.statMiniVal}>58</Text></View>
-            </View>
-          </View>
-
-          {/* Bowling Card */}
-          <View style={styles.statsCategoryCard}>
-            <View style={styles.statsCardHeader}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Text style={{ fontSize: 18 }}>⚾</Text>
-                <Text style={styles.statsCardTitle}>Bowling</Text>
-              </View>
-              <Text style={styles.formatPillText}>All Formats ⌵</Text>
-            </View>
-
-            <View style={styles.statsGridRow}>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Matches</Text>
-                <Text style={styles.statCellVal}>42</Text>
-              </View>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Overs</Text>
-                <Text style={styles.statCellVal}>126.4</Text>
-              </View>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Wickets</Text>
-                <Text style={[styles.statCellVal, { color: COLORS.primary }]}>58</Text>
-              </View>
-              <View style={styles.statCell}>
-                <Text style={styles.statCellLabel}>Economy</Text>
-                <Text style={[styles.statCellVal, { color: COLORS.primary }]}>7.2</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* MATCHES TAB */}
-      {profileSubTab === "matches" && (
-        <View style={{ marginTop: 14 }}>
-          <View style={styles.statsCategoryCard}>
-            <Text style={styles.statsCardTitle}>Match Summary</Text>
-            <View style={[styles.statsGridRow, { marginTop: 12 }]}>
-              <View style={styles.statCell}><Text style={styles.statCellVal}>42</Text><Text style={styles.statCellLabel}>Matches</Text></View>
-              <View style={styles.statCell}><Text style={styles.statCellVal}>26</Text><Text style={styles.statCellLabel}>Won</Text></View>
-              <View style={styles.statCell}><Text style={[styles.statCellVal, { color: COLORS.primary }]}>61.9%</Text><Text style={styles.statCellLabel}>Win %</Text></View>
-              <View style={styles.statCell}><Text style={styles.statCellVal}>8</Text><Text style={styles.statCellLabel}>POTM</Text></View>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* POSTS TAB */}
-      {profileSubTab === "posts" && (
-        <View style={{ marginTop: 14 }}>
-          <View style={styles.filterPillsRow}>
-            {["all", "photos", "videos", "performances"].map((filter) => (
-              <TouchableOpacity
-                key={filter}
-                onPress={() => setProfilePostsFilter(filter)}
-                style={[
-                  styles.filterPill,
-                  profilePostsFilter === filter && styles.filterPillActive,
-                ]}
-              >
-                <Text style={[styles.filterPillText, profilePostsFilter === filter && styles.filterPillTextActive]}>
-                  {filter === "all" ? "All Posts" : filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
-    </ScrollView>
-  );
+  // Active Sport Lens (default to Football matching web app)
+  const [activeSport, setActiveSport] = useState("Football");
+
+  // Post composer modal
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [postText, setPostText] = useState("");
+
+  // Games tab filter: "all" | "live" | "upcoming" | "completed"
+  const [gameFilter, setGameFilter] = useState("all");
+
+  // Interactive Live Scoring State
+  const [homeScore, setHomeScore] = useState(2);
+  const [awayScore, setAwayScore] = useState(1);
+  const [matchMinute, setMatchMinute] = useState(78);
+
+  // Cricket Scoring State
+  const [cricketRuns, setCricketRuns] = useState(186);
+  const [cricketWickets, setCricketWickets] = useState(4);
+  const [cricketOvers, setCricketOvers] = useState("18.4");
+  const [cricketBalls, setCricketBalls] = useState(["1", "4", "W", "6", "0", "2"]);
+
+  // Player search
+  const [playerSearch, setPlayerSearch] = useState("");
+
+  // Sample data contextual to active sport
+  const currentSport = SPORTS.find((s) => s.id === activeSport) || SPORTS[0];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B1115" translucent />
 
-      {/* Top Header */}
-      {renderTopHeader(
-        currentTab === "profile" ? "Profile" : currentTab === "matches" ? "Matches" : currentTab === "discover" ? "Discover" : "EZKORA",
-        currentTab === "home"
-      )}
-
-      {/* Active Tab Screen */}
-      <View style={{ flex: 1 }}>
-        {currentTab === "home" && renderHomeScreen()}
-        {currentTab === "matches" && renderMatchesScreen()}
-        {currentTab === "discover" && renderDiscoverScreen()}
-        {currentTab === "profile" && renderProfileScreen()}
-      </View>
-
-      {/* BOTTOM NAVIGATION BAR */}
-      <View style={styles.bottomNav}>
-        {/* Tab 1: Home */}
-        <TouchableOpacity
-          onPress={() => setCurrentTab("home")}
-          style={styles.bottomNavItem}
-        >
-          <Ionicons
-            name={currentTab === "home" ? "home" : "home-outline"}
-            size={22}
-            color={currentTab === "home" ? COLORS.primary : COLORS.textMuted}
-          />
-          <Text style={[styles.bottomNavLabel, currentTab === "home" && styles.bottomNavLabelActive]}>
-            Home
-          </Text>
-        </TouchableOpacity>
-
-        {/* Tab 2: Matches */}
-        <TouchableOpacity
-          onPress={() => setCurrentTab("matches")}
-          style={styles.bottomNavItem}
-        >
-          <MaterialCommunityIcons
-            name="cricket"
-            size={22}
-            color={currentTab === "matches" ? COLORS.primary : COLORS.textMuted}
-          />
-          <Text style={[styles.bottomNavLabel, currentTab === "matches" && styles.bottomNavLabelActive]}>
-            Matches
-          </Text>
-        </TouchableOpacity>
-
-        {/* Center Floating + Button */}
-        <TouchableOpacity
-          onPress={() => setCreateModalOpen(true)}
-          style={styles.floatingCenterBtn}
-        >
-          <Ionicons name="add" size={32} color="#000000" />
-        </TouchableOpacity>
-
-        {/* Tab 4: Discover */}
-        <TouchableOpacity
-          onPress={() => setCurrentTab("discover")}
-          style={styles.bottomNavItem}
-        >
-          <Ionicons
-            name={currentTab === "discover" ? "search" : "search-outline"}
-            size={22}
-            color={currentTab === "discover" ? COLORS.primary : COLORS.textMuted}
-          />
-          <Text style={[styles.bottomNavLabel, currentTab === "discover" && styles.bottomNavLabelActive]}>
-            Discover
-          </Text>
-        </TouchableOpacity>
-
-        {/* Tab 5: Profile */}
-        <TouchableOpacity
-          onPress={() => setCurrentTab("profile")}
-          style={styles.bottomNavItem}
-        >
-          <View style={[styles.profileNavCircle, currentTab === "profile" && { borderColor: COLORS.primary }]}>
-            <Text style={styles.profileNavText}>U</Text>
+      {/* TOPBAR — Pushed down with safe top spacing */}
+      <View style={styles.topbar}>
+        <View style={styles.topbarLeft}>
+          <View style={styles.brandRow}>
+            <Text style={styles.brandTitle}>EZKORA</Text>
+            <View style={styles.proBadge}>
+              <Text style={styles.proText}>PRO</Text>
+            </View>
           </View>
-          <Text style={[styles.bottomNavLabel, currentTab === "profile" && styles.bottomNavLabelActive]}>
-            Profile
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.lensIndicator}>
+            <MaterialCommunityIcons name={currentSport.icon} size={13} color={THEME.textMuted} />
+            <Text style={styles.lensText}>{currentSport.name}</Text>
+            <Text style={styles.lensSub}>· {currentSport.descriptor}</Text>
+          </View>
+        </View>
+
+        <View style={styles.topbarRight}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            activeOpacity={0.7}
+            onPress={() => setComposerOpen(true)}
+          >
+            <Ionicons name="add" size={20} color={THEME.text} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.avatarButton}
+            activeOpacity={0.7}
+            onPress={() => setCurrentTab("profile")}
+          >
+            <Text style={styles.avatarText}>CT</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* CREATE MODAL ("Build, organize, and play.") */}
-      <Modal visible={createModalOpen} animationType="slide" transparent>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.createModalCard}>
-            {/* Modal Header */}
-            <View style={styles.modalHeaderRow}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <View style={styles.logoBadge}><Text style={styles.logoBadgeText}>E</Text></View>
-                <Text style={styles.modalTitle}>Create</Text>
+      {/* SPORT STRIP — Smooth horizontal sport lens switcher */}
+      <View style={styles.sportStripContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sportStrip}
+        >
+          {SPORTS.map((sport) => {
+            const isSelected = sport.id === activeSport;
+            return (
+              <TouchableOpacity
+                key={sport.id}
+                style={[styles.sportPill, isSelected && styles.sportPillActive]}
+                onPress={() => setActiveSport(sport.id)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons
+                  name={sport.icon}
+                  size={15}
+                  color={isSelected ? "#000000" : THEME.textMuted}
+                />
+                <Text style={[styles.sportPillText, isSelected && styles.sportPillTextActive]}>
+                  {sport.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* MAIN CONTENT AREA */}
+      <View style={styles.content}>
+        {currentTab === "home" && (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            {/* HERO OVERVIEW CARD */}
+            <View style={styles.heroCard}>
+              <View style={styles.heroHeader}>
+                <View style={styles.liveIndicator}>
+                  <View style={styles.livePulse} />
+                  <Text style={styles.liveText}>FEATURED FIXTURE</Text>
+                </View>
+                <Text style={styles.heroSportTag}>{currentSport.name}</Text>
               </View>
-              <TouchableOpacity onPress={() => setCreateModalOpen(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+
+              {activeSport === "Cricket" ? (
+                <View style={styles.scoreboardSection}>
+                  <View style={styles.matchTeamRow}>
+                    <Text style={styles.teamName}>Falcons CC</Text>
+                    <Text style={styles.teamScore}>
+                      {cricketRuns}/{cricketWickets}{" "}
+                      <Text style={styles.oversText}>({cricketOvers})</Text>
+                    </Text>
+                  </View>
+                  <View style={styles.matchTeamRow}>
+                    <Text style={styles.teamName}>Warriors XI</Text>
+                    <Text style={styles.teamScoreMuted}>152/8 (20.0)</Text>
+                  </View>
+                  <View style={styles.ballRow}>
+                    <Text style={styles.ballRowLabel}>This Over:</Text>
+                    {cricketBalls.map((b, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.ballPill,
+                          b === "W" && styles.ballWicket,
+                          (b === "4" || b === "6") && styles.ballBoundary,
+                        ]}
+                      >
+                        <Text style={styles.ballPillText}>{b}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.scoreboardSection}>
+                  <View style={styles.matchTeamsDisplay}>
+                    <View style={styles.teamBlock}>
+                      <View style={styles.teamCrest}>
+                        <Text style={styles.teamCrestText}>MAD</Text>
+                      </View>
+                      <Text style={styles.teamLabel}>Real Madrid</Text>
+                    </View>
+                    <View style={styles.scoreBlock}>
+                      <Text style={styles.scoreText}>
+                        {homeScore} - {awayScore}
+                      </Text>
+                      <Text style={styles.matchTimeText}>{matchMinute}' LIVE</Text>
+                    </View>
+                    <View style={styles.teamBlock}>
+                      <View style={styles.teamCrest}>
+                        <Text style={styles.teamCrestText}>MCI</Text>
+                      </View>
+                      <Text style={styles.teamLabel}>Man City</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.heroFooter}>
+                <TouchableOpacity
+                  style={styles.heroActionBtn}
+                  onPress={() => setCurrentTab("scores")}
+                >
+                  <Text style={styles.heroActionBtnText}>Open Score Console</Text>
+                  <Ionicons name="arrow-forward" size={14} color="#000000" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* QUICK ACTIONS BAR */}
+            <View style={styles.quickActionsRow}>
+              <TouchableOpacity
+                style={styles.quickActionCard}
+                onPress={() => setCurrentTab("games")}
+              >
+                <Ionicons name="calendar-outline" size={18} color={THEME.text} />
+                <Text style={styles.quickActionTitle}>Fixtures</Text>
+                <Text style={styles.quickActionSub}>Upcoming games</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickActionCard}
+                onPress={() => setCurrentTab("players")}
+              >
+                <Ionicons name="people-outline" size={18} color={THEME.text} />
+                <Text style={styles.quickActionTitle}>Athletes</Text>
+                <Text style={styles.quickActionSub}>Rosters & stats</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quickActionCard}
+                onPress={() => setComposerOpen(true)}
+              >
+                <Ionicons name="create-outline" size={18} color={THEME.text} />
+                <Text style={styles.quickActionTitle}>Share</Text>
+                <Text style={styles.quickActionSub}>Post highlight</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSubtitle}>Build, organize, and play.</Text>
+            {/* SECTION HEADER */}
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionEyebrow}>COMMUNITY FEED</Text>
+                <Text style={styles.sectionTitle}>From the field</Text>
+              </View>
+              <TouchableOpacity onPress={() => setCurrentTab("players")}>
+                <Text style={styles.sectionLink}>Find athletes →</Text>
+              </TouchableOpacity>
+            </View>
 
-            {/* Action List */}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 16 }}>
-              {[
-                { title: "Create Match", desc: "Set up a cricket match", icon: "cricket", type: "mc" },
-                { title: "Create Team", desc: "Build your own team", icon: "people", type: "io" },
-                { title: "Create Tournament", desc: "Organize a tournament", icon: "trophy", type: "io" },
-                { title: "Create Event", desc: "Plan an event", icon: "calendar", type: "io" },
-                { title: "Create Post", desc: "Share moments with community", icon: "document-text", type: "io" },
-                { title: "Play Now", desc: "Find or join a game quickly", icon: "flash", type: "io", highlight: true },
-              ].map((item, idx) => (
+            {/* POST CARD 1 */}
+            <View style={styles.postCard}>
+              <View style={styles.postAuthorRow}>
+                <View style={styles.postAvatar}>
+                  <Text style={styles.postAvatarText}>RK</Text>
+                </View>
+                <View style={styles.postAuthorMeta}>
+                  <Text style={styles.postAuthorName}>Rahul Kumar</Text>
+                  <Text style={styles.postTime}>2 hours ago · {currentSport.name}</Text>
+                </View>
+                <View style={styles.postSportBadge}>
+                  <Text style={styles.postSportBadgeText}>MATCH HIGHLIGHT</Text>
+                </View>
+              </View>
+              <Text style={styles.postBody}>
+                Hard fought victory under the lights tonight! Team delivered under pressure in the
+                final 10 minutes. On to the semi-finals next weekend.
+              </Text>
+              <View style={styles.postInteractionRow}>
+                <TouchableOpacity style={styles.postStatBtn}>
+                  <Ionicons name="heart-outline" size={16} color={THEME.textMuted} />
+                  <Text style={styles.postStatText}>48</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.postStatBtn}>
+                  <Ionicons name="chatbubble-outline" size={15} color={THEME.textMuted} />
+                  <Text style={styles.postStatText}>12</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.postStatBtn}>
+                  <Ionicons name="share-social-outline" size={15} color={THEME.textMuted} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* POST CARD 2 */}
+            <View style={styles.postCard}>
+              <View style={styles.postAuthorRow}>
+                <View style={styles.postAvatar}>
+                  <Text style={styles.postAvatarText}>AS</Text>
+                </View>
+                <View style={styles.postAuthorMeta}>
+                  <Text style={styles.postAuthorName}>Ananya Sharma</Text>
+                  <Text style={styles.postTime}>5 hours ago · Training</Text>
+                </View>
+                <View style={styles.postSportBadge}>
+                  <Text style={styles.postSportBadgeText}>SESSION LOG</Text>
+                </View>
+              </View>
+              <Text style={styles.postBody}>
+                Early morning drill focused on agility and possession retention. 8.4 km clocked,
+                average heart rate 152 bpm. Staying consistent.
+              </Text>
+              <View style={styles.postInteractionRow}>
+                <TouchableOpacity style={styles.postStatBtn}>
+                  <Ionicons name="heart-outline" size={16} color={THEME.textMuted} />
+                  <Text style={styles.postStatText}>31</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.postStatBtn}>
+                  <Ionicons name="chatbubble-outline" size={15} color={THEME.textMuted} />
+                  <Text style={styles.postStatText}>6</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.postStatBtn}>
+                  <Ionicons name="share-social-outline" size={15} color={THEME.textMuted} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        )}
+
+        {/* PLAYERS TAB */}
+        {currentTab === "players" && (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.tabHeader}>
+              <Text style={styles.sectionEyebrow}>{currentSport.name} / ATHLETES</Text>
+              <Text style={styles.sectionTitle}>Player Directory</Text>
+              <Text style={styles.tabSubtitle}>
+                Verified athletes registered in the {currentSport.name.toLowerCase()} community.
+              </Text>
+            </View>
+
+            {/* Search Input */}
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={16} color={THEME.textSub} />
+              <TextInput
+                placeholder="Search athlete by name or role..."
+                placeholderTextColor={THEME.textSub}
+                value={playerSearch}
+                onChangeText={setPlayerSearch}
+                style={styles.searchInput}
+              />
+            </View>
+
+            {/* Athlete Cards */}
+            <View style={styles.playerCard}>
+              <View style={styles.playerAvatarLarge}>
+                <Text style={styles.playerAvatarLargeText}>RK</Text>
+              </View>
+              <View style={styles.playerInfo}>
+                <View style={styles.playerNameRow}>
+                  <Text style={styles.playerName}>Rahul Kumar</Text>
+                  <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+                </View>
+                <Text style={styles.playerRole}>Top Order / Striker · #17</Text>
+                <Text style={styles.playerMeta}>Falcons Club · 42 Matches · 61.9% Win Rate</Text>
+              </View>
+              <TouchableOpacity style={styles.connectBtn}>
+                <Text style={styles.connectBtnText}>Follow</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.playerCard}>
+              <View style={styles.playerAvatarLarge}>
+                <Text style={styles.playerAvatarLargeText}>AS</Text>
+              </View>
+              <View style={styles.playerInfo}>
+                <View style={styles.playerNameRow}>
+                  <Text style={styles.playerName}>Ananya Sharma</Text>
+                  <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+                </View>
+                <Text style={styles.playerRole}>Midfield Playmaker · #10</Text>
+                <Text style={styles.playerMeta}>Phoenix SC · 38 Matches · 68.4% Win Rate</Text>
+              </View>
+              <TouchableOpacity style={styles.connectBtn}>
+                <Text style={styles.connectBtnText}>Follow</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.playerCard}>
+              <View style={styles.playerAvatarLarge}>
+                <Text style={styles.playerAvatarLargeText}>DK</Text>
+              </View>
+              <View style={styles.playerInfo}>
+                <View style={styles.playerNameRow}>
+                  <Text style={styles.playerName}>Dinesh Karthik</Text>
+                  <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+                </View>
+                <Text style={styles.playerRole}>Wicketkeeper / Defender · #21</Text>
+                <Text style={styles.playerMeta}>Warriors XI · 56 Matches · 58.2% Win Rate</Text>
+              </View>
+              <TouchableOpacity style={styles.connectBtn}>
+                <Text style={styles.connectBtnText}>Follow</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        )}
+
+        {/* GAMES TAB */}
+        {currentTab === "games" && (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.tabHeader}>
+              <Text style={styles.sectionEyebrow}>{currentSport.name} / FIXTURES</Text>
+              <Text style={styles.sectionTitle}>Official Matches</Text>
+              <Text style={styles.tabSubtitle}>
+                Scheduled league games, friendly matches, and tournament brackets.
+              </Text>
+            </View>
+
+            {/* Filter Pills */}
+            <View style={styles.filterPillsRow}>
+              {["all", "live", "upcoming", "completed"].map((f) => (
                 <TouchableOpacity
-                  key={idx}
-                  onPress={() => setCreateModalOpen(false)}
-                  style={[
-                    styles.createActionRow,
-                    item.highlight && styles.createActionHighlight,
-                  ]}
+                  key={f}
+                  style={[styles.filterPill, gameFilter === f && styles.filterPillActive]}
+                  onPress={() => setGameFilter(f)}
                 >
-                  <View style={[styles.actionIconCircle, item.highlight && { backgroundColor: "rgba(0,230,118,0.2)" }]}>
-                    {item.type === "mc" ? (
-                      <MaterialCommunityIcons name="cricket" size={20} color={COLORS.orange} />
-                    ) : (
-                      <Ionicons name={item.icon} size={20} color={item.highlight ? COLORS.primary : COLORS.teal} />
-                    )}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.actionRowTitle}>{item.title}</Text>
-                    <Text style={styles.actionRowDesc}>{item.desc}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
+                  <Text
+                    style={[
+                      styles.filterPillText,
+                      gameFilter === f && styles.filterPillTextActive,
+                    ]}
+                  >
+                    {f.toUpperCase()}
+                  </Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
+
+            {/* Game Card 1 */}
+            <View style={styles.gameCard}>
+              <View style={styles.gameCardHeader}>
+                <View style={styles.liveIndicator}>
+                  <View style={styles.livePulse} />
+                  <Text style={styles.liveText}>LIVE NOW</Text>
+                </View>
+                <Text style={styles.gameVenue}>Gachibowli Stadium, Hyderabad</Text>
+              </View>
+              <View style={styles.gameMatchup}>
+                <View style={styles.gameTeamBlock}>
+                  <Text style={styles.gameTeamName}>Falcons CC</Text>
+                  <Text style={styles.gameTeamScore}>186/4 (18.4)</Text>
+                </View>
+                <Text style={styles.vsText}>VS</Text>
+                <View style={styles.gameTeamBlock}>
+                  <Text style={styles.gameTeamName}>Warriors XI</Text>
+                  <Text style={styles.gameTeamScore}>152/8 (20.0)</Text>
+                </View>
+              </View>
+              <View style={styles.gameCardFooter}>
+                <Text style={styles.gameRequirement}>Target: 187 runs · 8 balls left</Text>
+                <TouchableOpacity
+                  style={styles.gameScoreBtn}
+                  onPress={() => setCurrentTab("scores")}
+                >
+                  <Text style={styles.gameScoreBtnText}>Live Score</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Game Card 2 */}
+            <View style={styles.gameCard}>
+              <View style={styles.gameCardHeader}>
+                <View style={styles.upcomingBadge}>
+                  <Text style={styles.upcomingBadgeText}>UPCOMING</Text>
+                </View>
+                <Text style={styles.gameVenue}>Tomorrow · 07:00 PM</Text>
+              </View>
+              <View style={styles.gameMatchup}>
+                <View style={styles.gameTeamBlock}>
+                  <Text style={styles.gameTeamName}>Hyderabad Stars</Text>
+                  <Text style={styles.gameTeamSub}>Confirmed (11/11)</Text>
+                </View>
+                <Text style={styles.vsText}>VS</Text>
+                <View style={styles.gameTeamBlock}>
+                  <Text style={styles.gameTeamName}>Secunderabad United</Text>
+                  <Text style={styles.gameTeamSub}>Confirmed (11/11)</Text>
+                </View>
+              </View>
+              <View style={styles.gameCardFooter}>
+                <Text style={styles.gameRequirement}>Official Premier League · Round 4</Text>
+                <TouchableOpacity style={styles.gameReminderBtn}>
+                  <Ionicons name="notifications-outline" size={14} color={THEME.text} />
+                  <Text style={styles.gameReminderBtnText}>Remind</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        )}
+
+        {/* SCORES TAB */}
+        {currentTab === "scores" && (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.tabHeader}>
+              <Text style={styles.sectionEyebrow}>{currentSport.name} / OFFICIAL SCORING</Text>
+              <Text style={styles.sectionTitle}>Stadium Scoreboard</Text>
+              <Text style={styles.tabSubtitle}>
+                Live ball-by-ball, possession tracking, and verified results.
+              </Text>
+            </View>
+
+            {/* Interactive Stadium Scoreboard Console */}
+            <View style={styles.consoleCard}>
+              <View style={styles.consoleHeader}>
+                <View style={styles.liveIndicator}>
+                  <View style={styles.livePulse} />
+                  <Text style={styles.liveText}>CONSOLE ACTIVE</Text>
+                </View>
+                <Text style={styles.matchCodeText}>Match ID: EZ-8941</Text>
+              </View>
+
+              {activeSport === "Cricket" ? (
+                <View style={styles.cricketConsole}>
+                  <Text style={styles.cricketMainScore}>
+                    {cricketRuns} - {cricketWickets}
+                  </Text>
+                  <Text style={styles.cricketOversDisplay}>Overs: {cricketOvers} / 20.0</Text>
+
+                  <View style={styles.scoreButtonsGrid}>
+                    {["0", "1", "2", "3", "4", "6"].map((run) => (
+                      <TouchableOpacity
+                        key={run}
+                        style={styles.scoreActionBtn}
+                        onPress={() => {
+                          const n = parseInt(run);
+                          setCricketRuns((r) => r + n);
+                          setCricketBalls((b) => [...b.slice(1), run]);
+                        }}
+                      >
+                        <Text style={styles.scoreActionBtnText}>+{run}</Text>
+                      </TouchableOpacity>
+                    ))}
+                    <TouchableOpacity
+                      style={[styles.scoreActionBtn, styles.scoreActionWicket]}
+                      onPress={() => {
+                        setCricketWickets((w) => Math.min(10, w + 1));
+                        setCricketBalls((b) => [...b.slice(1), "W"]);
+                      }}
+                    >
+                      <Text style={[styles.scoreActionBtnText, { color: "#FFFFFF" }]}>OUT</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.scoreActionBtn, styles.scoreActionReset]}
+                      onPress={() => {
+                        setCricketRuns(186);
+                        setCricketWickets(4);
+                      }}
+                    >
+                      <Text style={styles.scoreActionResetText}>Reset</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.footballConsole}>
+                  <View style={styles.footballScoreRow}>
+                    <View style={styles.footballTeamCol}>
+                      <Text style={styles.footballTeamName}>Real Madrid</Text>
+                      <Text style={styles.footballScoreDigit}>{homeScore}</Text>
+                      <View style={styles.scoreAdjustRow}>
+                        <TouchableOpacity
+                          style={styles.adjustBtn}
+                          onPress={() => setHomeScore((s) => Math.max(0, s - 1))}
+                        >
+                          <Text style={styles.adjustBtnText}>-</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.adjustBtn}
+                          onPress={() => setHomeScore((s) => s + 1)}
+                        >
+                          <Text style={styles.adjustBtnText}>+1</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={styles.footballCenterCol}>
+                      <Text style={styles.footballColon}>:</Text>
+                      <Text style={styles.footballMinute}>{matchMinute}'</Text>
+                    </View>
+
+                    <View style={styles.footballTeamCol}>
+                      <Text style={styles.footballTeamName}>Man City</Text>
+                      <Text style={styles.footballScoreDigit}>{awayScore}</Text>
+                      <View style={styles.scoreAdjustRow}>
+                        <TouchableOpacity
+                          style={styles.adjustBtn}
+                          onPress={() => setAwayScore((s) => Math.max(0, s - 1))}
+                        >
+                          <Text style={styles.adjustBtnText}>-</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.adjustBtn}
+                          onPress={() => setAwayScore((s) => s + 1)}
+                        >
+                          <Text style={styles.adjustBtnText}>+1</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Historical Match Records */}
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionEyebrow}>HISTORICAL RESULTS</Text>
+                <Text style={styles.sectionTitle}>Completed Fixtures</Text>
+              </View>
+            </View>
+
+            <View style={styles.historyCard}>
+              <View style={styles.historyMetaRow}>
+                <Text style={styles.historySport}>{currentSport.name} Championship</Text>
+                <Text style={styles.historyDate}>Sep 18, 2026</Text>
+              </View>
+              <Text style={styles.historyTeams}>Falcons CC 194/6 def. Titans 182/9</Text>
+              <Text style={styles.historyResult}>Won by 12 runs · Player of the Match: Rahul Kumar (86*)</Text>
+            </View>
+          </ScrollView>
+        )}
+
+        {/* PROFILE TAB */}
+        {currentTab === "profile" && (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={styles.profileCard}>
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileAvatarText}>CT</Text>
+              </View>
+              <Text style={styles.profileName}>Charan Teja</Text>
+              <Text style={styles.profileHandle}>@charanteja · Athlete ID: PL-512391</Text>
+              <View style={styles.profileBadge}>
+                <Ionicons name="shield-checkmark" size={13} color="#FFFFFF" />
+                <Text style={styles.profileBadgeText}>VERIFIED ATHLETE</Text>
+              </View>
+
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>42</Text>
+                  <Text style={styles.statLabel}>Matches</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>61.9%</Text>
+                  <Text style={styles.statLabel}>Win Rate</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>8</Text>
+                  <Text style={styles.statLabel}>POTM</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>142.6</Text>
+                  <Text style={styles.statLabel}>Rating</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.settingsSection}>
+              <Text style={styles.settingsHeader}>PREFERENCES & ACCOUNT</Text>
+              <View style={styles.settingsItem}>
+                <Ionicons name="football-outline" size={18} color={THEME.text} />
+                <Text style={styles.settingsItemTitle}>Primary Sport Lens: {activeSport}</Text>
+              </View>
+              <View style={styles.settingsItem}>
+                <Ionicons name="notifications-outline" size={18} color={THEME.text} />
+                <Text style={styles.settingsItemTitle}>Match Alerts & Notifications</Text>
+              </View>
+              <View style={styles.settingsItem}>
+                <Ionicons name="cloud-done-outline" size={18} color={THEME.text} />
+                <Text style={styles.settingsItemTitle}>EZKORA Cloud Sync: Active</Text>
+              </View>
+            </View>
+          </ScrollView>
+        )}
+      </View>
+
+      {/* BOTTOM NAVIGATION — Clean, web-aligned 5-tab bar */}
+      <View style={styles.bottomNav}>
+        {[
+          { key: "home", label: "Home", icon: "home" },
+          { key: "players", label: "Players", icon: "people" },
+          { key: "games", label: "Games", icon: "trophy" },
+          { key: "scores", label: "Scores", icon: "timer" },
+          { key: "profile", label: "Profile", icon: "person" },
+        ].map((tab) => {
+          const isActive = currentTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={styles.navItem}
+              onPress={() => setCurrentTab(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isActive ? tab.icon : `${tab.icon}-outline`}
+                size={22}
+                color={isActive ? THEME.white : THEME.textSub}
+              />
+              <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* POST COMPOSER MODAL */}
+      <Modal visible={composerOpen} transparent animationType="slide">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Share a moment</Text>
+              <TouchableOpacity onPress={() => setComposerOpen(false)}>
+                <Ionicons name="close" size={22} color={THEME.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.modalInput}
+              placeholder={`What's happening on the ${currentSport.name.toLowerCase()} field?`}
+              placeholderTextColor={THEME.textSub}
+              multiline
+              numberOfLines={4}
+              value={postText}
+              onChangeText={setPostText}
+            />
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setComposerOpen(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSubmitBtn}
+                onPress={() => {
+                  setComposerOpen(false);
+                  setPostText("");
+                }}
+              >
+                <Text style={styles.modalSubmitText}>Post to Feed</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: THEME.bg,
   },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 90,
-  },
-  header: {
+
+  // TOPBAR — Pushed down with generous safe area spacing
+  topbar: {
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 16 : 52,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    backgroundColor: THEME.headerBg,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.border,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.bg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
   },
-  headerLeft: {
+  topbarLeft: {
+    flexDirection: "column",
+  },
+  brandRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
-  logoBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoBadgeText: {
-    color: "#000000",
+  brandTitle: {
+    fontSize: 20,
     fontWeight: "900",
-    fontSize: 16,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: COLORS.text,
+    color: THEME.white,
     letterSpacing: 0.5,
   },
-  locationPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.card,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    gap: 4,
+  proBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
-  locationText: {
-    color: COLORS.text,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  iconButton: {
-    position: "relative",
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    backgroundColor: COLORS.primary,
-    borderRadius: 8,
-    width: 15,
-    height: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeCountText: {
-    color: "#000000",
+  proText: {
+    color: THEME.white,
     fontSize: 9,
-    fontWeight: "900",
+    fontWeight: "800",
   },
-  avatarMini: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.card,
-    borderWidth: 1.5,
-    borderColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarMiniText: {
-    color: COLORS.text,
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  sectionHeaderRow: {
+  lensIndicator: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 16,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.text,
-  },
-  sectionSubText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
+    gap: 4,
     marginTop: 2,
   },
-  seeAllText: {
+  lensText: {
+    color: THEME.textMuted,
     fontSize: 12,
     fontWeight: "600",
-    color: COLORS.primary,
   },
-  liveBannerCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+  lensSub: {
+    color: THEME.textSub,
+    fontSize: 11,
   },
-  liveCardTop: {
+  topbarRight: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 10,
+  },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME.card,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME.borderLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: THEME.white,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  // SPORT STRIP
+  sportStripContainer: {
+    backgroundColor: THEME.headerBg,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.border,
+    paddingVertical: 8,
+  },
+  sportStrip: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  sportPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: THEME.card,
+    borderWidth: 1,
+    borderColor: THEME.border,
+  },
+  sportPillActive: {
+    backgroundColor: THEME.white,
+    borderColor: THEME.white,
+  },
+  sportPillText: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  sportPillTextActive: {
+    color: "#000000",
+    fontWeight: "800",
+  },
+
+  // CONTENT
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 24,
+    gap: 16,
+  },
+
+  // HERO CARD
+  heroCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 16,
+  },
+  heroHeader: {
+    flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
-  liveTag: {
-    backgroundColor: "rgba(0, 230, 118, 0.15)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  liveTagText: {
-    color: COLORS.primary,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-  overCountText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  teamsScoreRow: {
+  liveIndicator: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 4,
+    gap: 6,
   },
-  teamScoreCol: {
-    alignItems: "center",
-    width: 100,
+  livePulse: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: THEME.liveDot,
   },
-  teamBadgeCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: COLORS.cardActive,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  teamBadgeText: {
-    color: COLORS.primary,
+  liveText: {
+    color: THEME.text,
+    fontSize: 10,
     fontWeight: "800",
-    fontSize: 14,
+    letterSpacing: 0.8,
   },
-  teamNameText: {
-    color: COLORS.textSub,
-    fontSize: 12,
+  heroSportTag: {
+    color: THEME.textSub,
+    fontSize: 11,
     fontWeight: "600",
-    marginBottom: 4,
   },
-  scoreText: {
-    color: COLORS.text,
-    fontSize: 18,
-    fontWeight: "900",
+  scoreboardSection: {
+    paddingVertical: 8,
   },
-  vsText: {
-    color: COLORS.textMuted,
-    fontSize: 14,
+  matchTeamRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  teamName: {
+    color: THEME.white,
+    fontSize: 16,
     fontWeight: "700",
   },
-  tossInfoText: {
-    color: COLORS.primary,
+  teamScore: {
+    color: THEME.white,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  teamScoreMuted: {
+    color: THEME.textMuted,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  oversText: {
+    color: THEME.textSub,
     fontSize: 12,
-    textAlign: "center",
-    marginTop: 12,
     fontWeight: "500",
   },
-  subTabBar: {
+  ballRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
-    marginTop: 18,
-    marginBottom: 12,
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
   },
-  subTabItem: {
-    paddingVertical: 10,
-    marginRight: 24,
+  ballRowLabel: {
+    color: THEME.textSub,
+    fontSize: 11,
+    marginRight: 4,
   },
-  subTabItemActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
+  ballPill: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: THEME.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  subTabText: {
-    color: COLORS.textMuted,
-    fontSize: 13,
+  ballBoundary: {
+    backgroundColor: "#FFFFFF",
+  },
+  ballWicket: {
+    backgroundColor: THEME.danger,
+  },
+  ballPillText: {
+    color: THEME.white,
+    fontSize: 11,
     fontWeight: "700",
   },
-  subTabTextActive: {
-    color: COLORS.primary,
+  matchTeamsDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 6,
   },
-  postCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 16,
+  teamBlock: {
+    alignItems: "center",
+    gap: 6,
+  },
+  teamCrest: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: THEME.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  teamCrestText: {
+    color: THEME.white,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  teamLabel: {
+    color: THEME.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  scoreBlock: {
+    alignItems: "center",
+  },
+  scoreText: {
+    color: THEME.white,
+    fontSize: 26,
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  matchTimeText: {
+    color: THEME.danger,
+    fontSize: 11,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  heroFooter: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+  },
+  heroActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: THEME.white,
+    borderRadius: 10,
+    paddingVertical: 10,
+  },
+  heroActionBtnText: {
+    color: "#000000",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  // QUICK ACTIONS ROW
+  quickActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  quickActionCard: {
+    flex: 1,
+    backgroundColor: THEME.card,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    marginBottom: 14,
+    borderColor: THEME.border,
+    padding: 12,
+    gap: 2,
+  },
+  quickActionTitle: {
+    color: THEME.white,
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 6,
+  },
+  quickActionSub: {
+    color: THEME.textSub,
+    fontSize: 10,
+  },
+
+  // SECTION HEADER
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginTop: 6,
+  },
+  sectionEyebrow: {
+    color: THEME.textSub,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  sectionTitle: {
+    color: THEME.white,
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  sectionLink: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // POST CARD
+  postCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 16,
+    gap: 10,
   },
   postAuthorRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
   },
-  postAvatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.cardBorder,
-    justifyContent: "center",
+  postAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME.borderLight,
     alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
   postAvatarText: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  postAuthorName: {
-    color: COLORS.text,
-    fontSize: 14,
+    color: THEME.white,
+    fontSize: 12,
     fontWeight: "700",
   },
   postAuthorMeta: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 1,
-  },
-  postVenueMeta: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 1,
-  },
-  postMediaBox: {
-    height: 140,
-    borderRadius: 12,
-    backgroundColor: "#0F1E1B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  postCaptionText: {
-    color: COLORS.text,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  highlightBadgeBox: {
-    backgroundColor: "rgba(0, 230, 118, 0.08)",
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.primary,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-  },
-  highlightTitle: {
-    color: COLORS.orange,
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  highlightScore: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  highlightDetails: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-  },
-  postActionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 24,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
-  },
-  postActionGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  postActionCount: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  tabScrollContainer: {
-    flexDirection: "row",
-    marginTop: 6,
-    marginBottom: 6,
-  },
-  matchesSubTabItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginRight: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.card,
-  },
-  matchesSubTabItemActive: {
-    backgroundColor: COLORS.primary,
-  },
-  matchesSubTabText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  matchesSubTabTextActive: {
-    color: "#000000",
-  },
-  greenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-  },
-  matchCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    marginBottom: 12,
-  },
-  matchCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  leagueNameText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  matchScoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 6,
-  },
-  teamCol: {
-    alignItems: "center",
-    width: 90,
-  },
-  teamCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.cardBorder,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  teamCircleText: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  matchTeamTitle: {
-    color: COLORS.textSub,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  matchScoreBig: {
-    color: COLORS.text,
-    fontSize: 18,
-    fontWeight: "900",
-    marginTop: 2,
-  },
-  matchOverText: {
-    color: COLORS.primary,
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 1,
-  },
-  matchMiddleCol: {
-    alignItems: "center",
-  },
-  vsSmall: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  tossDecisionText: {
-    color: COLORS.primary,
-    fontSize: 10,
-    textAlign: "center",
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  matchFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
-  },
-  venueLocationText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
     flex: 1,
   },
-  followBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  followingBtnActive: {
-    backgroundColor: "rgba(0,230,118,0.15)",
-  },
-  followBtnText: {
-    color: COLORS.primary,
-    fontSize: 11,
+  postAuthorName: {
+    color: THEME.white,
+    fontSize: 14,
     fontWeight: "700",
   },
-  followingBtnTextActive: {
-    color: COLORS.primary,
-  },
-  scorecardBtn: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  scorecardBtnText: {
-    color: "#000000",
+  postTime: {
+    color: THEME.textSub,
     fontSize: 11,
+  },
+  postSportBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: THEME.badgeBg,
+    borderRadius: 6,
+  },
+  postSportBadgeText: {
+    color: THEME.textMuted,
+    fontSize: 9,
     fontWeight: "800",
   },
-  completedDateText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
+  postBody: {
+    color: THEME.textMuted,
+    fontSize: 13,
+    lineHeight: 20,
   },
-  winnerSummaryText: {
-    fontSize: 11,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  fixtureHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  fixtureDateHighlight: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  fixtureTimeBig: {
-    color: COLORS.text,
-    fontSize: 18,
-    fontWeight: "900",
-  },
-  fixtureTeamName: {
-    color: COLORS.textSub,
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  fixtureVenueText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 4,
-  },
-  fixtureLeagueText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-    marginBottom: 10,
-  },
-  fullWidthFollowBtn: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  fullWidthFollowText: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  myRoleRow: {
+  postInteractionRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 10,
+    gap: 16,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
+    borderTopColor: THEME.border,
   },
-  myRoleBadge: {
-    color: COLORS.primary,
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  viewRoleBtn: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-  },
-  viewRoleBtnText: {
-    color: COLORS.primary,
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  searchBarContainer: {
+  postStatBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.card,
+    gap: 5,
+  },
+  postStatText: {
+    color: THEME.textSub,
+    fontSize: 12,
+  },
+
+  // PLAYERS TAB
+  tabHeader: {
+    gap: 2,
+  },
+  tabSubtitle: {
+    color: THEME.textSub,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: THEME.card,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: THEME.border,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    marginTop: 10,
-    gap: 8,
   },
   searchInput: {
     flex: 1,
-    color: COLORS.text,
+    color: THEME.white,
     fontSize: 13,
+    padding: 0,
   },
-  categoryGrid: {
+  playerCard: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  categoryTile: {
-    width: (width - 48) / 3,
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    paddingVertical: 16,
     alignItems: "center",
+    backgroundColor: THEME.card,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: THEME.border,
+    padding: 14,
+    gap: 12,
   },
-  categoryIconCircle: {
+  playerAvatarLarge: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: 2,
+    backgroundColor: THEME.borderLight,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
   },
-  categoryTileText: {
-    color: COLORS.text,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  trendingCard: {
-    width: 200,
-    marginRight: 12,
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  trendingVideoThumb: {
-    height: 100,
-    backgroundColor: "#162532",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  trendingTitleText: {
-    color: COLORS.text,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  trendingMetaText: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    marginTop: 4,
-  },
-  recommendedTeamCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    gap: 12,
-  },
-  recTeamBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: COLORS.cardBorder,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  recTeamText: {
-    color: COLORS.primary,
-    fontWeight: "800",
+  playerAvatarLargeText: {
+    color: THEME.white,
     fontSize: 15,
-  },
-  recTeamName: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  recTeamRole: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-  },
-  followPillBtn: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  followPillText: {
-    color: "#000000",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  profileHeaderCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  profileAvatarOuterRing: {
-    width: 86,
-    height: 86,
-    borderRadius: 43,
-    borderWidth: 3,
-    borderColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  profileAvatarLargeText: {
-    color: COLORS.text,
-    fontSize: 34,
-    fontWeight: "900",
-  },
-  verifiedCheckBadge: {
-    position: "absolute",
-    bottom: 2,
-    right: 2,
-    backgroundColor: COLORS.primary,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  profileNameText: {
-    color: COLORS.text,
-    fontSize: 20,
     fontWeight: "800",
   },
-  profileHandleText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  profileLocationText: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  roleTagPill: {
-    backgroundColor: "rgba(0,230,118,0.15)",
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 20,
-    marginTop: 10,
-  },
-  roleTagText: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  skillsRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginTop: 10,
-  },
-  skillItem: {
-    color: COLORS.textSub,
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  profileButtonsRow: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-    marginTop: 18,
-  },
-  messageBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  messageBtnText: {
-    color: "#000000",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  shareProfileBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: COLORS.cardBorder,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  shareProfileBtnText: {
-    color: COLORS.text,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  countersBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    width: "100%",
-    backgroundColor: COLORS.bg,
-    borderRadius: 14,
-    paddingVertical: 12,
-    marginTop: 18,
-  },
-  counterItem: {
-    alignItems: "center",
+  playerInfo: {
     flex: 1,
   },
-  counterBig: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "800",
-    marginTop: 2,
+  playerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
-  counterLabel: {
-    color: COLORS.textMuted,
-    fontSize: 10,
+  playerName: {
+    color: THEME.white,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  playerRole: {
+    color: THEME.textMuted,
+    fontSize: 12,
     marginTop: 1,
   },
-  counterDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: COLORS.cardBorder,
+  playerMeta: {
+    color: THEME.textSub,
+    fontSize: 11,
+    marginTop: 2,
   },
-  profileSubTabsBar: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
-    marginTop: 18,
-  },
-  profileSubTabItem: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  profileSubTabItemActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
-  },
-  profileSubTabText: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  profileSubTabTextActive: {
-    color: COLORS.primary,
-  },
-  perfStatCard: {
-    width: 150,
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    padding: 12,
-    marginRight: 10,
+  connectBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: THEME.borderLight,
+    backgroundColor: THEME.badgeBg,
   },
-  perfScoreHighlight: {
-    color: COLORS.primary,
-    fontSize: 20,
-    fontWeight: "900",
-  },
-  perfDetailText: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    marginTop: 4,
-  },
-  perfOpponentText: {
-    color: COLORS.text,
+  connectBtnText: {
+    color: THEME.white,
     fontSize: 12,
     fontWeight: "700",
-    marginTop: 6,
   },
-  perfDateText: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    marginTop: 2,
-  },
-  formRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  formCol: {
-    alignItems: "center",
-    gap: 8,
-  },
-  formBar: {
-    width: 36,
-    backgroundColor: COLORS.primary,
-    borderRadius: 6,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingBottom: 4,
-  },
-  formBarScoreText: {
-    color: "#000000",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  formBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  formBadgeText: {
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  statsCategoryCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    marginBottom: 12,
-  },
-  statsCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  statsCardTitle: {
-    color: COLORS.text,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  formatPillText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  statsGridRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  statCell: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statCellLabel: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-  },
-  statCellVal: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "800",
-    marginTop: 2,
-  },
-  statCellMini: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statMiniLabel: {
-    color: COLORS.textMuted,
-    fontSize: 9,
-  },
-  statMiniVal: {
-    color: COLORS.text,
-    fontSize: 13,
-    fontWeight: "700",
-    marginTop: 2,
-  },
+
+  // GAMES TAB
   filterPillsRow: {
     flexDirection: "row",
     gap: 8,
@@ -1990,138 +1281,456 @@ const styles = StyleSheet.create({
   filterPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: COLORS.card,
+    borderRadius: 8,
+    backgroundColor: THEME.card,
+    borderWidth: 1,
+    borderColor: THEME.border,
   },
   filterPillActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: THEME.white,
+    borderColor: THEME.white,
   },
   filterPillText: {
-    color: COLORS.textMuted,
+    color: THEME.textSub,
     fontSize: 11,
     fontWeight: "700",
   },
   filterPillTextActive: {
     color: "#000000",
+    fontWeight: "800",
   },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 65,
-    backgroundColor: COLORS.bg,
+  gameCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 16,
+    gap: 12,
+  },
+  gameCardHeader: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
-    paddingHorizontal: 8,
-  },
-  bottomNavItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 60,
-  },
-  bottomNavLabel: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  bottomNavLabelActive: {
-    color: COLORS.primary,
-  },
-  floatingCenterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    bottom: 12,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  profileNavCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.cardBorder,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  profileNavText: {
-    color: COLORS.text,
+  gameVenue: {
+    color: THEME.textSub,
+    fontSize: 11,
+  },
+  upcomingBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: THEME.badgeBg,
+    borderRadius: 4,
+  },
+  upcomingBadgeText: {
+    color: THEME.white,
     fontSize: 10,
     fontWeight: "800",
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "flex-end",
-  },
-  createModalCard: {
-    backgroundColor: COLORS.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: "80%",
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  modalHeaderRow: {
+  gameMatchup: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingVertical: 4,
   },
-  modalTitle: {
-    color: COLORS.text,
-    fontSize: 18,
+  gameTeamBlock: {
+    flex: 1,
+  },
+  gameTeamName: {
+    color: THEME.white,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  gameTeamScore: {
+    color: THEME.white,
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  gameTeamSub: {
+    color: THEME.textSub,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  vsText: {
+    color: THEME.textSub,
+    fontSize: 12,
+    fontWeight: "800",
+    marginHorizontal: 12,
+  },
+  gameCardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+  },
+  gameRequirement: {
+    color: THEME.textSub,
+    fontSize: 11,
+    flex: 1,
+  },
+  gameScoreBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    backgroundColor: THEME.white,
+    borderRadius: 6,
+  },
+  gameScoreBtnText: {
+    color: "#000000",
+    fontSize: 11,
     fontWeight: "800",
   },
-  modalSubtitle: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  createActionRow: {
+  gameReminderBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    backgroundColor: COLORS.bg,
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 10,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: THEME.badgeBg,
+    borderRadius: 6,
+  },
+  gameReminderBtnText: {
+    color: THEME.white,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  // SCORES TAB / CONSOLE
+  consoleCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: THEME.border,
+    padding: 16,
+    gap: 14,
   },
-  createActionHighlight: {
-    borderColor: COLORS.primary,
-    backgroundColor: "rgba(0, 230, 118, 0.05)",
-  },
-  actionIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.cardBorder,
-    justifyContent: "center",
+  consoleHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  actionRowTitle: {
-    color: COLORS.text,
+  matchCodeText: {
+    color: THEME.textSub,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  cricketConsole: {
+    alignItems: "center",
+    paddingVertical: 8,
+    gap: 6,
+  },
+  cricketMainScore: {
+    color: THEME.white,
+    fontSize: 34,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  cricketOversDisplay: {
+    color: THEME.textMuted,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  scoreButtonsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+  scoreActionBtn: {
+    width: 52,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: THEME.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scoreActionBtnText: {
+    color: THEME.white,
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  scoreActionWicket: {
+    backgroundColor: THEME.danger,
+  },
+  scoreActionReset: {
+    width: 60,
+    backgroundColor: THEME.badgeBg,
+  },
+  scoreActionResetText: {
+    color: THEME.textSub,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  footballConsole: {
+    paddingVertical: 8,
+  },
+  footballScoreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  footballTeamCol: {
+    alignItems: "center",
+    gap: 6,
+  },
+  footballTeamName: {
+    color: THEME.white,
     fontSize: 14,
     fontWeight: "700",
   },
-  actionRowDesc: {
-    color: COLORS.textMuted,
+  footballScoreDigit: {
+    color: THEME.white,
+    fontSize: 36,
+    fontWeight: "900",
+  },
+  scoreAdjustRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  adjustBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: THEME.border,
+    borderRadius: 6,
+  },
+  adjustBtnText: {
+    color: THEME.white,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  footballCenterCol: {
+    alignItems: "center",
+  },
+  footballColon: {
+    color: THEME.textSub,
+    fontSize: 28,
+    fontWeight: "800",
+  },
+  footballMinute: {
+    color: THEME.danger,
     fontSize: 11,
+    fontWeight: "700",
+  },
+  historyCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 14,
+    gap: 4,
+  },
+  historyMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  historySport: {
+    color: THEME.textSub,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  historyDate: {
+    color: THEME.textSub,
+    fontSize: 11,
+  },
+  historyTeams: {
+    color: THEME.white,
+    fontSize: 14,
+    fontWeight: "700",
     marginTop: 2,
+  },
+  historyResult: {
+    color: THEME.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // PROFILE TAB
+  profileCard: {
+    backgroundColor: THEME.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 20,
+    alignItems: "center",
+    gap: 6,
+  },
+  profileAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: THEME.borderLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  profileAvatarText: {
+    color: THEME.white,
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  profileName: {
+    color: THEME.white,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  profileHandle: {
+    color: THEME.textSub,
+    fontSize: 12,
+  },
+  profileBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: THEME.badgeBg,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  profileBadgeText: {
+    color: THEME.white,
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  statsRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+  },
+  statBox: {
+    alignItems: "center",
+  },
+  statValue: {
+    color: THEME.white,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  statLabel: {
+    color: THEME.textSub,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  settingsSection: {
+    backgroundColor: THEME.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 16,
+    gap: 12,
+  },
+  settingsHeader: {
+    color: THEME.textSub,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  settingsItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 8,
+  },
+  settingsItemTitle: {
+    color: THEME.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // BOTTOM NAVIGATION
+  bottomNav: {
+    flexDirection: "row",
+    backgroundColor: THEME.headerBg,
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 12,
+    height: Platform.OS === "ios" ? 82 : 64,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+  },
+  navLabel: {
+    color: THEME.textSub,
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  navLabelActive: {
+    color: THEME.white,
+    fontWeight: "800",
+  },
+
+  // MODAL
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: THEME.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 20,
+    gap: 14,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  modalTitle: {
+    color: THEME.white,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  modalInput: {
+    backgroundColor: THEME.bg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    color: THEME.white,
+    fontSize: 13,
+    padding: 12,
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+  },
+  modalCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  modalCancelText: {
+    color: THEME.textMuted,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  modalSubmitBtn: {
+    backgroundColor: THEME.white,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  modalSubmitText: {
+    color: "#000000",
+    fontSize: 13,
+    fontWeight: "800",
   },
 });
 
