@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
-import { PageHeader, Button, EmptyState } from "../components/ezkora/CommonUI";
+import { PageHeader, Button, EmptyState, Avatar } from "../components/ezkora/CommonUI";
 import { PostCard } from "../components/ezkora/PostCard";
-import { PostComposer } from "../components/ezkora/PostComposer";
 import { Scoreboard } from "../components/ezkora/Scoreboard";
 import { IconPlus, IconArrowUpRight, IconClock, IconMapPin, IconMessageCircle } from "../components/ezkora/EzkoraIcons";
 
@@ -13,8 +12,7 @@ export default function HomePage() {
   const me = useEzkoraStore((s) => s.me);
   const posts = useEzkoraStore((s) => s.posts);
   const games = useEzkoraStore((s) => s.games);
-
-  const [composerOpen, setComposerOpen] = useState(false);
+  const openComposer = useEzkoraStore((s) => s.openComposer);
 
   // Filter posts and games by active sport lens
   const sportPosts = posts.filter((p) => p.sport === activeSportName);
@@ -29,12 +27,12 @@ export default function HomePage() {
         body={`A focused place for ${sport.name.toLowerCase()} athletes to connect, organize games, and share what is happening on the field.`}
         action={
           <Button
-            onClick={() => setComposerOpen(true)}
+            onClick={openComposer}
             style={{ backgroundColor: sport.accent }}
             className="text-white shadow-md hover:brightness-105"
           >
             <IconPlus size={16} />
-            <span>Share a moment</span>
+            <span>Create Post</span>
           </Button>
         }
       />
@@ -43,6 +41,56 @@ export default function HomePage() {
       <div className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* Left: Feed */}
         <section className="min-w-0 space-y-5">
+          {/* Inline Post Creator Box */}
+          <div className="rounded-3xl border border-[#DDD6C8] bg-white p-4 sm:p-5 shadow-sm transition-all hover:border-[#18181b]/30">
+            <div className="flex items-center gap-3">
+              <Avatar player={me} size="md" />
+              <button
+                type="button"
+                onClick={openComposer}
+                className="flex-1 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] px-4 py-3 text-left text-xs sm:text-[13px] font-medium text-[#71807d] hover:bg-white hover:border-[#18181b]/40 hover:text-[#253638] transition-all"
+              >
+                {me?.displayName
+                  ? `What's happening in your ${sport.name} today, ${me.displayName.split(" ")[0]}?`
+                  : `Share a ${sport.name} match highlight, score, or thought...`}
+              </button>
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-[#DDD6C8]/60 pt-3 text-xs font-bold text-[#71807d]">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={openComposer}
+                  className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 hover:bg-[#FAF7F2] hover:text-[#253638] transition-colors"
+                >
+                  <span className="text-emerald-600">📷</span>
+                  <span>Photo</span>
+                </button>
+                <Link
+                  to="/scores"
+                  className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 hover:bg-[#FAF7F2] hover:text-[#253638] transition-colors"
+                >
+                  <span className="text-amber-600">🏆</span>
+                  <span>Live Score</span>
+                </Link>
+                <Link
+                  to="/games"
+                  className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 hover:bg-[#FAF7F2] hover:text-[#253638] transition-colors"
+                >
+                  <span className="text-blue-600">📅</span>
+                  <span>Match</span>
+                </Link>
+              </div>
+              <Button
+                onClick={openComposer}
+                style={{ backgroundColor: sport.accent }}
+                className="text-white text-xs px-3.5 py-1.5 shadow-xs"
+              >
+                <IconPlus size={14} />
+                <span>Create Post</span>
+              </Button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <div>
               <p className="mono-font text-[10px] uppercase tracking-[0.18em] text-[#71807d]">
@@ -66,7 +114,7 @@ export default function HomePage() {
               title={`Your ${sport.name.toLowerCase()} feed is open.`}
               body={`There are no ${sport.name.toLowerCase()} posts yet. Be the first to share a real moment from your court or field.`}
               action={
-                <Button onClick={() => setComposerOpen(true)}>
+                <Button onClick={openComposer}>
                   <IconPlus size={15} />
                   <span>Create a post</span>
                 </Button>
@@ -169,9 +217,6 @@ export default function HomePage() {
           </section>
         </aside>
       </div>
-
-      {/* Post Composer Modal */}
-      {composerOpen && <PostComposer onClose={() => setComposerOpen(false)} />}
     </main>
   );
 }

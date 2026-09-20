@@ -87,6 +87,26 @@ export const useEzkoraStore = create((set, get) => ({
   friends: [],
   isLoading: false,
   lastSynced: null,
+  composerOpen: false,
+  appSettings: {
+    notifications: true,
+    soundEffects: true,
+    syncInterval: "realtime",
+    allowDiscovery: true,
+  },
+
+  openComposer: () => set({ composerOpen: true }),
+  closeComposer: () => set({ composerOpen: false }),
+
+  updateAppSettings: (partial) => {
+    set((state) => {
+      const updated = { ...state.appSettings, ...partial };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("ezkora_app_settings", JSON.stringify(updated));
+      }
+      return { appSettings: updated };
+    });
+  },
 
   setSport: (sportName) => {
     const found = SPORTS.find((s) => s.name === sportName);
@@ -318,7 +338,7 @@ export const useEzkoraStore = create((set, get) => ({
     get().notifyChange();
   },
 
-  addGame: async ({ sport, title, scheduledAt, location }) => {
+  addGame: async ({ sport, title, scheduledAt, location, invitedPlayers = [] }) => {
     const me = get().me;
     try {
       const res = await fetch("/api/games", {
@@ -329,6 +349,7 @@ export const useEzkoraStore = create((set, get) => ({
           title,
           scheduledAt,
           location,
+          invitedPlayers,
           host: {
             id: me.id,
             publicId: me.publicId,
@@ -347,6 +368,74 @@ export const useEzkoraStore = create((set, get) => ({
       console.error("Failed to create game:", e);
     }
     get().notifyChange();
+  },
+
+  invitePlayerToGame: async (gameId, playerOrId) => {
+    let targetPlayer = null;
+    if (typeof playerOrId === "object" && playerOrId !== null) {
+      targetPlayer = playerOrId;
+    } else {
+      const cleanId = String(playerOrId || "").trim().toUpperCase();
+      targetPlayer = get().players.find(
+        (p) =>
+          p.publicId?.toUpperCase() === cleanId ||
+          p.displayName?.toLowerCase() === cleanId.toLowerCase() ||
+          String(p.id) === String(playerOrId)
+      );
+    }
+    if (!targetPlayer) {
+      return { success: false, error: "Player not found with that ID" };
+    }
+
+    try {
+      const res = await fetch("/api/games/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gameId,
+          player: {
+            id: targetPlayer.id,
+            publicId: targetPlayer.publicId,
+            displayName: targetPlayer.displayName,
+            avatarUrl: targetPlayer.avatarUrl,
+          },
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.db) {
+          set({ games: data.db.games || [] });
+        }
+        get().notifyChange();
+        return { success: true, player: targetPlayer };
+      }
+    } catch (e) {
+      console.error("Failed to invite player:", e);
+    }
+    get().notifyChange();
+    return { success: false, error: "Failed to send invite" };
+  },
+
+  recordMatchScore: async ({ gameId, score, winnerId, details }) => {
+    try {
+      const res = await fetch("/api/games/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameId, score, winnerId, details }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.db) {
+          set({ games: data.db.games || [] });
+        }
+        get().notifyChange();
+        return { success: true };
+      }
+    } catch (e) {
+      console.error("Failed to record match score:", e);
+    }
+    get().notifyChange();
+    return { success: false };
   },
 
   joinGame: async (gameId) => {

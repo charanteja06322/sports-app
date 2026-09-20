@@ -11,10 +11,13 @@ import GameDetailPage from './pages/GameDetailPage';
 import ScoresPage from './pages/ScoresPage';
 import EzkoraSettingsPage from './pages/EzkoraSettingsPage';
 import LoginPage from './pages/LoginPage';
+import { PostComposer } from './components/ezkora/PostComposer';
 import { useEzkoraStore } from './store/ezkoraStore';
 
 function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const composerOpen = useEzkoraStore((s) => s.composerOpen);
+  const closeComposer = useEzkoraStore((s) => s.closeComposer);
 
   return (
     <div className="ezkora-app ezkora-noise flex min-h-screen">
@@ -48,6 +51,9 @@ function AppLayout({ children }) {
         </div>
         <MobileBottomNav />
       </div>
+
+      {/* Global Post Composer */}
+      {composerOpen && <PostComposer onClose={closeComposer} />}
     </div>
   );
 }

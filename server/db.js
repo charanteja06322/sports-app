@@ -124,6 +124,12 @@ export async function initDatabase() {
           created_by UUID REFERENCES users(id) ON DELETE SET NULL,
           created_at TIMESTAMPTZ DEFAULT NOW()
         );
+
+        ALTER TABLE matches ADD COLUMN IF NOT EXISTS location TEXT;
+        ALTER TABLE matches ADD COLUMN IF NOT EXISTS score TEXT;
+        ALTER TABLE matches ADD COLUMN IF NOT EXISTS winner_id TEXT;
+        ALTER TABLE matches ADD COLUMN IF NOT EXISTS roster JSONB DEFAULT '[]'::jsonb;
+        ALTER TABLE posts ALTER COLUMN user_id DROP NOT NULL;
       `);
       isCloudConnected = true;
       console.log("[EZKORA DB] Connected to Supabase / PostgreSQL and verified schema successfully.");
@@ -151,6 +157,29 @@ function formatPlayer(u) {
     primarySport: u.primary_sport || u.primarySport || "Football",
     createdAt: u.created_at || u.createdAt,
   };
+}
+
+export async function resolveUserUuid(player) {
+  if (!player) return null;
+  const rawId = player.id || player;
+  if (typeof rawId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId)) {
+    return rawId;
+  }
+  if (isCloudConnected && pool) {
+    try {
+      if (player.publicId) {
+        const byPublic = await pool.query(`SELECT id FROM users WHERE player_id = $1 LIMIT 1`, [player.publicId]);
+        if (byPublic.rows.length > 0) return byPublic.rows[0].id;
+      }
+      if (player.email) {
+        const byEmail = await pool.query(`SELECT id FROM users WHERE LOWER(email) = $1 LIMIT 1`, [player.email.toLowerCase()]);
+        if (byEmail.rows.length > 0) return byEmail.rows[0].id;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 // 1. Get Feed
@@ -223,17 +252,34 @@ export async function dbGetFeed() {
         };
       });
 
-      const games = matchesRes.rows.map((m) => ({
-        id: m.id,
-        sport: m.sport || "Football",
-        title: m.team1_name && m.team2_name ? `${m.team1_name} vs ${m.team2_name}` : m.match_code ? `Match ${m.match_code}` : "Game Fixture",
-        location: "Main Ground",
-        scheduledAt: m.match_date,
-        status: m.status || "open",
-        host: playersMap[m.created_by] || players[0] || null,
-        players: [],
-        createdAt: m.created_at,
-      }));
+      const games = matchesRes.rows.map((m) => {
+        let roster = [];
+        if (m.roster) {
+          try {
+            roster = typeof m.roster === "string" ? JSON.parse(m.roster) : m.roster;
+          } catch {
+            roster = [];
+          }
+        }
+        if (!Array.isArray(roster) || roster.length === 0) {
+          const hostPlayer = playersMap[m.created_by] || players[0] || null;
+          if (hostPlayer) roster = [{ player: hostPlayer, status: "confirmed" }];
+        }
+
+        return {
+          id: m.id,
+          sport: m.sport || "Football",
+          title: m.team1_name && m.team2_name ? `${m.team1_name} vs ${m.team2_name}` : m.team1_name || (m.match_code ? `Match ${m.match_code}` : "Game Fixture"),
+          location: m.location || "Main Arena",
+          scheduledAt: m.match_date,
+          status: m.status || "open",
+          score: m.score || null,
+          winnerId: m.winner_id || null,
+          host: playersMap[m.created_by] || players[0] || null,
+          players: roster,
+          createdAt: m.created_at,
+        };
+      });
 
       return { posts, games, players, friends: [] };
     } catch (e) {
@@ -429,11 +475,12 @@ export async function dbCreatePost({ sport, author, caption, imagePath }) {
 
   if (isCloudConnected && pool) {
     try {
+      const authorUuid = await resolveUserUuid(author);
       const res = await pool.query(
         `INSERT INTO posts (user_id, sport, content, image_url, likes_count, comments_count)
          VALUES ($1, $2, $3, $4, 0, 0)
          RETURNING *`,
-        [author?.id, cleanSport, cleanCaption, imagePath || null]
+        [authorUuid, cleanSport, cleanCaption, imagePath || null]
       );
       const row = res.rows[0];
       return {
@@ -560,18 +607,29 @@ export async function dbAddComment(postId, author, body) {
 }
 
 // 9. Create Game / Match
-export async function dbCreateGame({ sport, title, location, scheduledAt, host }) {
+export async function dbCreateGame({ sport, title, location, scheduledAt, host, invitedPlayers = [] }) {
   const cleanSport = sport || "Football";
   const cleanTitle = (title || "").trim();
   const scheduled = scheduledAt || new Date().toISOString();
+  const hostPlayer = formatPlayer(host);
+  const initialRoster = [{ player: hostPlayer, status: "confirmed" }];
+
+  if (Array.isArray(invitedPlayers)) {
+    for (const inv of invitedPlayers) {
+      if (inv && inv.id !== hostPlayer.id) {
+        initialRoster.push({ player: formatPlayer(inv), status: "confirmed" });
+      }
+    }
+  }
 
   if (isCloudConnected && pool) {
     try {
+      const hostUuid = await resolveUserUuid(hostPlayer);
       const res = await pool.query(
-        `INSERT INTO matches (sport, match_code, match_date, status, team1_name, created_by)
-         VALUES ($1, $2, $3, 'scheduled', $4, $5)
+        `INSERT INTO matches (sport, match_code, match_date, status, team1_name, created_by, location, roster)
+         VALUES ($1, $2, $3, 'open', $4, $5, $6, $7)
          RETURNING *`,
-        [cleanSport, "M-" + Math.floor(1000 + Math.random() * 9000), scheduled, cleanTitle, host?.id]
+        [cleanSport, "M-" + Math.floor(1000 + Math.random() * 9000), scheduled, cleanTitle, hostUuid, location || "Main Stadium", JSON.stringify(initialRoster)]
       );
       const row = res.rows[0];
       return {
@@ -581,8 +639,10 @@ export async function dbCreateGame({ sport, title, location, scheduledAt, host }
         location: location || "Main Stadium",
         scheduledAt: scheduled,
         status: "open",
-        host: formatPlayer(host),
-        players: [{ player: formatPlayer(host), status: "confirmed" }],
+        score: null,
+        winnerId: null,
+        host: hostPlayer,
+        players: initialRoster,
         createdAt: row.created_at,
       };
     } catch (e) {
@@ -598,8 +658,10 @@ export async function dbCreateGame({ sport, title, location, scheduledAt, host }
     location: location || "Venue to be shared",
     scheduledAt: scheduled,
     status: "open",
-    host: formatPlayer(host),
-    players: [{ player: formatPlayer(host), status: "confirmed" }],
+    score: null,
+    winnerId: null,
+    host: hostPlayer,
+    players: initialRoster,
     createdAt: new Date().toISOString(),
   };
   if (!local.games) local.games = [];
@@ -608,9 +670,69 @@ export async function dbCreateGame({ sport, title, location, scheduledAt, host }
   return newGame;
 }
 
-// 10. Join Game
+// 10. Join Game / Add Player to Roster
 export async function dbJoinGame(gameId, player) {
+  const p = formatPlayer(player);
+  if (isCloudConnected && pool) {
+    try {
+      const res = await pool.query(`SELECT roster FROM matches WHERE id::text = $1 LIMIT 1`, [String(gameId)]);
+      if (res.rows.length > 0) {
+        let roster = res.rows[0].roster || [];
+        if (typeof roster === "string") {
+          try { roster = JSON.parse(roster); } catch { roster = []; }
+        }
+        if (!Array.isArray(roster)) roster = [];
+        if (!roster.some((item) => item.player?.id === p.id || item.player?.publicId === p.publicId)) {
+          roster.push({ player: p, status: "confirmed" });
+          await pool.query(`UPDATE matches SET roster = $1 WHERE id::text = $2`, [JSON.stringify(roster), String(gameId)]);
+        }
+      }
+    } catch (e) {
+      console.error("[EZKORA DB] Join match error Supabase:", e.message);
+    }
+  }
+
+  const local = readLocalDb();
+  const game = (local.games || []).find((g) => String(g.id) === String(gameId));
+  if (game) {
+    if (!game.players) game.players = [];
+    if (!game.players.some((item) => item.player?.id === p.id || item.player?.publicId === p.publicId)) {
+      game.players.push({ player: p, status: "confirmed" });
+      writeLocalDb(local);
+    }
+  }
   return { success: true };
+}
+
+// 10b. Invite Player
+export async function dbInviteToGame(gameId, invitedPlayer) {
+  return dbJoinGame(gameId, invitedPlayer);
+}
+
+// 10c. Record Match Score
+export async function dbRecordScore({ gameId, score, winnerId, details }) {
+  const cleanScore = String(score || "").trim();
+  if (isCloudConnected && pool) {
+    try {
+      await pool.query(
+        `UPDATE matches SET score = $1, winner_id = $2, status = 'finished' WHERE id::text = $3`,
+        [cleanScore, winnerId ? String(winnerId) : null, String(gameId)]
+      );
+    } catch (e) {
+      console.error("[EZKORA DB] Record score error Supabase:", e.message);
+    }
+  }
+
+  const local = readLocalDb();
+  const game = (local.games || []).find((g) => String(g.id) === String(gameId));
+  if (game) {
+    game.score = cleanScore;
+    game.winnerId = winnerId;
+    game.status = "finished";
+    game.completedAt = new Date().toISOString();
+    writeLocalDb(local);
+  }
+  return { success: true, score: cleanScore };
 }
 
 // 11. Clear all data for clean slate

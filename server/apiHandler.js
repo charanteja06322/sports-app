@@ -10,6 +10,8 @@ import {
   dbAddComment,
   dbCreateGame,
   dbJoinGame,
+  dbInviteToGame,
+  dbRecordScore,
   dbResetAll,
   dbGoogleLogin,
 } from "./db.js";
@@ -152,6 +154,22 @@ export function handleEzkoraApi(req, res, next) {
       if (req.method === "POST" && url === "/api/games/join") {
         const body = await parseBody(req);
         const result = await dbJoinGame(body.gameId, body.player);
+        const db = await dbGetFeed();
+        return sendJson(res, 200, { success: true, ...result, db });
+      }
+
+      // 10b. POST /api/games/invite
+      if (req.method === "POST" && url === "/api/games/invite") {
+        const body = await parseBody(req);
+        const result = await dbInviteToGame(body.gameId, body.player);
+        const db = await dbGetFeed();
+        return sendJson(res, 200, { success: true, ...result, db });
+      }
+
+      // 10c. POST /api/games/score
+      if (req.method === "POST" && url === "/api/games/score") {
+        const body = await parseBody(req);
+        const result = await dbRecordScore(body);
         const db = await dbGetFeed();
         return sendJson(res, 200, { success: true, ...result, db });
       }

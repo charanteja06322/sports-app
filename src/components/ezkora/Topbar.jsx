@@ -11,6 +11,7 @@ export function Topbar({ openMenu }) {
   const allAthletes = useEzkoraStore((s) => s.allAthletes);
   const switchAthlete = useEzkoraStore((s) => s.switchAthlete);
   const logout = useEzkoraStore((s) => s.logout);
+  const openComposer = useEzkoraStore((s) => s.openComposer);
 
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -58,6 +59,17 @@ export function Topbar({ openMenu }) {
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>LIVE SYNC</span>
         </div>
+
+        {/* Quick Post Button */}
+        <button
+          type="button"
+          onClick={openComposer}
+          style={{ backgroundColor: sport.accent }}
+          className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-bold text-white shadow-xs hover:brightness-110 active:scale-95 transition-all"
+        >
+          <IconPlus size={15} />
+          <span>Post</span>
+        </button>
 
         <Link
           to="/players"

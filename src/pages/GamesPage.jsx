@@ -1,19 +1,38 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
-import { PageHeader, Button, EmptyState, Field } from "../components/ezkora/CommonUI";
-import { IconPlus, IconCalendar, IconClock, IconMapPin, IconArrowUpRight, IconX } from "../components/ezkora/EzkoraIcons";
+import { PageHeader, Button, EmptyState, Field, Avatar } from "../components/ezkora/CommonUI";
+import {
+  IconPlus,
+  IconCalendar,
+  IconClock,
+  IconMapPin,
+  IconArrowUpRight,
+  IconX,
+  IconTrophy,
+  IconUsers,
+  SportIcon,
+} from "../components/ezkora/EzkoraIcons";
 
 export default function GamesPage() {
   const activeSportName = useEzkoraStore((s) => s.activeSport);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
   const games = useEzkoraStore((s) => s.games);
+  const allAthletes = useEzkoraStore((s) => s.allAthletes);
   const addGame = useEzkoraStore((s) => s.addGame);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [formSport, setFormSport] = useState(activeSportName);
   const [formTitle, setFormTitle] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formLocation, setFormLocation] = useState("");
+  const [invitePlayerId, setInvitePlayerId] = useState("");
+  const [selectedInviteAthletes, setSelectedInviteAthletes] = useState([]);
+
+  // Keep form sport synced when active sport changes
+  React.useEffect(() => {
+    setFormSport(activeSportName);
+  }, [activeSportName]);
 
   const sportGames = games.filter((g) => g.sport === activeSportName);
 
@@ -21,25 +40,48 @@ export default function GamesPage() {
     e.preventDefault();
     if (!formTitle.trim()) return;
 
+    // Find any player entered by ID
+    let invited = [...selectedInviteAthletes];
+    if (invitePlayerId.trim()) {
+      const cleanId = invitePlayerId.trim().toUpperCase();
+      const found = allAthletes.find(
+        (a) => a.publicId?.toUpperCase() === cleanId || a.displayName?.toLowerCase() === cleanId.toLowerCase()
+      );
+      if (found && !invited.some((i) => i.id === found.id)) {
+        invited.push(found);
+      }
+    }
+
     addGame({
-      sport: activeSportName,
+      sport: formSport,
       title: formTitle.trim(),
       scheduledAt: formDate ? new Date(formDate).toISOString() : new Date().toISOString(),
-      location: formLocation.trim() || "Local Arena",
+      location: formLocation.trim() || "Local Sports Arena",
+      invitedPlayers: invited,
     });
 
     setFormTitle("");
     setFormDate("");
     setFormLocation("");
+    setInvitePlayerId("");
+    setSelectedInviteAthletes([]);
     setCreateOpen(false);
+  };
+
+  const toggleInviteAthlete = (athlete) => {
+    if (selectedInviteAthletes.some((a) => a.id === athlete.id)) {
+      setSelectedInviteAthletes(selectedInviteAthletes.filter((a) => a.id !== athlete.id));
+    } else {
+      setSelectedInviteAthletes([...selectedInviteAthletes, athlete]);
+    }
   };
 
   return (
     <main className="mx-auto max-w-[1120px] px-5 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
       <PageHeader
-        eyebrow={`${sport.name} / Games & Matchups`}
-        title="Make a plan."
-        body={`Create or join a ${sport.name.toLowerCase()} game. Your sport lens keeps fixtures focused on what you actually want to play.`}
+        eyebrow={`${sport.name} / Match Fixtures & Roster`}
+        title="Create & Organize Matches."
+        body={`Create a match, invite players via Player ID or direct invite, and record official scores that sync directly to everyone's profile.`}
         action={
           <Button
             onClick={() => setCreateOpen(true)}
@@ -47,7 +89,7 @@ export default function GamesPage() {
             className="text-white shadow-md hover:brightness-105"
           >
             <IconPlus size={16} />
-            <span>Create a game</span>
+            <span>Create a match</span>
           </Button>
         }
       />
@@ -56,12 +98,12 @@ export default function GamesPage() {
         {sportGames.length === 0 ? (
           <EmptyState
             icon={<IconCalendar size={24} />}
-            title={`No ${sport.name.toLowerCase()} games scheduled yet.`}
-            body="Start with a title, a time, and a location. Teammates can RSVP and join rosters immediately."
+            title={`No ${sport.name.toLowerCase()} matches scheduled yet.`}
+            body="Start a new match, invite teammates or opponents via their Player ID, and score live."
             action={
               <Button onClick={() => setCreateOpen(true)}>
                 <IconPlus size={15} />
-                <span>Create the first game</span>
+                <span>Create the first match</span>
               </Button>
             }
           />
@@ -74,22 +116,30 @@ export default function GamesPage() {
                 className="group rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#277863]/60 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span
-                    className="rounded-full px-3 py-1 text-[11px] font-bold"
-                    style={{
-                      color: sport.deep,
-                      backgroundColor: sport.wash,
-                    }}
-                  >
-                    {game.status.toUpperCase()}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+                        game.status === "finished"
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                          : "text-white"
+                      }`}
+                      style={game.status !== "finished" ? { backgroundColor: sport.deep } : undefined}
+                    >
+                      {game.status === "finished" ? "COMPLETED" : "OPEN"}
+                    </span>
+                    {game.score && (
+                      <span className="mono-font rounded-full bg-[#18181b] px-3 py-0.5 text-[11px] font-bold text-white shadow-xs">
+                        {game.score}
+                      </span>
+                    )}
+                  </div>
                   <IconArrowUpRight
                     size={18}
                     className="text-[#71807d] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                   />
                 </div>
 
-                <h3 className="display-font mt-5 text-xl font-bold leading-snug text-[#253638]">
+                <h3 className="display-font mt-4 text-xl font-bold leading-snug text-[#253638]">
                   {game.title}
                 </h3>
 
@@ -114,10 +164,17 @@ export default function GamesPage() {
                   )}
                 </div>
 
+                {/* Match Roster / Participants */}
                 <div className="mt-6 flex items-center justify-between border-t border-[#DDD6C8] pt-4 text-xs font-semibold text-[#71807d]">
-                  <span>Hosted by {game.host?.displayName || "Captain"}</span>
-                  <span className="text-[#277863] font-bold">
-                    {game.players?.length || 1} playing →
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-[#71807d]">Host:</span>
+                    <span className="font-bold text-[#253638]">
+                      {game.host?.displayName || "Captain"}
+                    </span>
+                  </div>
+                  <span className="text-[#277863] font-bold flex items-center gap-1">
+                    <IconUsers size={14} />
+                    {game.players?.length || 1} on roster →
                   </span>
                 </div>
               </Link>
@@ -126,12 +183,12 @@ export default function GamesPage() {
         )}
       </div>
 
-      {/* Create Game Modal */}
+      {/* Create Match Modal with Player Invites */}
       {createOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-xs">
           <form
             onSubmit={handleSubmit}
-            className="ezkora-fade w-full max-w-[500px] rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
+            className="ezkora-fade max-h-[92vh] overflow-y-auto w-full max-w-[520px] rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
           >
             <div className="flex justify-between items-start">
               <div>
@@ -139,10 +196,10 @@ export default function GamesPage() {
                   className="mono-font text-[10px] uppercase tracking-[0.2em] font-semibold"
                   style={{ color: sport.deep }}
                 >
-                  New {sport.name} Game
+                  Create Match Fixture
                 </p>
                 <h2 className="display-font mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#253638]">
-                  Set the fixture details.
+                  Set match details & invite.
                 </h2>
               </div>
               <button
@@ -155,13 +212,28 @@ export default function GamesPage() {
             </div>
 
             <div className="mt-6 space-y-4">
-              <Field label="Fixture Title">
+              {/* Sport Selector */}
+              <Field label="Sport Discipline">
+                <select
+                  value={formSport}
+                  onChange={(e) => setFormSport(e.target.value)}
+                  className="field font-semibold"
+                >
+                  {SPORTS.map((s) => (
+                    <option key={s.name} value={s.name}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Match / Fixture Title">
                 <input
                   required
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder={`Saturday ${sport.name.toLowerCase()} session`}
+                  placeholder={`e.g. ${formSport} Singles Championship, Evening 5v5`}
                   className="field"
                 />
               </Field>
@@ -176,15 +248,66 @@ export default function GamesPage() {
                 />
               </Field>
 
-              <Field label="Where (Venue or Field)">
+              <Field label="Venue / Court Location">
                 <input
                   type="text"
                   value={formLocation}
                   onChange={(e) => setFormLocation(e.target.value)}
-                  placeholder="e.g. Central Sports Complex, Pitch 4"
+                  placeholder="e.g. Central Badminton Court 2, Turf Ground"
                   className="field"
                 />
               </Field>
+
+              {/* Invite Players by Player ID */}
+              <div className="rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-4">
+                <p className="mono-font text-[10px] font-bold uppercase tracking-wider text-[#277863] mb-1">
+                  Invite Players (Via Player ID or Roster)
+                </p>
+                <p className="text-[11px] text-[#71807d] mb-3">
+                  Enter an athlete's Player ID (e.g. <code>PL-512391</code>) or select from active players to invite them to this match.
+                </p>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={invitePlayerId}
+                    onChange={(e) => setInvitePlayerId(e.target.value)}
+                    placeholder="Enter Player ID (PL-XXXXXX)"
+                    className="flex-1 rounded-xl border border-[#DDD6C8] bg-white px-3 py-2 text-xs font-mono font-bold text-[#18181b] placeholder:font-sans placeholder:font-normal placeholder:text-[#9BA6A3] focus:outline-none focus:border-[#18181b]"
+                  />
+                </div>
+
+                {/* Available athletes to quick-add */}
+                {allAthletes.length > 1 && (
+                  <div className="mt-3 pt-3 border-t border-[#DDD6C8]/60">
+                    <p className="text-[10px] font-bold text-[#71807d] mb-1.5 uppercase">
+                      Quick Add Registered Athletes:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allAthletes.map((ath) => {
+                        const isSelected = selectedInviteAthletes.some((a) => a.id === ath.id);
+                        return (
+                          <button
+                            key={ath.id}
+                            type="button"
+                            onClick={() => toggleInviteAthlete(ath)}
+                            className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs transition-all ${
+                              isSelected
+                                ? "bg-[#18181b] text-white font-bold"
+                                : "bg-white border border-[#DDD6C8] text-[#253638] hover:border-[#18181b]"
+                            }`}
+                          >
+                            <Avatar player={ath} size="xs" />
+                            <span>{ath.displayName}</span>
+                            <span className="mono-font text-[9px] opacity-75">({ath.publicId})</span>
+                            {isSelected && <span>✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-2.5 pt-3 border-t border-[#DDD6C8]">
@@ -194,9 +317,9 @@ export default function GamesPage() {
               <Button
                 type="submit"
                 style={{ backgroundColor: sport.accent }}
-                className="text-white"
+                className="text-white shadow-md"
               >
-                Create game
+                Create Match & Send Invites
               </Button>
             </div>
           </form>

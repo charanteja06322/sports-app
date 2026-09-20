@@ -5,7 +5,16 @@ import { Button } from "./CommonUI";
 
 export function Scoreboard() {
   const activeSport = useEzkoraStore((s) => s.activeSport);
+  const games = useEzkoraStore((s) => s.games);
+  const recordMatchScore = useEzkoraStore((s) => s.recordMatchScore);
   const sportConfig = SPORTS.find((s) => s.name === activeSport) || SPORTS[0];
+
+  const [selectedMatchId, setSelectedMatchId] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const activeMatches = games.filter(
+    (g) => g.sport === activeSport && g.status !== "finished"
+  );
 
   // Cricket state
   const [cricketRuns, setCricketRuns] = useState(0);
@@ -69,6 +78,35 @@ export function Scoreboard() {
 
   const overs = Math.floor(cricketBalls / 6) + "." + (cricketBalls % 6);
 
+  const getCurrentScoreString = () => {
+    switch (activeSport) {
+      case "Badminton":
+        return `${badmintonP1} - ${badmintonP2} (Set ${badmintonSet})`;
+      case "Football":
+        return `${footballHome} - ${footballAway} (${footballMinute}')`;
+      case "Basketball":
+        return `${bbHome} - ${bbAway} (${bbQuarter})`;
+      case "Cricket":
+        return `${cricketRuns}/${cricketWickets} (${overs} ov)`;
+      case "Volleyball":
+        return `${rallyScoreA} - ${rallyScoreB}`;
+      case "Running":
+        return `${runDistance} km (${runSteps} steps)`;
+      case "Cycling":
+        return `${cycleDistance} km (${cycleSpeed} km/h)`;
+      default:
+        return "Live Match";
+    }
+  };
+
+  const handleSaveToMatch = async () => {
+    if (!selectedMatchId) return;
+    const scoreStr = getCurrentScoreString();
+    await recordMatchScore({ gameId: selectedMatchId, score: scoreStr });
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
   return (
     <div className="overflow-hidden rounded-3xl border border-[#DDD6C8] bg-white p-6 sm:p-8 shadow-sm">
       {/* Header */}
@@ -100,6 +138,41 @@ export function Scoreboard() {
           />
           READY TO SCORE
         </span>
+      </div>
+
+      {/* Match Fixture Linker Bar */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#DDD6C8] bg-[#FAF7F2] p-3 sm:p-4 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-bold text-[#253638]">Save Score to Match:</span>
+          {activeMatches.length > 0 ? (
+            <select
+              value={selectedMatchId}
+              onChange={(e) => setSelectedMatchId(e.target.value)}
+              className="rounded-xl border border-[#DDD6C8] bg-white px-3 py-1.5 font-bold text-[#18181b] focus:outline-none"
+            >
+              <option value="">-- Choose scheduled {activeSport} match --</option>
+              {activeMatches.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.title} ({m.players?.length || 1} on roster)
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="text-[#71807d] italic">No open {activeSport} matches. (Scoring in live standalone mode)</span>
+          )}
+        </div>
+
+        {selectedMatchId && (
+          <div className="flex items-center gap-2">
+            {saveSuccess ? (
+              <span className="font-bold text-[#277863]">✓ Score saved to match & all player profiles!</span>
+            ) : (
+              <Button onClick={handleSaveToMatch} className="text-xs py-1.5 px-3.5 shadow-xs">
+                🏆 Record & Save Score to Match
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Sport-specific console */}

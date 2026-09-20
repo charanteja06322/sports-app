@@ -7,6 +7,7 @@ export default function PlayersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const me = useEzkoraStore((s) => s.me);
   const players = useEzkoraStore((s) => s.players);
+  const games = useEzkoraStore((s) => s.games);
   const friends = useEzkoraStore((s) => s.friends);
   const sendRequest = useEzkoraStore((s) => s.sendFriendRequest);
   const respondRequest = useEzkoraStore((s) => s.respondFriendRequest);
@@ -88,6 +89,21 @@ export default function PlayersPage() {
                           {player.primarySport && (
                             <span className="rounded-md bg-[#FAF7F2] border border-[#DDD6C8] px-2 py-0.5 text-[10px] font-bold text-[#71807d]">
                               {player.primarySport}
+                            </span>
+                          )}
+                          {games.some(
+                            (g) =>
+                              g.status === "finished" &&
+                              (g.host?.id === player.id ||
+                                g.host?.publicId === player.publicId ||
+                                g.players?.some(
+                                  (p) =>
+                                    p.player?.id === player.id ||
+                                    p.player?.publicId === player.publicId
+                                ))
+                          ) && (
+                            <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
+                              🏆 Matches Scored
                             </span>
                           )}
                         </div>
