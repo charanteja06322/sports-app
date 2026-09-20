@@ -1,10 +1,10 @@
 import React from "react";
-import { SportIcon } from "./AervoIcons";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
+import { SportIcon } from "./EzkoraIcons";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
 export function SportStrip() {
-  const activeSport = useAervoStore((s) => s.activeSport);
-  const setSport = useAervoStore((s) => s.setSport);
+  const activeSport = useEzkoraStore((s) => s.activeSport);
+  const setSport = useEzkoraStore((s) => s.setSport);
 
   return (
     <div className="thin-scrollbar flex gap-2 overflow-x-auto border-b border-[#DDD6C8] bg-white/50 px-5 py-2 sm:px-8 lg:px-10">

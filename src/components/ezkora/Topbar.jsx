@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { IconMenu, IconSearch, IconBell, IconChevronDown, SportIcon, IconCheck, IconPlus } from "./AervoIcons";
+import { IconMenu, IconSearch, IconBell, IconChevronDown, SportIcon, IconCheck, IconPlus } from "./EzkoraIcons";
 import { Avatar, Button } from "./CommonUI";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
 export function Topbar({ openMenu }) {
-  const activeSportName = useAervoStore((s) => s.activeSport);
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
-  const me = useAervoStore((s) => s.me);
-  const allAthletes = useAervoStore((s) => s.allAthletes);
-  const switchAthlete = useAervoStore((s) => s.switchAthlete);
-  const logout = useAervoStore((s) => s.logout);
+  const me = useEzkoraStore((s) => s.me);
+  const allAthletes = useEzkoraStore((s) => s.allAthletes);
+  const switchAthlete = useEzkoraStore((s) => s.switchAthlete);
+  const logout = useEzkoraStore((s) => s.logout);
 
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -82,7 +82,7 @@ export function Topbar({ openMenu }) {
           </button>
 
           {noticeOpen && (
-            <div className="aervo-fade absolute right-0 top-11 z-30 w-64 rounded-2xl border border-[#DDD6C8] bg-white p-4 shadow-xl">
+            <div className="ezkora-fade absolute right-0 top-11 z-30 w-64 rounded-2xl border border-[#DDD6C8] bg-white p-4 shadow-xl">
               <p className="text-xs font-bold text-[#253638]">Live Notifications</p>
               <p className="mt-1 text-[11px] leading-relaxed text-[#71807d]">
                 Instant updates on match RSVPs, post likes, and comments from fellow athletes.
@@ -118,7 +118,7 @@ export function Topbar({ openMenu }) {
           </button>
 
           {profileMenuOpen && (
-            <div className="aervo-fade absolute right-0 top-11 z-30 w-72 rounded-2xl border border-[#DDD6C8] bg-white p-4 shadow-xl">
+            <div className="ezkora-fade absolute right-0 top-11 z-30 w-72 rounded-2xl border border-[#DDD6C8] bg-white p-4 shadow-xl">
               {/* Current user info */}
               <div className="flex items-center gap-3 border-b border-[#DDD6C8] pb-3">
                 <Avatar player={me} size="md" />

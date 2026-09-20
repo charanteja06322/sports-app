@@ -1,17 +1,17 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { useAervoStore, SPORTS } from "../store/aervoStore";
-import { Button, Avatar, EmptyState } from "../components/aervo/CommonUI";
-import { IconArrowLeft, IconCheck, IconClock, IconMapPin, IconUsers } from "../components/aervo/AervoIcons";
+import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
+import { Button, Avatar, EmptyState } from "../components/ezkora/CommonUI";
+import { IconArrowLeft, IconCheck, IconClock, IconMapPin, IconUsers } from "../components/ezkora/EzkoraIcons";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
   const idNum = Number(gameId);
 
-  const games = useAervoStore((s) => s.games);
-  const me = useAervoStore((s) => s.me);
-  const joinGame = useAervoStore((s) => s.joinGame);
-  const updateRoster = useAervoStore((s) => s.updateRosterStatus);
+  const games = useEzkoraStore((s) => s.games);
+  const me = useEzkoraStore((s) => s.me);
+  const joinGame = useEzkoraStore((s) => s.joinGame);
+  const updateRoster = useEzkoraStore((s) => s.updateRosterStatus);
 
   const game = games.find((g) => g.id === idNum);
 
@@ -45,7 +45,7 @@ export default function GameDetailPage() {
         <IconArrowLeft size={16} /> All {game.sport} games
       </Link>
 
-      <div className="aervo-enter mt-6 rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-sm sm:p-8">
+      <div className="ezkora-enter mt-6 rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <span

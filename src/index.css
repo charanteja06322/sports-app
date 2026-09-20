@@ -93,14 +93,14 @@ body {
   font-family: 'DM Mono', monospace;
 }
 
-.aervo-app {
+.ezkora-app {
   min-height: 100dvh;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   position: relative;
 }
 
-.aervo-noise::after {
+.ezkora-noise::after {
   content: '';
   position: fixed;
   inset: 0;
@@ -110,7 +110,7 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
 }
 
-@keyframes aervo-rise {
+@keyframes ezkora-rise {
   from {
     opacity: 0;
     transform: translateY(12px);
@@ -121,7 +121,7 @@ body {
   }
 }
 
-@keyframes aervo-fade {
+@keyframes ezkora-fade {
   from {
     opacity: 0;
     transform: scale(.985);
@@ -132,14 +132,12 @@ body {
   }
 }
 
-.aervo-enter,
 .ezkora-enter {
-  animation: aervo-rise .52s cubic-bezier(.2, .8, .2, 1) both;
+  animation: ezkora-rise .52s cubic-bezier(.2, .8, .2, 1) both;
 }
 
-.aervo-fade,
 .ezkora-fade {
-  animation: aervo-fade .38s ease both;
+  animation: ezkora-fade .38s ease both;
 }
 
 .action-ring:focus-visible {

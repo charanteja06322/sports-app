@@ -112,7 +112,7 @@ export function Field({ label, children, hint }) {
 
 export function PageHeader({ eyebrow, title, body, action }) {
   return (
-    <div className="aervo-enter flex flex-wrap items-end justify-between gap-6">
+    <div className="ezkora-enter flex flex-wrap items-end justify-between gap-6">
       <div className="max-w-[720px]">
         <p className="mono-font text-[10px] uppercase tracking-[0.2em] font-semibold text-[#277863]">
           {eyebrow}

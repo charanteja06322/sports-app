@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { useAervoStore } from "../store/aervoStore";
-import { PageHeader, Avatar, Button, EmptyState } from "../components/aervo/CommonUI";
-import { IconSearch, IconUsers, IconCheck, IconPlus } from "../components/aervo/AervoIcons";
+import { useEzkoraStore } from "../store/ezkoraStore";
+import { PageHeader, Avatar, Button, EmptyState } from "../components/ezkora/CommonUI";
+import { IconSearch, IconUsers, IconCheck, IconPlus } from "../components/ezkora/EzkoraIcons";
 
 export default function PlayersPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const me = useAervoStore((s) => s.me);
-  const players = useAervoStore((s) => s.players);
-  const friends = useAervoStore((s) => s.friends);
-  const sendRequest = useAervoStore((s) => s.sendFriendRequest);
-  const respondRequest = useAervoStore((s) => s.respondFriendRequest);
+  const me = useEzkoraStore((s) => s.me);
+  const players = useEzkoraStore((s) => s.players);
+  const friends = useEzkoraStore((s) => s.friends);
+  const sendRequest = useEzkoraStore((s) => s.sendFriendRequest);
+  const respondRequest = useEzkoraStore((s) => s.respondFriendRequest);
 
   const filteredPlayers = players.filter((p) => {
     if (p.id === me?.id || p.publicId === me?.publicId) return false;

@@ -171,5 +171,3 @@ export function handleEzkoraApi(req, res, next) {
 
   return true;
 }
-
-export const handleAervoApi = handleEzkoraApi;

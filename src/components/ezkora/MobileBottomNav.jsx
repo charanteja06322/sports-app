@@ -6,12 +6,12 @@ import {
   IconCalendar,
   IconTrophy,
   IconSettings,
-} from "./AervoIcons";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
+} from "./EzkoraIcons";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
 export function MobileBottomNav() {
   const location = useLocation();
-  const activeSportName = useAervoStore((s) => s.activeSport);
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
 
   const tabs = [

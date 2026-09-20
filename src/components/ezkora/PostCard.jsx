@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { IconHeart, IconMessageCircle, IconClock } from "./AervoIcons";
+import { IconHeart, IconMessageCircle, IconClock } from "./EzkoraIcons";
 import { Avatar, Button } from "./CommonUI";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
 function formatRelative(isoString) {
   try {
@@ -19,9 +19,9 @@ function formatRelative(isoString) {
 }
 
 export function PostCard({ post }) {
-  const me = useAervoStore((s) => s.me);
-  const toggleLike = useAervoStore((s) => s.toggleLikePost);
-  const addComment = useAervoStore((s) => s.addComment);
+  const me = useEzkoraStore((s) => s.me);
+  const toggleLike = useEzkoraStore((s) => s.toggleLikePost);
+  const addComment = useEzkoraStore((s) => s.addComment);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
 

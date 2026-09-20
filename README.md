@@ -64,7 +64,7 @@ Visit `http://localhost:5173/` in your browser.
 │   ├── apiHandler.js       # API middleware & endpoints (/api/*)
 │   └── server.js           # Standalone HTTP server
 ├── src/
-│   ├── components/aervo/   # Sport strips, topbar, scoreboard, feed cards
+│   ├── components/ezkora/  # Sport strips, topbar, scoreboard, feed cards
 │   ├── pages/              # Home, Players, Games, Scores, Settings
 │   ├── store/              # Zustand state management (ezkoraStore)
 │   └── App.jsx             # Router & main layout

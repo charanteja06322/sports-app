@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
-import { PageHeader, Field, Button, Avatar } from "../components/aervo/CommonUI";
-import { SportIcon, IconCheck, IconPlus } from "../components/aervo/AervoIcons";
+import { PageHeader, Field, Button, Avatar } from "../components/ezkora/CommonUI";
+import { SportIcon, IconCheck, IconPlus } from "../components/ezkora/EzkoraIcons";
 
 export default function EzkoraSettingsPage() {
   const me = useEzkoraStore((s) => s.me);

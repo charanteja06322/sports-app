@@ -544,5 +544,3 @@ if (typeof window !== "undefined") {
     useEzkoraStore.getState().fetchLiveData();
   }, 4000);
 }
-
-export const useAervoStore = useEzkoraStore;

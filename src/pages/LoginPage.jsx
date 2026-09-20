@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useEzkoraStore } from "../store/ezkoraStore";
-import { LogoMark, IconGoogle, IconArrowRight, IconX, IconCheck } from "../components/aervo/AervoIcons";
+import { LogoMark, IconGoogle, IconArrowRight, IconX, IconCheck } from "../components/ezkora/EzkoraIcons";
 
 export default function LoginPage() {
   const loginWithGoogle = useEzkoraStore((s) => s.loginWithGoogle);

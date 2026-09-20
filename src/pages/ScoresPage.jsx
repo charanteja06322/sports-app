@@ -1,11 +1,11 @@
 import React from "react";
-import { useAervoStore, SPORTS } from "../store/aervoStore";
-import { PageHeader } from "../components/aervo/CommonUI";
-import { ScoreboardDemo } from "../components/aervo/ScoreboardDemo";
+import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
+import { PageHeader } from "../components/ezkora/CommonUI";
+import { Scoreboard } from "../components/ezkora/Scoreboard";
 
 export default function ScoresPage() {
-  const activeSportName = useAervoStore((s) => s.activeSport);
-  const games = useAervoStore((s) => s.games);
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
+  const games = useEzkoraStore((s) => s.games);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
 
   return (
@@ -17,7 +17,7 @@ export default function ScoresPage() {
       />
 
       <div className="mt-8 space-y-8">
-        <ScoreboardDemo />
+        <Scoreboard />
 
         {/* Historical Matches */}
         <section className="rounded-3xl border border-[#DDD6C8] bg-white p-6 sm:p-8 shadow-sm space-y-4">

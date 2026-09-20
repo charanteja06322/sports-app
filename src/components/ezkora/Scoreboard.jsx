@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
-import { SportIcon, IconZap } from "./AervoIcons";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
+import { SportIcon, IconZap } from "./EzkoraIcons";
 import { Button } from "./CommonUI";
 
-export function ScoreboardDemo() {
-  const activeSport = useAervoStore((s) => s.activeSport);
+export function Scoreboard() {
+  const activeSport = useEzkoraStore((s) => s.activeSport);
   const sportConfig = SPORTS.find((s) => s.name === activeSport) || SPORTS[0];
 
   // Cricket state
@@ -703,3 +703,5 @@ export function ScoreboardDemo() {
     </div>
   );
 }
+
+export default Scoreboard;

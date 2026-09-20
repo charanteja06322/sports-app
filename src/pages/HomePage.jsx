@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAervoStore, SPORTS } from "../store/aervoStore";
-import { PageHeader, Button, EmptyState } from "../components/aervo/CommonUI";
-import { PostCard } from "../components/aervo/PostCard";
-import { PostComposer } from "../components/aervo/PostComposer";
-import { ScoreboardDemo } from "../components/aervo/ScoreboardDemo";
-import { IconPlus, IconArrowUpRight, IconClock, IconMapPin, IconMessageCircle } from "../components/aervo/AervoIcons";
+import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
+import { PageHeader, Button, EmptyState } from "../components/ezkora/CommonUI";
+import { PostCard } from "../components/ezkora/PostCard";
+import { PostComposer } from "../components/ezkora/PostComposer";
+import { Scoreboard } from "../components/ezkora/Scoreboard";
+import { IconPlus, IconArrowUpRight, IconClock, IconMapPin, IconMessageCircle } from "../components/ezkora/EzkoraIcons";
 
 export default function HomePage() {
-  const activeSportName = useAervoStore((s) => s.activeSport);
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
-  const me = useAervoStore((s) => s.me);
-  const posts = useAervoStore((s) => s.posts);
-  const games = useAervoStore((s) => s.games);
+  const me = useEzkoraStore((s) => s.me);
+  const posts = useEzkoraStore((s) => s.posts);
+  const games = useEzkoraStore((s) => s.games);
 
   const [composerOpen, setComposerOpen] = useState(false);
 
@@ -80,9 +80,9 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Interactive Live Scoreboard Demo */}
+          {/* Live Match Scoreboard */}
           <div className="pt-6">
-            <ScoreboardDemo />
+            <Scoreboard />
           </div>
         </section>
 

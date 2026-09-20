@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAervoStore, SPORTS } from "../store/aervoStore";
-import { PageHeader, Button, EmptyState, Field } from "../components/aervo/CommonUI";
-import { IconPlus, IconCalendar, IconClock, IconMapPin, IconArrowUpRight, IconX } from "../components/aervo/AervoIcons";
+import { useEzkoraStore, SPORTS } from "../store/ezkoraStore";
+import { PageHeader, Button, EmptyState, Field } from "../components/ezkora/CommonUI";
+import { IconPlus, IconCalendar, IconClock, IconMapPin, IconArrowUpRight, IconX } from "../components/ezkora/EzkoraIcons";
 
 export default function GamesPage() {
-  const activeSportName = useAervoStore((s) => s.activeSport);
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
-  const games = useAervoStore((s) => s.games);
-  const addGame = useAervoStore((s) => s.addGame);
+  const games = useEzkoraStore((s) => s.games);
+  const addGame = useEzkoraStore((s) => s.addGame);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [formTitle, setFormTitle] = useState("");
@@ -131,7 +131,7 @@ export default function GamesPage() {
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-xs">
           <form
             onSubmit={handleSubmit}
-            className="aervo-fade w-full max-w-[500px] rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
+            className="ezkora-fade w-full max-w-[500px] rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
           >
             <div className="flex justify-between items-start">
               <div>

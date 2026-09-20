@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { IconX, IconImagePlus } from "./AervoIcons";
+import { IconX, IconImagePlus } from "./EzkoraIcons";
 import { Button } from "./CommonUI";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
 export function PostComposer({ onClose }) {
-  const activeSport = useAervoStore((s) => s.activeSport);
+  const activeSport = useEzkoraStore((s) => s.activeSport);
   const sportConfig = SPORTS.find((s) => s.name === activeSport) || SPORTS[0];
-  const addPost = useAervoStore((s) => s.addPost);
+  const addPost = useEzkoraStore((s) => s.addPost);
 
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState("");
@@ -41,7 +41,7 @@ export function PostComposer({ onClose }) {
       <div
         role="dialog"
         aria-modal="true"
-        className="aervo-fade max-h-[90vh] w-full max-w-[540px] overflow-y-auto rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
+        className="ezkora-fade max-h-[90vh] w-full max-w-[540px] overflow-y-auto rounded-3xl border border-[#DDD6C8] bg-white p-6 shadow-2xl sm:p-8"
       >
         <div className="flex items-start justify-between">
           <div>

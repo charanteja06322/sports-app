@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Sidebar } from './components/aervo/Sidebar';
-import { Topbar } from './components/aervo/Topbar';
-import { SportStrip } from './components/aervo/SportStrip';
-import { MobileBottomNav } from './components/aervo/MobileBottomNav';
+import { Sidebar } from './components/ezkora/Sidebar';
+import { Topbar } from './components/ezkora/Topbar';
+import { SportStrip } from './components/ezkora/SportStrip';
+import { MobileBottomNav } from './components/ezkora/MobileBottomNav';
 import HomePage from './pages/HomePage';
 import PlayersPage from './pages/PlayersPage';
 import GamesPage from './pages/GamesPage';
@@ -17,7 +17,7 @@ function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="ezkora-app aervo-app ezkora-noise aervo-noise flex min-h-screen">
+    <div className="ezkora-app ezkora-noise flex min-h-screen">
       {/* Sidebar for Desktop & Drawer for Mobile */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transition-transform duration-200 lg:static lg:translate-x-0 ${

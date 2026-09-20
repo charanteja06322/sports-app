@@ -1,14 +1,14 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LogoMark, IconCompass, IconUsers, IconCalendar, IconTrophy, IconSettings, IconUser, IconX, SportIcon } from "./AervoIcons";
+import { LogoMark, IconCompass, IconUsers, IconCalendar, IconTrophy, IconSettings, IconUser, IconX, SportIcon } from "./EzkoraIcons";
 import { Avatar } from "./CommonUI";
-import { useAervoStore, SPORTS } from "../../store/aervoStore";
+import { useEzkoraStore, SPORTS } from "../../store/ezkoraStore";
 
 export function Sidebar({ mobileClose }) {
   const location = useLocation();
-  const activeSportName = useAervoStore((s) => s.activeSport);
+  const activeSportName = useEzkoraStore((s) => s.activeSport);
   const sport = SPORTS.find((s) => s.name === activeSportName) || SPORTS[0];
-  const me = useAervoStore((s) => s.me);
+  const me = useEzkoraStore((s) => s.me);
 
   const links = [
     { href: "/", label: "Home", icon: <IconCompass size={18} /> },
