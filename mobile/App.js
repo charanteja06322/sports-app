@@ -1968,101 +1968,103 @@ export default function App() {
       {/* MODAL 1: DIRECT CHAT WITH FRIEND */}
       {/* ==================================================== */}
       <Modal visible={!!activeChatFriend} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.chatModalCard}>
-            {/* Chat Header */}
-            <View style={styles.chatHeader}>
-              <View style={styles.chatHeaderLeft}>
-                <View style={styles.chatAvatar}>
-                  <Text style={styles.chatAvatarText}>
-                    {activeChatFriend?.name.substring(0, 2).toUpperCase()}
-                  </Text>
-                  {activeChatFriend?.online && <View style={styles.onlineDot} />}
-                </View>
-                <View>
-                  <Text style={styles.chatName}>{activeChatFriend?.name}</Text>
-                  <Text style={styles.chatStatus}>
-                    {activeChatFriend?.online ? "Active Now" : "Offline"} · {activeChatFriend?.playerId}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={() => setActiveChatFriend(null)}>
-                <Ionicons name="close" size={24} color={THEME.textMuted} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Quick Match Challenge Pill */}
-            <View style={styles.challengeBar}>
-              <Text style={styles.challengeBarText}>Ready to play?</Text>
-              <TouchableOpacity
-                style={[styles.challengeActionBtn, { backgroundColor: currentSport.accent }]}
-                onPress={handleSendMatchChallenge}
-              >
-                <Ionicons name="trophy" size={13} color="#FFFFFF" />
-                <Text style={styles.challengeActionBtnText}>Challenge to Match</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Message Thread */}
-            <ScrollView
-              style={styles.chatMessagesScroll}
-              contentContainerStyle={styles.chatMessagesContent}
-            >
-              {activeChatFriend?.messages.length === 0 ? (
-                <View style={styles.chatEmpty}>
-                  <Text style={styles.chatEmptyText}>
-                    No messages yet. Say hello or challenge {activeChatFriend?.name} to a game!
-                  </Text>
-                </View>
-              ) : (
-                activeChatFriend?.messages.map((m, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.chatBubble,
-                      m.sender === "me" ? styles.bubbleMe : styles.bubbleThem,
-                      m.isChallenge && styles.bubbleChallenge,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.bubbleText,
-                        m.sender === "me" ? styles.bubbleTextMe : styles.bubbleTextThem,
-                      ]}
-                    >
-                      {m.text}
+        {activeChatFriend && (
+          <View style={styles.modalBackdrop}>
+            <View style={styles.chatModalCard}>
+              {/* Chat Header */}
+              <View style={styles.chatHeader}>
+                <View style={styles.chatHeaderLeft}>
+                  <View style={styles.chatAvatar}>
+                    <Text style={styles.chatAvatarText}>
+                      {(activeChatFriend.name || "AT").substring(0, 2).toUpperCase()}
                     </Text>
-                    <Text
-                      style={[
-                        styles.bubbleTime,
-                        m.sender === "me" ? { color: "rgba(255,255,255,0.7)" } : { color: THEME.textSub },
-                      ]}
-                    >
-                      {m.time}
+                    {activeChatFriend.online && <View style={styles.onlineDot} />}
+                  </View>
+                  <View>
+                    <Text style={styles.chatName}>{activeChatFriend.name || "Athlete"}</Text>
+                    <Text style={styles.chatStatus}>
+                      {activeChatFriend.online ? "Active Now" : "Offline"} · {activeChatFriend.playerId || ""}
                     </Text>
                   </View>
-                ))
-              )}
-            </ScrollView>
+                </View>
+                <TouchableOpacity onPress={() => setActiveChatFriend(null)}>
+                  <Ionicons name="close" size={24} color={THEME.textMuted} />
+                </TouchableOpacity>
+              </View>
 
-            {/* Chat Input Bar */}
-            <View style={styles.chatInputBar}>
-              <TextInput
-                style={styles.chatTextInput}
-                placeholder={`Message ${activeChatFriend?.name.split(" ")[0]}...`}
-                placeholderTextColor={THEME.textSub}
-                value={chatInputText}
-                onChangeText={setChatInputText}
-              />
-              <TouchableOpacity
-                style={[styles.chatSendBtn, { backgroundColor: currentSport.accent }]}
-                onPress={handleSendMessage}
+              {/* Quick Match Challenge Pill */}
+              <View style={styles.challengeBar}>
+                <Text style={styles.challengeBarText}>Ready to play?</Text>
+                <TouchableOpacity
+                  style={[styles.challengeActionBtn, { backgroundColor: currentSport.accent }]}
+                  onPress={handleSendMatchChallenge}
+                >
+                  <Ionicons name="trophy" size={13} color="#FFFFFF" />
+                  <Text style={styles.challengeActionBtnText}>Challenge to Match</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Message Thread */}
+              <ScrollView
+                style={styles.chatMessagesScroll}
+                contentContainerStyle={styles.chatMessagesContent}
               >
-                <Ionicons name="send" size={16} color="#FFFFFF" />
-              </TouchableOpacity>
+                {(!activeChatFriend.messages || activeChatFriend.messages.length === 0) ? (
+                  <View style={styles.chatEmpty}>
+                    <Text style={styles.chatEmptyText}>
+                      No messages yet. Say hello or challenge {activeChatFriend.name || "friend"} to a game!
+                    </Text>
+                  </View>
+                ) : (
+                  activeChatFriend.messages.map((m, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.chatBubble,
+                        m.sender === "me" ? styles.bubbleMe : styles.bubbleThem,
+                        m.isChallenge && styles.bubbleChallenge,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.bubbleText,
+                          m.sender === "me" ? styles.bubbleTextMe : styles.bubbleTextThem,
+                        ]}
+                      >
+                        {m.text}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.bubbleTime,
+                          m.sender === "me" ? { color: "rgba(255,255,255,0.7)" } : { color: THEME.textSub },
+                        ]}
+                      >
+                        {m.time}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+
+              {/* Chat Input Bar */}
+              <View style={styles.chatInputBar}>
+                <TextInput
+                  style={styles.chatTextInput}
+                  placeholder={`Message ${(activeChatFriend.name || "athlete").split(" ")[0]}...`}
+                  placeholderTextColor={THEME.textSub}
+                  value={chatInputText}
+                  onChangeText={setChatInputText}
+                />
+                <TouchableOpacity
+                  style={[styles.chatSendBtn, { backgroundColor: currentSport.accent }]}
+                  onPress={handleSendMessage}
+                >
+                  <Ionicons name="send" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        )}
       </Modal>
 
       {/* ==================================================== */}
