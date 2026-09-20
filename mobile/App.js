@@ -1,4 +1,5 @@
 import "./polyfill";
+import { registerRootComponent } from "expo";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -2123,3 +2124,5 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+registerRootComponent(App);
