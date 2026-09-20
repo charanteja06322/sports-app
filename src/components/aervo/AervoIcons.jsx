@@ -32,7 +32,7 @@ import {
 import { FaVolleyballBall } from "react-icons/fa";
 import { MdSportsCricket } from "react-icons/md";
 import { FaBasketball, FaFutbol, FaVolleyball } from "react-icons/fa6";
-import { IoTennisballOutline } from "react-icons/io5";
+import { GiShuttlecock } from "react-icons/gi";
 
 export function IconGoogle({ size = 18, className = "" }) {
   return (
@@ -98,8 +98,8 @@ export function SportIcon({ name, size = 16, className = "" }) {
       return <FaFutbol size={size} className={className} />;
     case "Basketball":
       return <FaBasketball size={size} className={className} />;
-    case "Tennis":
-      return <IoTennisballOutline size={size} className={className} />;
+    case "Badminton":
+      return <GiShuttlecock size={size} className={className} />;
     case "Cricket":
       return <MdSportsCricket size={size} className={className} />;
     case "Running":
