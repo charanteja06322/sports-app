@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "EZKORA",
-    "slug": "ezkora-mobile",
+    "slug": "ezkora",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
